@@ -1,0 +1,8 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="policy-auction Application Test Suite" annotations="1.5">
+    <test name="Unit Tests">
+        <packages>
+            <package name="net.retakethe.policyauction"/>
+        </packages>
+    </test>
+</suite>
