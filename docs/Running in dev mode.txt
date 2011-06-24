@@ -1,0 +1,23 @@
+Requirements:
+    Java: JDK. I have 1.6.0_24-b07. Java 1.5 may also work, not tested.
+
+    Maven: maven2. I have 2.2.1. Maven 3 may also work, not tested.
+        Install maven ubuntu / debian:
+            sudo apt-get install maven2
+
+    Eclipse is recommended for development.
+        The project files (.classpath, .project, .settings/) are set up for Eclipse Helios SR2.
+        You'll also want the M2Eclipse plugin:
+            http://m2eclipse.sonatype.org
+
+Background reading:
+    Tapestry info / tutorial:
+        http://tapestry.apache.org/creating-the-skeleton-application.html
+    Cassandra info / tutorial:
+        http://www.datastax.com/docs/0.8/index
+
+To run from commandline:
+    mvn jetty:run
+then it will be accessible at:
+        http://localhost:8080/policy-auction/
+
