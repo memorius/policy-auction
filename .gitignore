@@ -1,0 +1,4 @@
+# Files and directories to ignore in this directory tree
+
+# Maven build output
+/target/
