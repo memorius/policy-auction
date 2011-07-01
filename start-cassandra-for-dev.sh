@@ -32,8 +32,6 @@ check_directory () {
 
 trap trap_err ERR && set -o errexit
 
-set -x
-
 . conf/cassandra-dev-dirs.sh
 
 check_directory "$cassandra_log"
