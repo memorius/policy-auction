@@ -34,11 +34,9 @@ check_not_directory () {
 
 trap trap_err ERR && set -o errexit
 
-cassandra_bin='cassandra-bin'
-cassandra_log='cassandra-log'
-cassandra_data='cassandra-data'
-
 set -x
+
+. conf/cassandra-dev-dirs.sh
 
 check_not_directory "$cassandra_log"
 check_not_directory "$cassandra_data"

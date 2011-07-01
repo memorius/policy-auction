@@ -1,10 +1,5 @@
 #!/bin/bash
 
-cassandra_bin='cassandra-bin'
-cassandra_log='cassandra-log'
-cassandra_data='cassandra-data'
-cassandra_conf='conf/cassandra-dev'
-
 trap_err () {
     err=$?
 
@@ -38,6 +33,8 @@ check_directory () {
 trap trap_err ERR && set -o errexit
 
 set -x
+
+. conf/cassandra-dev-dirs.sh
 
 check_directory "$cassandra_log"
 check_directory "$cassandra_data"
