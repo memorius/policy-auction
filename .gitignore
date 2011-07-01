@@ -2,3 +2,8 @@
 
 # Maven build output
 /target/
+
+# Cassandra dirs used in dev/test
+/cassandra-bin/
+/cassandra-data/
+/cassandra-log/
