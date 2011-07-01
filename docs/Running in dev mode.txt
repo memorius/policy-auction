@@ -33,6 +33,8 @@ To setup cassandra (local installation in the repos, for dev, as current user):
           $USER soft memlock unlimited
           $USER hard memlock unlimited
 
+    You can use jconsole (connect to the CassandraDaemon process) to view its JMX management stuff.
+
 To run the cassandra cli (console querying / DDL tool): start cassandra as above, then:
     ./cassandra-cli-for-dev.sh
 
