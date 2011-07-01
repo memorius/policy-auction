@@ -1,0 +1,5 @@
+# Files and directories to ignore in this directory tree
+
+# Files auto-generated from templates with property substitution
+/cassandra.yaml
+/log4j-server.properties
