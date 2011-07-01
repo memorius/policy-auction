@@ -16,7 +16,20 @@ Background reading:
     Cassandra info / tutorial:
         http://www.datastax.com/docs/0.8/index
 
-To run from commandline:
+To setup cassandra (local installation in the repos, for dev, as current user):
+    Run this from top dir of repos:
+        ./install-cassandra-for-dev.sh  (one-off unless you use 'git clean' as below)
+        ./start-cassandra-for-dev.sh    (start or restart; this will stay open and log to console)
+
+    To exit cassandra, just Ctrl+C to kill it.
+
+    This setup runs a localhost (single node) cluster, keeping its data in the repos in gitignored dirs,
+    so you can clean everything easily, e.g. using 'git clean -d -X -f'
+
+To run the cassandra cli (console querying / DDL tool): start cassandra as above, then:
+    ./cassandra-cli-for-dev.sh
+
+To run the webapp from the commandline:
     mvn jetty:run
 then it will be accessible at:
         http://localhost:8080/policy-auction/
