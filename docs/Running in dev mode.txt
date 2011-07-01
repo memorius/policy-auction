@@ -26,6 +26,13 @@ To setup cassandra (local installation in the repos, for dev, as current user):
     This setup runs a localhost (single node) cluster, keeping its data in the repos in gitignored dirs,
     so you can clean everything easily, e.g. using 'git clean -d -X -f'
 
+    On linux you may also want to do this, as described here:
+       http://www.datastax.com/docs/0.8/install/installing#installing-jna
+
+       Edit the file /etc/security/limits.conf, adding the following entries for the user or group that runs Cassandra:
+          $USER soft memlock unlimited
+          $USER hard memlock unlimited
+
 To run the cassandra cli (console querying / DDL tool): start cassandra as above, then:
     ./cassandra-cli-for-dev.sh
 

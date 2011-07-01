@@ -55,3 +55,18 @@ mkdir -p "$cassandra_log" "$cassandra_data"
 
 # We have our own modified copy of this in git
 rm -r "$cassandra_bin/conf"
+
+case "`uname`" in
+    Linux)
+        cp "downloaded/jna.jar" "$cassandra_bin/lib/"
+        limit="$(ulimit -H -l)"
+        if [ "$limit" != "unlimited" ]; then
+            echo
+            echo "memlock limit is too low ($limit):"
+            echo "To use JNA (which improves memory usage and compaction on linux) you need to edit /etc/security/limits.conf,"
+            echo "see docs/Running in dev mode.txt"
+        fi
+        ;;
+    *)
+        ;;
+esac
