@@ -48,6 +48,8 @@ check_not_directory "$cassandra_bin"
 cassandra_tar="downloaded/apache-cassandra-${cassandra_version}-bin.tar.gz"
 
 tar xzvf "$cassandra_tar"
+mkdir -p "$cassandra_bin"
+rmdir "$cassandra_bin"
 mv "apache-cassandra-${cassandra_version}" "$cassandra_bin"
 mkdir -p "$cassandra_log" "$cassandra_data"
 
