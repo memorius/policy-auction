@@ -54,4 +54,9 @@ done
 # Tell cassandra where our config scripts are then start it in the foreground
 export CASSANDRA_CONF="$full_conf_dir"
 
+# Override cassandra auto-calculation of heap size for dev mode:
+# it uses half the physical memory by default which is way too much for small-scale testing
+export MAX_HEAP_SIZE="512M"
+export HEAP_NEWSIZE="128M"
+
 exec "$cassandra_bin/bin/cassandra" -f "$@"
