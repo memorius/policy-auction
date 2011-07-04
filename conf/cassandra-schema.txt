@@ -1,0 +1,45 @@
+
+create keyspace policy_auction;
+
+/* TODO: placement strategy, replication factor
+create keyspace Keyspace1
+    with strategy_options=[{replication_factor:1}]
+    and placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy'
+*/
+
+use policy_auction;
+
+create column family policies
+    with comment = 'Policies keyed by policyID, and votes given them by each user'
+    and comparator = UTF8Type
+    and column_metadata = [{
+            column_name: short_name,
+            validation_class: UTF8Type
+        },
+        {
+            column_name: description,
+            validation_class: UTF8Type
+        }
+    ];
+
+create column family users
+    with comment = 'Users by userID'
+    and comparator = UTF8Type
+    and column_metadata = [{
+            column_name: password,
+            validation_class: UTF8Type
+        },
+        {
+            column_name: name,
+            validation_class: UTF8Type
+        }
+    ];
+
+create column family users_by_name
+    with comment = 'Lookup of userID from user name'
+    and comparator = UTF8Type
+    and column_metadata = [{
+            column_name: user_id,
+            validation_class: TimeUUIDType
+        }
+    ];
