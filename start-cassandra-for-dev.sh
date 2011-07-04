@@ -53,4 +53,5 @@ done
 
 # Tell cassandra where our config scripts are then start it in the foreground
 export CASSANDRA_CONF="$full_conf_dir"
-exec "$cassandra_bin/bin/cassandra" -f
+
+exec "$cassandra_bin/bin/cassandra" -f "$@"

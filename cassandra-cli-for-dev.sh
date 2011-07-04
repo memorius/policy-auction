@@ -41,4 +41,4 @@ full_conf_dir="$(readlink -mnq "${cassandra_conf}")"
 
 # Tell cassandra where our config scripts are then start the cli, looking at local cassandra instance
 export CASSANDRA_CONF="$full_conf_dir"
-exec "$cassandra_bin/bin/cassandra-cli" --host localhost
+exec "$cassandra_bin/bin/cassandra-cli" --host localhost "$@"
