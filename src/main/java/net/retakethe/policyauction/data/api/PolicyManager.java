@@ -2,6 +2,8 @@ package net.retakethe.policyauction.data.api;
 
 import java.util.List;
 
+import net.retakethe.policyauction.entities.Policy;
+
 /**
  * @author Nick Clarke
  */
@@ -21,8 +23,6 @@ public interface PolicyManager {
 
     Policy createPolicy();
 
-    // TODO: should this be on the Policy interface?
-    //       Need to see some of the use cases on how multiple data objects interact before we decide this.
     void storePolicy(Policy policy);
 
     List<Policy> getAllPolicies();

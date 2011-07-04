@@ -16,21 +16,16 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
-import net.retakethe.policyauction.data.api.Policy;
 import net.retakethe.policyauction.data.api.PolicyID;
 import net.retakethe.policyauction.data.api.PolicyManager;
+import net.retakethe.policyauction.entities.Policy;
 
 /**
  * @author Nick Clarke
  */
 public class HectorPolicyManagerImpl extends AbstractHectorDAO implements PolicyManager {
 
-    private static final String POLICIES_COLUMN_FAMILY = "policies";
-
-    private static final String SHORT_NAME = "short_name";
-    private static final String DESCRIPTION = "description";
-
-    public static final class HectorPolicyIDImpl implements PolicyID {
+    private static final class HectorPolicyIDImpl implements PolicyID {
 
         private final UUID _uuid;
 
@@ -59,6 +54,11 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
             return _uuid;
         }
     }
+
+    private static final String POLICIES_COLUMN_FAMILY = "policies";
+
+    private static final String SHORT_NAME = "short_name";
+    private static final String DESCRIPTION = "description";
 
     private final HectorCassandraDAOManagerImpl _daoManager;
 
@@ -91,7 +91,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
         String shortName = getStringColumnOrNull(cs, SHORT_NAME);
         String description = getStringColumnOrNull(cs, DESCRIPTION);
 
-        return new HectorPolicyImpl(idImpl, shortName, description);
+        return new Policy(idImpl, shortName, description);
     }
 
     private HectorPolicyIDImpl getPolicyIDImpl(PolicyID policyID) {
@@ -102,7 +102,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
     public Policy createPolicy() {
         UUID uuid = TimeUUIDUtils.getUniqueTimeUUIDinMillis();
         HectorPolicyIDImpl policyID = new HectorPolicyIDImpl(uuid);
-        return new HectorPolicyImpl(policyID);
+        return new Policy(policyID);
     }
 
     @Override
@@ -145,7 +145,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
 
             String description = getStringColumnOrNull(cs, DESCRIPTION);
 
-            policies.add(new HectorPolicyImpl(new HectorPolicyIDImpl(row.getKey()), shortName, description));
+            policies.add(new Policy(new HectorPolicyIDImpl(row.getKey()), shortName, description));
         }
 
         return policies;
@@ -153,7 +153,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
 
     @Override
     public void storePolicy(Policy policy) {
-        UUID policyID = getPolicyImpl(policy).getPolicyID().getUUID();
+        UUID policyID = getInternalPolicyID(policy);
         Mutator<UUID> mutator = HFactory.createMutator(_daoManager.getKeyspace(), UUIDSerializer.get())
                 .addInsertion(policyID, POLICIES_COLUMN_FAMILY,
                               HFactory.createStringColumn(SHORT_NAME, policy.getShortName()))
@@ -164,8 +164,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
         mutator.execute();
     }
 
-    private HectorPolicyImpl getPolicyImpl(Policy policy) {
-        return (HectorPolicyImpl) policy;
+    private UUID getInternalPolicyID(Policy policy) {
+        return ((HectorPolicyIDImpl) policy.getPolicyID()).getUUID();
     }
-
 }
