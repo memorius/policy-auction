@@ -2,7 +2,10 @@ package net.retakethe.policyauction.services;
 
 import java.io.IOException;
 
-import org.apache.tapestry5.*;
+import net.retakethe.policyauction.data.api.DAOManager;
+import net.retakethe.policyauction.data.impl.HectorCassandraDAOManagerImpl;
+
+import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.ServiceBinder;
@@ -27,9 +30,13 @@ public class AppModule
         // Use service builder methods (example below) when the implementation
         // is provided inline, or requires more initialization than simply
         // invoking the constructor.
+
+        // Use our Cassandra implementation.
+        // TODO: make this bind conditional on properties or something if we have more than one implementation.
+        // TODO: use tapestry methods of getting config properties (hosts etc) to the hector service.
+        binder.bind(DAOManager.class, HectorCassandraDAOManagerImpl.class);
     }
-    
-    
+
     public static void contributeApplicationDefaults(
             MappedConfiguration<String, String> configuration)
     {
