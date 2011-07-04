@@ -18,7 +18,7 @@ import net.retakethe.policyauction.data.api.PolicyManager;
  *
  * @author Nick Clarke
  */
-public class HectorCassandraDAOManager implements DAOManager {
+public class HectorCassandraDAOManagerImpl implements DAOManager {
 
     private static final String KEYSPACE_NAME = "policy_auction";
 
@@ -34,7 +34,10 @@ public class HectorCassandraDAOManager implements DAOManager {
 
     private final PolicyManager _policyManager;
 
-    public HectorCassandraDAOManager() throws InitializationException {
+    /**
+     * @throws InitializationException
+     */
+    public HectorCassandraDAOManagerImpl() {
         _cluster = HFactory.getOrCreateCluster("policy_auction_cluster",
                 new CassandraHostConfigurator("localhost:9160"));
 

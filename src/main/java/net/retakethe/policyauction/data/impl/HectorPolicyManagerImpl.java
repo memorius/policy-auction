@@ -60,9 +60,9 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
         }
     }
 
-    private final HectorCassandraDAOManager _daoManager;
+    private final HectorCassandraDAOManagerImpl _daoManager;
 
-    public HectorPolicyManagerImpl(HectorCassandraDAOManager daoManager) {
+    public HectorPolicyManagerImpl(HectorCassandraDAOManagerImpl daoManager) {
         super();
         _daoManager = daoManager;
     }
