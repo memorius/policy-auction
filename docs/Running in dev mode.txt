@@ -14,24 +14,32 @@ Background reading:
     Tapestry info / tutorial:
         http://tapestry.apache.org/creating-the-skeleton-application.html
     Cassandra info / tutorial:
+        http://wiki.apache.org/cassandra/FrontPage
+        http://wiki.apache.org/cassandra/DataModel
         http://www.datastax.com/docs/0.8/index
+        http://maxgrinev.com/2010/07/12/do-you-really-need-sql-to-do-it-all-in-cassandra/
+    Hector (data access library used to interface to Cassandra):
+        https://github.com/rantav/hector/wiki/User-Guide
+        https://github.com/rantav/hector/wiki
+        - note some info is a little out-of-date and refers to the old Hector APIs before a recent redesign.
 
 To setup cassandra (local installation in the repos, for dev, as current user):
     Run this from top dir of repos:
-        ./install-cassandra-for-dev.sh  (one-off unless you use 'git clean' as below)
-        ./start-cassandra-for-dev.sh    (start or restart; this will stay open and log to console)
+        ./install-cassandra-for-dev.sh   (one-off unless you use 'git clean' as below)
+        ./start-cassandra-for-dev.sh     (start or restart; this will stay open and log to console)
+        ./initialize-cassandra-schema.sh (one-off after first startup, unless you use 'git clean' as below)
 
     To exit cassandra, just Ctrl+C to kill it.
 
     This setup runs a localhost (single node) cluster, keeping its data in the repos in gitignored dirs,
     so you can clean everything easily, e.g. using 'git clean -d -X -f'
 
-    On linux you may also want to do this, as described here:
+    On linux you may also want to do this, as described here - it will still work without this though:
        http://www.datastax.com/docs/0.8/install/installing#installing-jna
 
        Edit the file /etc/security/limits.conf, adding the following entries for the user or group that runs Cassandra:
-          $USER soft memlock unlimited
-          $USER hard memlock unlimited
+          theusername soft memlock unlimited
+          theusername hard memlock unlimited
 
     You can use jconsole (connect to the CassandraDaemon process) to view its JMX management stuff.
 
@@ -41,5 +49,13 @@ To run the cassandra cli (console querying / DDL tool): start cassandra as above
 To run the webapp from the commandline:
     mvn jetty:run
 then it will be accessible at:
-        http://localhost:8080/policy-auction/
+    http://localhost:8080/policy-auction/
 
+To run within Eclipse:
+    I can't get this to work yet! Should be possible with the "Run Jetty Run" plugin:
+        Install the "Run Jetty Run" plugin (http://code.google.com/p/run-jetty-run/)
+            in eclipse: search for "Jetty" in the Eclipse Marketplace, or use this update site:
+                http://run-jetty-run.googlecode.com/svn/trunk/updatesite
+        then use Run Configurations, select Jetty Webapp, click New, enter config
+    ...I can get it to launch jetty, but it doesn't seem to start the Tapestry servlet context properly:
+        accessing http://localhost:8080/<context> only lists the directory for fileserving, doesn't run Tapestry classes.
