@@ -1,5 +1,9 @@
 Requirements:
-    Java: JDK. I have 1.6.0_24-b07. Java 1.5 may also work, not tested.
+    So far everything has been tested only on linux (Ubuntu).
+    However the only platform-dependent part is the cassandra dev setup scripts (see below),
+    which assume bash; they may or may not work under Cygwin...
+
+    Java: JDK (not JRE). I have 1.6.0_24-b07. Java 1.5 may also work, not tested.
 
     Maven: maven2. I have 2.2.1. Maven 3 may also work, not tested.
         Install maven ubuntu / debian:
@@ -9,6 +13,9 @@ Requirements:
         The project files (.classpath, .project, .settings/) are set up for Eclipse Helios SR2.
         You'll also want the M2Eclipse plugin:
             http://m2eclipse.sonatype.org
+        Once you've installed M2Eclipse and restarted, you shoud be able to add this project
+            using File / Import..., General:Existing Projects into Workspace.
+            It will then spend ages downloading maven dependencies but should eventually work.
 
 Background reading:
     Tapestry info / tutorial:
@@ -27,6 +34,7 @@ To setup cassandra (local installation in the repos, for dev, as current user):
     Run this from top dir of repos:
         ./install-cassandra-for-dev.sh   (one-off unless you use 'git clean' as below)
         ./start-cassandra-for-dev.sh     (start or restart; this will stay open and log to console)
+    then from a separate console:
         ./initialize-cassandra-schema.sh (one-off after first startup, unless you use 'git clean' as below)
 
     To exit cassandra, just Ctrl+C to kill it.
@@ -59,3 +67,48 @@ To run within Eclipse:
         then use Run Configurations, select Jetty Webapp, click New, enter config
     ...I can get it to launch jetty, but it doesn't seem to start the Tapestry servlet context properly:
         accessing http://localhost:8080/<context> only lists the directory for fileserving, doesn't run Tapestry classes.
+
+Intro to java project structure:
+    src/main/java:
+        Tapestry-related stuff:
+            net/retakethe/policyauction/pages
+                Each Tapestry page has one class in here (plus a ".tml" template with matching name).
+                This class connects together the page template and the data layer.
+                The getter/setter methods provide properties that can be reference in the page .tml template.
+                There are also handlers for events such as "onActionFrom..." and "onSuccess...".
+                The "@Persist" annotation means that field is kept in the session between page shows.
+
+            net/retakethe/policyauction/components
+                Tapestry "components" that can be shared between pages.
+                The "Layout" one is used for most of the current pages, set up by the 't:type="layout"' in the page .tml.
+
+            net/retakethe/policyauction/entities
+                Data objects acted on by Tapestry pages and passed to/from the data layer.
+
+            net/retakethe/policyauction/services
+                AppModule - the 'bind' call here is what makes our Cassandra implementation of the 'DAOManager'
+                available for injection into fields of cassandra page classes via '@Inject'.
+
+        Data layer stuff:
+            net/retakethe/policyauction/data/api
+                Abstract interfaces for the data layer.
+                This is what the Tapestry pages talk to.
+                No dependency on any specific data store implementation here.
+
+            net/retakethe/policyauction/data/impl
+                The implementation of the data layer which talks to Cassandra via the Hector library.
+
+    src/main/resources:
+        net/retakethe/policyauction/pages
+           <pagename>.tml - HTML template corresponding to each Tapestry page.
+               (Note you can make Eclipse show them with HTML syntax highlighting by adding "*.tml" to the "Text/XML"
+                content type in Preferences / General / Content Types.)
+               This has some magic markup ('t:' and 'p:' namespaces, '${<propertyname>}' and '${<prefix>:<name>}' syntax)
+               which Tapestry uses to do all the dynamic stuff at render time.
+           <pagename>.properties - values for the '${message:<name>}' placeholders on that page.
+
+        net/retakethe/policyauction/components
+           HTML template corresponding to each Tapestry component.
+
+    src/main/webapp:
+      WEB-INF/web.xml defines servlet config and sets up Tapestry as a servlet filter.
