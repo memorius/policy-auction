@@ -1,10 +1,10 @@
-<html t:type="layout" title="Policy Auction Project - Policies"
+<html t:type="layout" title="Policy Auction - ${createOrUpdate} Policy"
       xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
       xmlns:p="tapestry:parameter">
         <!-- Most of the page content, including <head>, <body>, etc. tags, comes from Layout.tml -->
 
-    <p>
-        <t:pagelink page="policies/AllPolicies">View all policies</t:pagelink>
-    </p>
+    <p>${createOrUpdate} Policy</p>
+
+    <t:beaneditform object="policy" submitlabel="${createOrUpdate}" reorder="shortName,description" />
 
 </html>

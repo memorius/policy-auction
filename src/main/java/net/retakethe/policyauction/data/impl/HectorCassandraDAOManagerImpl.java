@@ -4,6 +4,7 @@ import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
+import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.data.api.PolicyManager;
@@ -41,7 +42,13 @@ public class HectorCassandraDAOManagerImpl implements DAOManager {
         _cluster = HFactory.getOrCreateCluster("policy_auction_cluster",
                 new CassandraHostConfigurator("localhost:9160"));
 
-        KeyspaceDefinition keyspaceDef = _cluster.describeKeyspace(KEYSPACE_NAME);
+        KeyspaceDefinition keyspaceDef;
+        try {
+            keyspaceDef = _cluster.describeKeyspace(KEYSPACE_NAME);
+        } catch (HectorException e) {
+            throw new InitializationException("Cannot retrieve cassandra keyspace '" + KEYSPACE_NAME + "':"
+                    + " check the cluster has been started before webapp startup - see dev docs.");
+        }
 
         if (keyspaceDef == null) {
             throw new InitializationException("Cassandra keyspace '" + KEYSPACE_NAME + "' not found."
@@ -50,17 +57,12 @@ public class HectorCassandraDAOManagerImpl implements DAOManager {
 
         _keyspace = HFactory.createKeyspace(KEYSPACE_NAME, _cluster);
 
-        _policyManager = new HectorPolicyManagerImpl(this);
-    }
-
-    public Keyspace getKeyspace() {
-        return _keyspace;
+        _policyManager = new HectorPolicyManagerImpl(_keyspace);
     }
 
     @Override
     public PolicyManager getPolicyManager() {
         return _policyManager;
     }
-
 
 }

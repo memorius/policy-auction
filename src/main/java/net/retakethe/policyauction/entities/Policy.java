@@ -2,6 +2,8 @@ package net.retakethe.policyauction.entities;
 
 import net.retakethe.policyauction.data.api.PolicyID;
 
+import org.apache.tapestry5.beaneditor.Validate;
+
 /**
  * @author Nick Clarke
  */
@@ -36,6 +38,7 @@ public class Policy  {
         return _policyID;
     }
 
+    @Validate("required")
     public String getShortName() {
         return _shortName;
     }
@@ -44,6 +47,7 @@ public class Policy  {
         _shortName = shortName;
     }
 
+    @Validate("required")
     public String getDescription() {
         return _description;
     }

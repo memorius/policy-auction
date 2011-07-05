@@ -1,4 +1,4 @@
-<html t:type="layout" title="Policy Auction Project"
+<html t:type="layout" title="Policy Auction"
       t:sidebarTitle="Sidebar thing"
       xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
       xmlns:p="tapestry:parameter">
@@ -7,7 +7,7 @@
     <p>${message:greeting}</p>
 
     <p>
-        <t:pagelink page="policies/PoliciesIndex">Policies</t:pagelink>
+        <t:pagelink page="policy/PolicyIndex">Policies</t:pagelink>
     </p>
 
     <p:sidebar>

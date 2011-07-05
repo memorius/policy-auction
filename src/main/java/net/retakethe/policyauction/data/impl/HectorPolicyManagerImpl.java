@@ -8,6 +8,7 @@ import java.util.UUID;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.cassandra.utils.TimeUUIDUtils;
+import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
@@ -60,11 +61,14 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
     private static final String SHORT_NAME = "short_name";
     private static final String DESCRIPTION = "description";
 
-    private final HectorCassandraDAOManagerImpl _daoManager;
+    private final Keyspace _keyspace;
 
-    public HectorPolicyManagerImpl(HectorCassandraDAOManagerImpl daoManager) {
+    public HectorPolicyManagerImpl(Keyspace keyspace) {
         super();
-        _daoManager = daoManager;
+        if (keyspace == null) {
+            throw new IllegalArgumentException("keyspace must not be null");
+        }
+        _keyspace = keyspace;
     }
 
     @Override
@@ -76,7 +80,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
     public Policy getPolicy(PolicyID policyID) throws NoSuchPolicyException {
         HectorPolicyIDImpl idImpl = getPolicyIDImpl(policyID);
         SliceQuery<UUID, String, String> q =
-            HFactory.createSliceQuery(_daoManager.getKeyspace(),
+            HFactory.createSliceQuery(_keyspace,
                     UUIDSerializer.get(), StringSerializer.get(), StringSerializer.get())
                 .setColumnFamily(POLICIES_COLUMN_FAMILY)
                 .setKey(idImpl.getUUID())
@@ -108,7 +112,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
     @Override
     public List<Policy> getAllPolicies() {
         RangeSlicesQuery<UUID, String, String> rangeSlicesQuery =
-            HFactory.createRangeSlicesQuery(_daoManager.getKeyspace(),
+            HFactory.createRangeSlicesQuery(_keyspace,
                     UUIDSerializer.get(), StringSerializer.get(), StringSerializer.get())
                 .setColumnFamily(POLICIES_COLUMN_FAMILY)
                 // TODO: may need paging of data once we have more than a few hundred.
@@ -152,9 +156,9 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
     }
 
     @Override
-    public void storePolicy(Policy policy) {
+    public void persist(Policy policy) {
         UUID policyID = getInternalPolicyID(policy);
-        Mutator<UUID> mutator = HFactory.createMutator(_daoManager.getKeyspace(), UUIDSerializer.get())
+        Mutator<UUID> mutator = HFactory.createMutator(_keyspace, UUIDSerializer.get())
                 .addInsertion(policyID, POLICIES_COLUMN_FAMILY,
                               HFactory.createStringColumn(SHORT_NAME, policy.getShortName()))
                 .addInsertion(policyID, POLICIES_COLUMN_FAMILY,

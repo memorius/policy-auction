@@ -23,7 +23,7 @@ public interface PolicyManager {
 
     Policy createPolicy();
 
-    void storePolicy(Policy policy);
-
     List<Policy> getAllPolicies();
+
+    void persist(Policy policy);
 }
