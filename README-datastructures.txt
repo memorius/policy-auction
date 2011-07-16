@@ -1,3 +1,52 @@
+TODO: changes needed:
+---------------------
+- Removing votes from a policy has a cost: you only get 50% of the votes back.
+  How do we represent this?
+
+- 3-day rolling "new votes" list.
+  Set TTL to make all votes for a given day expire at the same time - i.e. 3 days minus time since start of day.
+  When do we write items? Similar consistency issues to the main policies table?
+
+- Comments on policies.
+
+- Policy categories: fixed set of items: Education, Tax, Health etc.
+
+- Policies are in exactly one category, set at creation. But editable I guess?
+
+- Policy tags. User (and possibly other people?) can assign any number of tags to a policy.
+  - Users can create tags with any text, they're added to a central list.
+    (tag name -> tag ID, as for usernames; allows renaming; same tricks as with username to prevent duplicate inserts: write with decreasing timestamp, read back again before using.)
+  - Users with "moderate_tags" role can:
+    - delete tags
+    - merge one tag into another
+    - rename tags
+  - Need efficient way to list all policies with a given tag, and also all policies which have a given set of tags.
+    (for "related policies" feature)
+
+- "hot categories" data (trending categories) - categories plus some kind of activity metric.
+
+- "hot tags" data (trending tags) - tags plus some kind of activity metric.
+
+- Tag cloud: tags plus number-of-policies-tagged.
+
+- Users can have watchlist of policies.
+
+- User profile needs to provide:
+  You have N unspent pollies.
+  You have created N policies.
+  You have voted for N policies.
+
+- Anyone can create new policies, but it costs you X votes. How do we represent that? Just assign votes to it immediately, or special case?
+
+- Featured policies on front page.
+
+- "Report this" feature. For policies; for comments; maybe also tags?
+
+- Policy pages need to show current ranking (within the 3-day window), neighbouring policies in the ranking, and difference from the one above and below - .g. "N votes needed to beat <nearest policy>".
+  How to calculate this?
+
+
+
 Background on Cassandra data model:
 -----------------------------------
 Cassandra's structure is "column families" - tables with rows looked up by a unique key, with each row containing any number of "columns", which are name->value pairs storing a single value - i.e. each row is a Map<ColumnName, Value>. Very large numbers of columns per row (e.g. millions) are OK.
@@ -38,6 +87,9 @@ users: (key = <userID> : timeUUID) {
     username: text
     email: text
     password_hash: binary
+    first_name: text
+    last_name: text
+    show_real_name: boolean
     vote_salary_last_paid_timestamp: time
     vote_salary_<date> ...: int (never changed once written)
     role_XXX: [nothing]
@@ -48,8 +100,9 @@ policies: (key = <policyID> : timeUUID) {
     active: boolean
     short_name: text
     description: text
+    link ...:
     party: <partyID>
-    last_edit_user: <userID>
+    owner: <userID>
     last_edit_date: date
     total_votes: int
     finalized_votes: int:timeUUID
@@ -91,17 +144,6 @@ parties: (key = <partyID> : timeUUID) {
     description: text
 }
 
-policies_edit_history: (key = <policyID> : timeUUID) {
-    <timestamp> ...: {
-        active: boolean
-        short_name: text
-        description: text
-        party: <partyID>
-        edited_by: <userID>
-        ...other fields to match "policies" as required
-    }
-}
-
 users_by_name: (key = <username> : text) {
     user_id: <userID>
     registered_timestamp: timeUUID
@@ -125,9 +167,10 @@ misc["webapp-instances"]: {
 
 misc["voting-config"]: {
     vote_finalize_delay_seconds: int
-    user_vote_salary_frequency_days: int
-    user_vote_salary_increment: int
-
+    ranking_window_days: int (3)
+    user_vote_salary_frequency_days: int (7)
+    user_vote_salary_increment: int (100)
+    vote_cost_to_create_policy: int (100)
 }
 
 log: (key = timeUUID) {
@@ -193,10 +236,6 @@ policies_vote_history:
 
 parties:
   Assuming we want to track policies by political party, this is the list of parties.
-
-policies_edit_history:
-  Permanent records of all changes made to policies.
-  This will affect how people vote, so should be tracked for use in our analysis, though probably not displayed to non-admin users.
 
 users_by_name:
   This is an index for records in "users" by username.
