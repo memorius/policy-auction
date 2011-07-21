@@ -135,7 +135,7 @@ policy_new_votes: (key = <policyID> : timeUUID) { - super column family
     }
 }
 
-policies_vote_history: (key = <policyID>_<date>) {
+policy_vote_history: (key = <policyID>_<date>) {
     timeUUID ...: {
         userid: <userID>
         vote_increment: int (can be -/+, never 0)
@@ -197,7 +197,7 @@ users:
 policies:
   Policy current config and calculated totals.
   - total_votes: cached count that resulted from the last policy_new_votes change. Any operation that changes policy_new_votes will then read back, calculate and write this column, with the write timestamp set to the time we started the read back. Also, we'll have a periodic background process (say, every few minutes) that recalculates it - last resort protection against failures in the recalc following any given update.
-  - finalized_votes: This is the count of all the votes that have been "finalized" and copied to "policies_vote_history", i.e. they are old enough that we can be sure that all writes have arrived and conflicts are resolved. This provides the base value to which increments in policy_new_votes are added when recalculating policies.total_votes. The timeUUID is the "version" from the latest vote included in the count - in a single column because it's critical they're always updated atomically together.
+  - finalized_votes: This is the count of all the votes that have been "finalized" and copied to "policy_vote_history", i.e. they are old enough that we can be sure that all writes have arrived and conflicts are resolved. This provides the base value to which increments in policy_new_votes are added when recalculating policies.total_votes. The timeUUID is the "version" from the latest vote included in the count - in a single column because it's critical they're always updated atomically together.
 
 user_policy_votes:
   Each row is the user vote history for a single user across all policies. Change in votes and new total votes per policy for this user is in policyid-named columns in each record. The structure is designed to cope - in the absence of a locking mechanism - with multiple vote submits by the same user, by detecting conflicting writes and garbage-collecting any child updates whose parent writes lost the conflict resolution.
@@ -235,10 +235,10 @@ policy_new_votes:
     - Write result to policies.total_votes, with the write timestamp set to the time we started the read.
     - Write a column to policy_ranking.
 
-policies_vote_history:
+policy_vote_history:
   History of "finalized" votes. Grouped into a row per date for convenient retrieval.
   Every so often, records from policy_new_votes whose "version" (not "prev_version") is old enough (misc["voting-config"].vote_finalize_delay_seconds) are:
-  - copied to the appropriate row of policies_vote_history
+  - copied to the appropriate row of policy_vote_history
     We discard any zero values, and we follow the same duplicate-history rules as described under policy_new_votes, except that we actually discard (by not copying them) the duplicate records.
   - added to policies.finalized_votes plus its timestamp is updated to that of the newest "version" (not "prev_version") that we copied
   - deleted from policy_new_votes
@@ -278,7 +278,7 @@ misc:
     Main purpose is to allow each background runner to easily determine how many webapp nodes are in the cluster, so it can set frequencies of background tasks accordingly, and maybe other monitoring info as needed.
 
   misc["voting-config"]:
-  - current_votes_finalize_delay: seconds to keep items in policy_new_votes waiting for conflict resolution before background process "finalizes" them as above and archives to policies_vote_history. This has to be the same as Cassandra GC_GRACE_SECONDS, since that's the longest it can possibly take (in the event of server failure and recovery) for late writes to reappear (e.g. a failed write that actually made it to disk on a machine just before it dies, which later recovers). It's probably a few days.
+  - current_votes_finalize_delay: seconds to keep items in policy_new_votes waiting for conflict resolution before background process "finalizes" them as above and archives to policy_vote_history. This has to be the same as Cassandra GC_GRACE_SECONDS, since that's the longest it can possibly take (in the event of server failure and recovery) for late writes to reappear (e.g. a failed write that actually made it to disk on a machine just before it dies, which later recovers). It's probably a few days.
 
 log:
   We can use Cassandra for some of the logging from the webapps, system activity records, etc.
@@ -297,7 +297,7 @@ Each instance of the webapp will have a background scheduler thread (using Quart
 
 Tasks:
 
-- Occasionally (maybe a few times a day), archive from policy_new_votes to policies_vote_history as described above, according to current_votes_finalize_delay, and update finalized baseline counts in policies.
+- Occasionally (maybe a few times a day), archive from policy_new_votes to policy_vote_history as described above, according to current_votes_finalize_delay, and update finalized baseline counts in policies.
 
 - Periodically look for user_policy_votes records with pending_votes columns, and re-do/complete the writes to policy_new_votes, and the recalc of policies.total_votes, then move the user_policy_votes.pending_votes column to a user_policy_votes.votes column.
 
