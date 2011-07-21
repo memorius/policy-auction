@@ -1,8 +1,5 @@
 TODO: changes needed:
 ---------------------
-- Removing votes from a policy has a cost: you only get 50% of the votes back.
-  How do we represent this?
-
 - 3-day rolling "new votes" list.
   Set TTL to make all votes for a given day expire at the same time - i.e. 3 days minus time since start of day.
   When do we write items? Similar consistency issues to the main policies table?
@@ -111,12 +108,14 @@ policies: (key = <policyID> : timeUUID) {
 user_policy_votes: (key = <userID> : timeUUID) { - super column family
     votes_<prev_version> ... {
         version: timeUUID
-        votes_<policyID> ... : increment:newtotal (ints)
+        votes_<policyID> ... : increment:newtotal[:penalty] (ints)
+        cumulative_penalty_votes: int
         cassandra timestamp copied from pending_votes.
     },
     pending_votes_<version> {
         prev_version: timeUUID
-        votes_<policyID> ... : increment:newtotal (ints)
+        votes_<policyID> ... : increment:newtotal[:penalty] (ints)
+        cumulative_penalty_votes: int
         cassandra timestamp = (- now) so oldest wins
     }
 }
@@ -171,6 +170,7 @@ misc["voting-config"]: {
     user_vote_salary_frequency_days: int (7)
     user_vote_salary_increment: int (100)
     vote_cost_to_create_policy: int (100)
+    vote_withdrawal_penalty_percentage: int (50)
 }
 
 log: (key = timeUUID) {
@@ -201,8 +201,12 @@ user_policy_votes:
   - The Cassandra timestamp on these updates will be DECREASING with time; this means that when there are conflicting updates in user_policy_votes.votes_ and in policy_new_votes, the first update will eventually win.
   - Once written to policy_new_votes, the pending entry is written as a user_policy_votes.votes_<prev_version> supercolumn, with timestamp set the same as the pending item, then the pending supercolumn is deleted.
   - Note the 'version' and 'prev' items are deliberately inverted between pending and non-pending: the pending ones are intended to NOT collide until propagated to policy_new_votes, so that the conflict resolution can occur there when the vote counting happens; the non-pending ones collide here and the oldest one wins.
-  - To read the user's current vote allocation, taking into account conflict resolution, read all the user_policy_votes.votes_ supercolumns, organize by version -> prev_version, and find the newest version that has an unbroken chain of extant prev_version links. If there's a conflict, the chain will be broken for the newer ones whose basis lost the conflict resolution, because they collide since they write the same votes_<prev_version> item. Then, ignore allocations to any policies that have since been deleted / made inactive.
+  - "Penalty" votes: when withdrawing votes from a policy, you only get back a percentage (say 50% - see voting config "vote_withdrawal_penalty_percentage") of the votes. This must participate in conflict resolution so is stored in the vote records.
+    - Withdrawals are represented as a negative vote against the policy (conceptually, decrement of policy total), and a negative "penalty" value associated with that vote decrement (conceptually, decrement of the user's balance) - e.g. if you withdraw 100 votes, you record -100 vote increment, and -50 penalty.
+    - Each user vote record also tracks the cumulative total of penalty votes for this user, so we don't have to go all the way back through the chain to calculate it.
+  - To determine the list of entries which add up to make the user's current vote allocation, taking into account conflict resolution, read all the user_policy_votes.votes_ supercolumns, organize by version -> prev_version, and find the newest version that has an unbroken chain of extant prev_version links. If there's a conflict, the chain will be broken for the newer ones whose basis lost the conflict resolution, because they collide since they write the same votes_<prev_version> item. Then, ignore allocations to any policies that have since been deleted / made inactive.
   - For efficiency, the conflicted orphans could eventually be deleted, and we could keep a timestamp of prev_version up to which we have resolved everything.
+  - To calculate unallocated votes, add up all the vote salary entries; then take the last conflict-resolved votes_ entry, subtract from the salary the sum of its newtotal values for all policies, then subtract from this the cumulative_penalty_votes value.
   - Propagating to policy_new_votes: see below.
 
 policy_new_votes:
