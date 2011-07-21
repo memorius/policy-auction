@@ -69,10 +69,16 @@ Consistency levels: it's tunable; when we have only one node it's not an issue, 
   - Replication Factor 3 (or more)
   - Write Consistency: quorum (2, if 3 nodes)
   - Read Consistency quorum (2, if 3 nodes)
-This means a write followed by a read will always see the data it's just written; this design assumes this constraint. We'll still have some failure tolerance - we can operate with any one node (for a given key's replica set) down or unresponsive, but reads will fail if two are down. (Writes will also fail with two nodes down in some conditions, depending on number of nodes in cluster - hinted handoff may allow it to keep working if there are four nodes total hence still two active.)
+This means a successful write followed by a successful read will always see the data it's just written (or newer data, if someone else is also writing) - this design assumes this constraint. We'll still have some failure tolerance - we can operate with any one node (for a given key's replica set) down or unresponsive, but reads will fail if two are down. (Writes will also fail with two nodes down in some conditions, depending on number of nodes in cluster - hinted handoff may allow it to keep working if there are four nodes total hence still two active.)
+Note however that if the write fails, then the new data may still have been written; it might not yet be readable, but it may later reappear and replace the old data, despite the write failing. See "Eventual consistency of lost writes" below.
 
 Indexing: Cassandra's secondary indexes are not intended for high-uniqueness indexed values (e.g. username -> userID), but for aggregation queries where there are many rows with the same value; queries against a secondary index have to contact ALL nodes in the cluster, as I understand it. So where we have fields with high uniqueness that we want to index, we make our own lookup column families - this then only has to contact READ_CONSISTENCY nodes.
 
+The nasty corner cases we have to handle:
+  - No locking. There's no atomic check-and-write operation, no lock-for-update, and no single point of consistency. This means there's no safe way to do insert-if-not-present kinds of operations. The best we can do is to do a best-effort check, then insert anyway and resolve conflicts later.
+  - Retrying failed writes. A write command can fail due to server load / timeout, or because a server crashes while being written to. For some cases there is no way for the client to tell if the value was nevertheless persisted. This means we need most of our writes to be safely retryable (idempotent).
+  - Client death in the middle of a write that spans multiple rows / column families. The separate parts are not atomic, so we need mechanisms in place to ensure the missing writes get performed if the webapp user thread fails in the middle, or the first one succeeds but the second one times out. This is done with "staging" fields, such that if we see them, we retry the write to the other location until done; and with background cleanup processes. Fortunately there are only a few of these cases. Example: user_policy_votes.pending_votes_ used as "staging" for things that must be written to both user_policy_votes and policy_new_votes.
+  - Eventual consistency of lost writes. In some rare cases - if some of the nodes fail while we're writing, but are later recovered - then a write could appear to the client to fail, and the old data may later still be readable, but when the written nodes eventually recover, the "lost" newer-timestamped data gets propagated and wins. This could take a long time (we have up to Cassandra GC_GRACE_SECONDS to recover the failed node; beyond that we have to clean and repopulate it), so we have to code for this. Example: use of vote chaining for conflict resolution in user_policy_votes / policy_new_votes; when the late writes appear they'll change the chaining and the next read (or background process) will update totals accordingly.
 
 Cassandra column families:
 --------------------------
@@ -190,7 +196,7 @@ users:
 
 policies:
   Policy current config and calculated totals.
-  - total_votes: cached count that resulted from the last policy_new_votes change. Any operation that changes policy_current_votes will then read back, calculate and write this column, with the write timestamp set to the time we started the read back. Also, we'll have a periodic background process (say, every few minutes) that recalculates it - last resort protection against failures in the recalc following any given update.
+  - total_votes: cached count that resulted from the last policy_new_votes change. Any operation that changes policy_new_votes will then read back, calculate and write this column, with the write timestamp set to the time we started the read back. Also, we'll have a periodic background process (say, every few minutes) that recalculates it - last resort protection against failures in the recalc following any given update.
   - finalized_votes: This is the count of all the votes that have been "finalized" and copied to "policies_vote_history", i.e. they are old enough that we can be sure that all writes have arrived and conflicts are resolved. This provides the base value to which increments in policy_new_votes are added when recalculating policies.total_votes. The timeUUID is the "version" from the latest vote included in the count - in a single column because it's critical they're always updated atomically together.
 
 user_policy_votes:
@@ -272,7 +278,7 @@ misc:
     Main purpose is to allow each background runner to easily determine how many webapp nodes are in the cluster, so it can set frequencies of background tasks accordingly, and maybe other monitoring info as needed.
 
   misc["voting-config"]:
-  - current_votes_finalize_delay: seconds to keep items in policy_new_votes waiting for conflict resolution before background process "finalizes" them as above and archives to policies_vote_history. Probably hours or days. Don't accept submit of vote allocations if older than this, make them re-read the data.
+  - current_votes_finalize_delay: seconds to keep items in policy_new_votes waiting for conflict resolution before background process "finalizes" them as above and archives to policies_vote_history. This has to be the same as Cassandra GC_GRACE_SECONDS, since that's the longest it can possibly take (in the event of server failure and recovery) for late writes to reappear (e.g. a failed write that actually made it to disk on a machine just before it dies, which later recovers). It's probably a few days.
 
 log:
   We can use Cassandra for some of the logging from the webapps, system activity records, etc.
