@@ -264,7 +264,12 @@ parties:
 users_by_name:
   This is an index for records in "users" by username.
   - Avoiding duplicate concurrent registration of usernames:
-    - To create a user account, we first write to users_by_name, without setting user_id, and with the timestamp on the write transaction set to a DECREASING value, -now. This way later writes will never overwrite earlier ones. Then we read back and check that the registered_timestamp is the same as we just wrote. If it is, we "won" the username and can set the user_id column. If it's not, someone else already has it.
+    - To create a user account, we first write to users_by_name, without setting user_id, and with the timestamp on the write transaction set to a DECREASING value, -now. This way later writes will not overwrite earlier ones - mostly!
+    - Then we read back and check that the registered_timestamp is the same as we just wrote. If it is, we "won" the username and can set the user_id column. If it's not, someone else already has it.
+      (There are still some corner cases:
+        1. Two writes started at about the same time can interleave their reads and writes such that each client sees its own write win (even though the earliest-timestamped one REALLY wins).
+        2. Failed writes can eventually reappear when a node recovers.
+      It's not possible to make it bulletproof without a centralized locking service. For now, clients will treat failed writes as "someone else has the username", which protects against case 2; and in case 1, one of them will win, we'll end up with a stray entry in "users" with no "users_by_name" pointing to it, and only the winning user will be able to log in. This is obscure enough that I'm ignoring it for now; background processes can clean up the other one or log for manual attention.)
 
 policy_ranking_current["total-votes"]:
   Allows rapid retrieval of current sorted ranking (by total votes) for the front page.
@@ -327,6 +332,8 @@ Tasks:
 - TODO: what updates needed for lost writes in the 3-day ranking calculation?
 
 - Every few minutes, recalc policies.total_votes for each one (last-resort protection against failures during recalc after updates to policy_new_votes). TODO: is that still needed given the use of user_policy_votes and pending_votes? The pending entry will stay until a successful write-and-recalc. The main issue is the amount of time it will take to correct it.
+
+- Rarely, check for stray entries in users_by_name with no entry in users, and vice versa; these can result from failures part-way through the user registration process or simultaneous registration of same username; just delete them if last modified more than GC_GRACE_SECONDS ago so the username is freed up for reuse.
 
 
 Questions remaining:
