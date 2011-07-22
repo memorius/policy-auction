@@ -1,9 +1,5 @@
 TODO: changes needed:
 ---------------------
-- 3-day rolling "new votes" list.
-  Set TTL to make all votes for a given day expire at the same time - i.e. 3 days minus time since start of day.
-  When do we write items? Similar consistency issues to the main policies table?
-
 - Comments on policies.
 
 - Policy categories: fixed set of items: Education, Tax, Health etc.
@@ -40,8 +36,9 @@ TODO: changes needed:
 - "Report this" feature. For policies; for comments; maybe also tags?
 
 - Policy pages need to show current ranking (within the 3-day window), neighbouring policies in the ranking, and difference from the one above and below - .g. "N votes needed to beat <nearest policy>".
-  How to calculate this?
+  The info is there in policy_ranking_current[<int>"-day"], just need operations for it. Which objects do these belong to?
 
+- Figure out how/when we update policy_ranking_history.
 
 
 Background on Cassandra data model:
@@ -143,6 +140,22 @@ policy_vote_history: (key = <policyID>_<date>) {
     }
 }
 
+policy_vote_daily_change: (key = <date>) {
+    <policyID> ...: int
+}
+
+policy_ranking_current["total-votes"] {
+    <votecount>_<policyID> ...: short_name
+}
+
+policy_ranking_current[<int>"-day"] {
+    <date>_<policyID> ...: <votecount>:short_name, with TTL set to expire at end of Nth day
+}
+
+policy_ranking_history: (key = hour (or minute, or whatever)) {
+    <votecount>_<policyID> ...: short_name
+}
+
 parties: (key = <partyID> : timeUUID) {
     active: boolean
     short_name: text
@@ -152,10 +165,6 @@ parties: (key = <partyID> : timeUUID) {
 users_by_name: (key = <username> : text) {
     user_id: <userID>
     registered_timestamp: timeUUID
-}
-
-policy_ranking: (key = hour (or minute, or whatever)) {
-    <votecount>_<policyID> ...: short_name
 }
 
 misc["active-policies"]: {
@@ -220,28 +229,33 @@ policy_new_votes:
   - Records are created from user_policy_votes.pending_votes, one for every policy, including those receiving no change in votes - zero-increment ones are still needed for correct conflict resolution.
   - All columns come from the corresponding user_policy_votes.pending_votes_ record.
   - Records remain here for a while (configurable in "misc["config"]) until we can be certain we have all the data for that time, even in the event of node failure and recovery. Until then we can still make vote counts, but it's possible they might change later.
-  - To calculate the current vote allocation for a policy:
-    - Read policies.finalized_votes -> count and boundary timeUUID. Start with this count.
+  - To recalculate the current vote allocation for a policy:
+    - Read policies.finalized_votes -> count and boundary timeUUID. Start with this count. Figure out which day is the last-fully-finalized day.
+    - Init daily vote counts to zero for each day since last finalized day.
     - Read ALL columns in policy_new_votes.
     - Iterate, discarding any items whose "version" column is older than boundary timeUUID: these are already counted
       and will shortly get archived. Put the rest into a map by "version" column.
     - Iterate the map:
       - if the "prev_version" value (column name) is older than the boundary timeUUID, item passes conflict resolution,
-        because its parent has been finalized. Add the increment to the total vote count.
+        because its parent has been finalized. Add the increment to the total vote count and the appropriate daily count.
       - else look up the "prev_version" value in the map and follow the chain back repeatedly:
-        - If we reach an entry whose "prev_version" value is not in the map but is older than the boundary timeUUID, the whole chain is consistent; add the increment for the child value we started with to the total.
+        - If we reach an entry whose "prev_version" value is not in the map but is older than the boundary timeUUID, the whole chain is consistent; add the increment for the child value we started with to the total and the appropriate daily count.
         - If we reach an entry whose "prev_version" value is not in the map but is NOT older than the boundary timeUUID, then the whole chain has been superseded - one of the parents failed conflict resolution. Don't add the value for the child value we started with to the total. Additionally, issue a delete for it.
     All this is not as bad as it sounds; mostly there will be very short chains or single items, and we only have to do all this recalculation when we save vote changes.
     - Write result to policies.total_votes, with the write timestamp set to the time we started the read.
-    - Write a column to policy_ranking.
+    - Write a column to policy_ranking_current["total-votes"], with the write timestamp set to the time we started the read.
+    - Write policy_vote_daily_change[<day>][<policyID>] for each day's count, with the write timestamp set to the time we started the read.
+    - For each N-day count we're keeping, write a separate column to policy_ranking_current[<int>"-day"] for each of the last N days' vote changes (reading further back in policy_vote_daily_change if necessary), with the write timestamp set to the time we started the read, and the TTL set to expire just after the last day in the window, i.e. interval - (time until end of today) + a little bit (the TTL is only for expiry; the read query sets a date range).
 
 policy_vote_history:
   History of "finalized" votes. Grouped into a row per date for convenient retrieval.
   Every so often, records from policy_new_votes whose "version" (not "prev_version") is old enough (misc["voting-config"].vote_finalize_delay_seconds) are:
   - copied to the appropriate row of policy_vote_history
     We discard any zero values, and we follow the same duplicate-history rules as described under policy_new_votes, except that we actually discard (by not copying them) the duplicate records.
+  - updated again in policy_votes_daily and policy_vote_daily_change
   - added to policies.finalized_votes plus its timestamp is updated to that of the newest "version" (not "prev_version") that we copied
   - deleted from policy_new_votes
+  - then redo the usual calcs for policy_new_votes? Or separate process for this.
   Provided the write to "finalized_votes" is done before the deletes, this is safe if it happens to get run by multiple threads in parallel.
 
 parties:
@@ -252,12 +266,19 @@ users_by_name:
   - Avoiding duplicate concurrent registration of usernames:
     - To create a user account, we first write to users_by_name, without setting user_id, and with the timestamp on the write transaction set to a DECREASING value, -now. This way later writes will never overwrite earlier ones. Then we read back and check that the registered_timestamp is the same as we just wrote. If it is, we "won" the username and can set the user_id column. If it's not, someone else already has it.
 
-policy_ranking:
-  Allows rapid retrieval of current sorted ranking for the front page, and keeps historical record of rankings.
+policy_ranking_current["total-votes"]:
+  Allows rapid retrieval of current sorted ranking (by total votes) for the front page.
   It means we only need a one-row read instead of a read for each policy record.
-  If the read comes back empty (first request in a time interval), then caller reads all active policies, writes values for them, then reads again.
   Write a column to it every time we update at a policy's total_votes.
-  Reader just retrieves all columns, iterates into a LinkedHashMap {policyID -> [count, timestamp]}, discards all but the newest-timestamped for any policyID that appears twice and issues a column delete for each old value.
+  Reader just retrieves all columns, iterates into a LinkedHashMap {policyID -> [count, timestamp]}, discards (and issues deletes for) all but the newest-timestamped for any policyID that appears twice, then reads map.entrySet() in order - they're already sorted.
+
+policy_ranking_current[<int>"-day"]:
+  Read everything with date range from N days ago, iterate and add up votes for each policy, sort on client by vote total. Client doesn't need to do conflict resolution this time.
+  (Will generalize to 4-day, weekly, whatever.)
+
+policy_ranking_history:
+  Keeps historical record of rankings.
+  TODO: to be accurate in the face of late-resolved conflicts, we can only update this when copying votes to policy_vote_history. Figure out the data and algorithm for this.
 
 misc:
   Contains various single-row stuff: quick-lookups to avoid the need to iterate all keys on every request, and provide things in sorted order; runtime and config data:
@@ -301,7 +322,9 @@ Tasks:
 
 - Periodically look for user_policy_votes records with pending_votes columns, and re-do/complete the writes to policy_new_votes, and the recalc of policies.total_votes, then move the user_policy_votes.pending_votes column to a user_policy_votes.votes column.
 
-- At least once every policy_ranking interval: update policy_ranking[now] from policies.total_votes across all policies. This makes reasonably sure there's a record for each interval as long as one or more servers is up, and corrects current rankings if any writes to this row get lost. (Whether we need a hard guarantee of having a record for each interval depends on intended data analysis; if we do, we'll need some other way to calculate it.)
+- Every few minutes, update policy_ranking_current["total-votes"] from policies.total_votes across all policies. This corrects current rankings if any writes to this row get lost.
+
+- TODO: what updates needed for lost writes in the 3-day ranking calculation?
 
 - Every few minutes, recalc policies.total_votes for each one (last-resort protection against failures during recalc after updates to policy_new_votes). TODO: is that still needed given the use of user_policy_votes and pending_votes? The pending entry will stay until a successful write-and-recalc. The main issue is the amount of time it will take to correct it.
 
