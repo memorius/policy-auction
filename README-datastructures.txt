@@ -4,9 +4,11 @@ TODO: changes needed:
 
 - Policy categories: fixed set of items: Education, Tax, Health etc.
 
+- Policies are owned by the creating user, but at the moment this doesn't give them any special editing privileges once created.
+
 - Policies are in exactly one category, set at creation. But editable I guess?
 
-- Policy tags. User (and possibly other people?) can assign any number of tags to a policy.
+- Policy tags. Owner (and possibly other people?) can assign any number of tags to a policy.
   - Users can create tags with any text, they're added to a central list.
     (tag name -> tag ID, as for usernames; allows renaming; same tricks as with username to prevent duplicate inserts: write with decreasing timestamp, read back again before using.)
   - Users with "moderate_tags" role can:
@@ -33,7 +35,12 @@ TODO: changes needed:
 
 - Featured policies on front page.
 
-- "Report this" feature. For policies; for comments; maybe also tags?
+- "Report this" feature:
+  - For policies
+  - For comments
+  - For tags
+  - For login and registration problems
+  These can all work the same way - write a timestamped record, send an email to moderators/admins list.
 
 - Policy pages need to show current ranking (within the 3-day window), neighbouring policies in the ranking, and difference from the one above and below - .g. "N votes needed to beat <nearest policy>".
   The info is there in policy_ranking_current[<int>"-day"], just need operations for it. Which objects do these belong to?
