@@ -1,5 +1,11 @@
 TODO: changes needed:
 ---------------------
+
+- Anyone can create new policies, but it costs you X votes.
+  This will be represented by putting a normal vote record against the policy following creation.
+  However, we need to make it safe against concurrent policy creation by the same user account, so you can't overspend your vote balance on policy creation. How do we do this given the problems with delayed lost writes and given that we also want creation to be instantaneous and immediately exposed to other users' votes?
+  This is probably the trickiest consistency problem in the system!
+
 - Comments on policies.
 
 - Policy categories: fixed set of items: Education, Tax, Health etc.
@@ -30,8 +36,6 @@ TODO: changes needed:
   You have N unspent pollies.
   You have created N policies.
   You have voted for N policies.
-
-- Anyone can create new policies, but it costs you X votes. How do we represent that? Just assign votes to it immediately, or special case?
 
 - Featured policies on front page.
 
