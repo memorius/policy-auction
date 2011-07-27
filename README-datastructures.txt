@@ -1,11 +1,6 @@
 TODO: changes needed:
 ---------------------
 
-- Anyone can create new policies, but it costs you X votes.
-  This will be represented by putting a normal vote record against the policy following creation.
-  However, we need to make it safe against concurrent policy creation by the same user account, so you can't overspend your vote balance on policy creation. How do we do this given the problems with delayed lost writes and given that we also want creation to be instantaneous and immediately exposed to other users' votes?
-  This is probably the trickiest consistency problem in the system!
-
 - Comments on policies.
 
 - Policy categories: fixed set of items: Education, Tax, Health etc.
@@ -108,28 +103,31 @@ users: (key = <userID> : timeUUID) {
 }
 
 policies: (key = <policyID> : timeUUID) {
-    active: boolean
+    state: "active" or "merged" or "deleted" or "pending-deletion" or "retired"
+    state_changed: <time>
     short_name: text
     description: text
     link ...:
     party: <partyID>
     owner: <userID>
-    last_edit_date: date
+    last_edit_date: <time>
     total_votes: int
     finalized_votes: int:timeUUID
+    merged_from_<policyID> ...: [] (or timestamp maybe, or userID) 
+    merged_to: <policyID>
 }
 
 user_policy_votes: (key = <userID> : timeUUID) { - super column family
     votes_<prev_version> ... {
         version: timeUUID
-        votes_<policyID> ... : increment:newtotal[:penalty] (ints)
-        cumulative_penalty_votes: int
+        votes_<policyID> ... : increment:penaltyincrement:newtotal:penaltytotal (ints)
+        [policy_created: <policyID>]
         cassandra timestamp copied from pending_votes.
     },
     pending_votes_<version> {
         prev_version: timeUUID
-        votes_<policyID> ... : increment:newtotal[:penalty] (ints)
-        cumulative_penalty_votes: int
+        votes_<policyID> ... : increment:penaltyincrement:newtotal:penaltytotal (ints)
+        [policy_created: <policyID>]
         cassandra timestamp = (- now) so oldest wins
     }
 }
@@ -199,6 +197,10 @@ misc["voting-config"]: {
     vote_withdrawal_penalty_percentage: int (50)
 }
 
+misc["vote-history-dates"]: {
+    <date> : (nothing)
+}
+
 log: (key = timeUUID) {
     server_ipaddr: <string> (secondary indexed)
     something...
@@ -218,6 +220,8 @@ policies:
   Policy current config and calculated totals.
   - total_votes: cached count that resulted from the last policy_new_votes change. Any operation that changes policy_new_votes will then read back, calculate and write this column, with the write timestamp set to the time we started the read back. Also, we'll have a periodic background process (say, every few minutes) that recalculates it - last resort protection against failures in the recalc following any given update.
   - finalized_votes: This is the count of all the votes that have been "finalized" and copied to "policy_vote_history", i.e. they are old enough that we can be sure that all writes have arrived and conflicts are resolved. This provides the base value to which increments in policy_new_votes are added when recalculating policies.total_votes. The timeUUID is the "version" from the latest vote included in the count - in a single column because it's critical they're always updated atomically together.
+  - state: normally "active" which means it's available for user votes. Other states: "deletion-pending", "deleted".
+  - Deleting a policy (e.g. due co conflict at creation - see user_policy_votes; or for abusive stuff): just set the state to "pending-deletion". The background processes take care of the rest. Also try to delete from misc["active-policies"] (makes immediately invisible) but ignore failure, but background process will tidy up if this write fails.
 
 user_policy_votes:
   Each row is the user vote history for a single user across all policies. Change in votes and new total votes per policy for this user is in policyid-named columns in each record. The structure is designed to cope - in the absence of a locking mechanism - with multiple vote submits by the same user, by detecting conflicting writes and garbage-collecting any child updates whose parent writes lost the conflict resolution.
@@ -229,10 +233,16 @@ user_policy_votes:
   - Note the 'version' and 'prev' items are deliberately inverted between pending and non-pending: the pending ones are intended to NOT collide until propagated to policy_new_votes, so that the conflict resolution can occur there when the vote counting happens; the non-pending ones collide here and the oldest one wins.
   - "Penalty" votes: when withdrawing votes from a policy, you only get back a percentage (say 50% - see voting config "vote_withdrawal_penalty_percentage") of the votes. This must participate in conflict resolution so is stored in the vote records.
     - Withdrawals are represented as a negative vote against the policy (conceptually, decrement of policy total), and a negative "penalty" value associated with that vote decrement (conceptually, decrement of the user's balance) - e.g. if you withdraw 100 votes, you record -100 vote increment, and -50 penalty.
-    - Each user vote record also tracks the cumulative total of penalty votes for this user, so we don't have to go all the way back through the chain to calculate it.
-  - To determine the list of entries which add up to make the user's current vote allocation, taking into account conflict resolution, read all the user_policy_votes.votes_ supercolumns, organize by version -> prev_version, and find the newest version that has an unbroken chain of extant prev_version links. If there's a conflict, the chain will be broken for the newer ones whose basis lost the conflict resolution, because they collide since they write the same votes_<prev_version> item. Then, ignore allocations to any policies that have since been deleted / made inactive.
-  - For efficiency, the conflicted orphans could eventually be deleted, and we could keep a timestamp of prev_version up to which we have resolved everything.
-  - To calculate unallocated votes, add up all the vote salary entries; then take the last conflict-resolved votes_ entry, subtract from the salary the sum of its newtotal values for all policies, then subtract from this the cumulative_penalty_votes value.
+    - Each user vote record also tracks the cumulative total of penalty votes per policy per for this user, so we don't have to go all the way back through the chain to calculate it. We track it per policy so we can ignore it for deleted policies.
+  - When user creates a policy, the records include the created policyID and the initial mandatory vote allocation to  the new policy.
+  - To determine the list of entries which add up to make the user's current vote allocation, taking into account conflict resolution, read all the user_policy_votes.votes_ supercolumns, organize by version -> prev_version, and find the newest version that has an unbroken chain of extant prev_version links.
+    - If there's a conflict, the chain will be broken for the newer ones whose basis lost the conflict resolution, because they collide since they write the same votes_<prev_version> item.
+      - When we find such items whose parent doesn't exist, then we delete them immediately.
+      - If they include policy creations, then we delete the policy. This eventually cleans up (albeit after temporary exposure to other users) if someone manages to double-create, which would double-spend their votes.
+    - We could keep a timestamp of prev_version up to which we have resolved everything. Need to go back at least GC_GRACE_SECONDS each time though.
+  - Ignore allocations to any policies that have since been marked deleted.
+  - Combine allocations to any policies that are marked merged - only show the merge target.
+  - To calculate unallocated votes, add up all the vote salary entries; then take the last conflict-resolved votes_ entry, subtract from the salary the sum of its newtotal values for all policies, then subtract from this the sum of the penaltytotal values.
   - Propagating to policy_new_votes: see below.
 
 policy_new_votes:
@@ -263,6 +273,7 @@ policy_vote_history:
   Every so often, records from policy_new_votes whose "version" (not "prev_version") is old enough (misc["voting-config"].vote_finalize_delay_seconds) are:
   - copied to the appropriate row of policy_vote_history
     We discard any zero values, and we follow the same duplicate-history rules as described under policy_new_votes, except that we actually discard (by not copying them) the duplicate records.
+  - misc["vote-history-dates"] is updated
   - updated again in policy_votes_daily and policy_vote_daily_change
   - added to policies.finalized_votes plus its timestamp is updated to that of the newest "version" (not "prev_version") that we copied
   - deleted from policy_new_votes
@@ -317,13 +328,27 @@ misc:
   misc["voting-config"]:
   - current_votes_finalize_delay: seconds to keep items in policy_new_votes waiting for conflict resolution before background process "finalizes" them as above and archives to policy_vote_history. This has to be the same as Cassandra GC_GRACE_SECONDS, since that's the longest it can possibly take (in the event of server failure and recovery) for late writes to reappear (e.g. a failed write that actually made it to disk on a machine just before it dies, which later recovers). It's probably a few days.
 
+  misc["vote-history-dates"]:
+    - for driving iteration over all date records in the system. Updated when finalizing votes to vote history.
+
 log:
   We can use Cassandra for some of the logging from the webapps, system activity records, etc.
 
 
 Other stuff:
 ------------
-Activities that do things with policies (e.g. show/edit user votes for policies) must check that the policyID hasn't been deleted / made inactive. Checking in misc["active-policies"] should generally be enough. There's no locking so it's impossible to make setting the policy inactive behave as an instant cutoff; the best we could do is have a timestamp and retrospectively undo stuff. Probably not a big deal... and if we design for it, we can do things like cache the list of active policies for a few minutes in each webapp.
+Merging policies:
+  We want to treat the finalized vote history as immutable rather than trying to rewrite it with new IDs, and we want to show the owning user what has happened to their policy. So to merge, we:
+    - Create a new policies record to represent the merged policies.
+    - Mark the old ones as "state=merged" and "merged_to=<newPolicyID>".
+    - Add merged_from_ columns in the new policy for each of the old ones.
+    - The new merge-result policy will start with its finalized vote count at zero:now.
+  Various vote-handling code needs to be merge-aware:
+  - Whenever we recalculate the vote count for a merge-target policy, we add to it the current policies.total_votes from all of its merged_from_ policies.
+  - Whenever we recalculate the vote count for a merge-victim policy, we then trigger a recalc for its merged_to policy. This takes care of late votes and updating of rankings.
+  - Policies marked as "merged" will not show vote counts or rankings on their edit page (and won't participate in ranking recalcs), but just a link to the merge result policy.
+
+Activities that do things with policies (e.g. show/edit user votes for policies) must check the state for the policyID. Checking in misc["active-policies"] should generally be enough. There's no locking so it's impossible to make setting the policy inactive behave as an instant cutoff; the best we could do is have a timestamp and retrospectively undo stuff. Probably not a big deal... and if we design for it, we can do things like cache the list of active policies for a few minutes in each webapp.
 
 Similar considerations with deleted users.
 
@@ -338,27 +363,23 @@ Tasks:
 
 - Periodically look for user_policy_votes records with pending_votes columns, and re-do/complete the writes to policy_new_votes, and the recalc of policies.total_votes, then move the user_policy_votes.pending_votes column to a user_policy_votes.votes column.
 
+- Re-read user_policy_votes and apply conflict resolution - sorts out the mess for double-created policies. Maybe combine with the pending_votes operation above.
+
 - Every few minutes, update policy_ranking_current["total-votes"] from policies.total_votes across all policies. This corrects current rankings if any writes to this row get lost.
 
 - TODO: what updates needed for lost writes in the 3-day ranking calculation?
 
-- Every few minutes, recalc policies.total_votes for each one (last-resort protection against failures during recalc after updates to policy_new_votes). TODO: is that still needed given the use of user_policy_votes and pending_votes? The pending entry will stay until a successful write-and-recalc. The main issue is the amount of time it will take to correct it.
+- Every few minutes, recalc policies.total_votes for each one (last-resort protection against failures during recalc after updates to policy_new_votes). Note this is still needed given the use of user_policy_votes and pending_votes: for example, we have to update the merge target policy if we lose stuff part-way through marking it as merged.
 
 - Rarely, check for stray entries in users_by_name with no entry in users, and vice versa; these can result from failures part-way through the user registration process or simultaneous registration of same username; just delete them if last modified more than GC_GRACE_SECONDS ago so the username is freed up for reuse.
+
+- Every few minutes, update active-policies / active-parties records from entries in policies and parties and their states: caters for lost writes when deleting/creating/merging policies/parties.
+
+- Apply policy deletions. "deletion" is an "obliterate" operation used when there's an edit conflict at policy creation, - see user_policy_votes; this will be rare; or for when someone creates something abusive. Find policies with state="deletion-pending" which have been in that state longer than GC_GRACE_SECONDS, and delete all records for that ID elsewhere in the system (expensive), then set state to "deleted" and leave there.
 
 
 Questions remaining:
 --------------------
-- Deleted/retired policies: how to handle? Just mark as "active=false", and have user unallocated votes calculation ignore these? Note that once made inactive, they can never be activated again, because the user can then immediately assign the votes to something else.
-
-- Merging two policies: what do we do with the votes?
-  - Still thinking about this, but probably we'll leave the old policy records in the system, and mark them as "active=false", create a new policy, and set an "ancestor_policy" field on the new ones and a "merge_child" field on the ones.
-  - What about pre-merge votes in the history?
-    - Just leave them against the old policy records? The UI / analytics code may need to be merge-aware.
-    - Add the two policy's totals together and put in the new policy's records? but this is "rewriting history" and may present consistency issues across the merge.
-  - What about users' current vote allocations at the time of the merge?
-    We'd like to set the new votes to the sum of the old votes, but can we do this atomically such that it's safe against users concurrently changing their vote allocations? Maybe; needs thought. Or, we can just leave the votes which were against the old policies as unallocated until the user comes back and allocates them somewhere; but this heavily disadvantages the new policy compared to the old ones.
-
 - Detection of duplicate accounts. Do we require users to have unique email addresses? What else?
 
 
