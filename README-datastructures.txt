@@ -25,8 +25,6 @@ TODO: changes needed:
 
 - Tag cloud: tags plus number-of-policies-tagged.
 
-- Users can have watchlist of policies.
-
 - User profile needs to provide:
   You have N unspent pollies.
   You have created N policies.
@@ -99,6 +97,7 @@ users: (key = <userID> : timeUUID) {
     vote_salary_last_paid_timestamp: time
     vote_salary_<date> ...: int (never changed once written)
     role_XXX: [nothing]
+    policy_watchlist_<policyID>: [nothing]
     maybe other user data as needed - login history, password reset mechanism, etc.
 }
 
@@ -214,6 +213,7 @@ users:
   - User vote salary is in separate timestamp-named columns, added to every week. These are never modified once written - i.e. we don't subtract when allocating votes, we just calculate the difference of (total salary - current policy vote allocations). Can either have a background process to add these columns weekly, or just update whenever we look at that user's record.
   - password_hash: bcrypt hash of password.
   - Roles: columns present to indicate role_admin, role_edit_policies, role_edit_users etc. Secondary indexes on these for user config screens.
+  - Watchlist: add policyIDs as policy_watchlist_ columns.
   - Other user data as needed - last login etc.
 
 policies:
