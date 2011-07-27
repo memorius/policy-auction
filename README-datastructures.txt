@@ -1,11 +1,7 @@
 TODO: changes needed:
 ---------------------
 
-- Comments on policies.
-
 - Policy categories: fixed set of items: Education, Tax, Health etc.
-
-- Policies are owned by the creating user, but at the moment this doesn't give them any special editing privileges once created.
 
 - Policies are in exactly one category, set at creation. But editable I guess?
 
@@ -134,7 +130,7 @@ user_policy_votes: (key = <userID> : timeUUID) { - super column family
 policy_new_votes: (key = <policyID> : timeUUID) { - super column family
     <prev_version> ...: {
         vote_increment: int (can be -/0/+)
-        userid: <userID>
+        user_id: <userID>
         version: timeUUID
         cassandra timestamp: from user_policy_votes.pending_votes, so oldest wins
     }
@@ -142,7 +138,7 @@ policy_new_votes: (key = <policyID> : timeUUID) { - super column family
 
 policy_vote_history: (key = <policyID>_<date>) {
     timeUUID ...: {
-        userid: <userID>
+        user_id: <userID>
         vote_increment: int (can be -/+, never 0)
         new_vote_total: int
     }
@@ -173,6 +169,23 @@ parties: (key = <partyID> : timeUUID) {
 users_by_name: (key = <username> : text) {
     user_id: <userID>
     registered_timestamp: timeUUID
+}
+
+policy_comments: (key = <policyID> : timeUUID) {
+    <commentID> : timeUUID ...: { // ID is the creation time
+        parent_id: <commentID>
+        user_id: <userID>
+        subject: text
+        body: text
+        edited: time
+        edited_by: <userID> // If moderators can edit
+        deleted_by: <userID>
+        deleted_reason: text
+    }
+}
+
+policy_comments_threaded: (key = <policyID> : timeUUID) {
+    <parentTimeUUID>[:<childTimeUUID>][:<childTimeUUID>...] ...: nothing
 }
 
 misc["active-policies"]: {
@@ -306,6 +319,13 @@ policy_ranking_current[<int>"-day"]:
 policy_ranking_history:
   Keeps historical record of rankings.
   TODO: to be accurate in the face of late-resolved conflicts, we can only update this when copying votes to policy_vote_history. Figure out the data and algorithm for this.
+
+policy_comments:
+  Time-ordered comments for each policy. Stored this way so we can time-slice query for "what's new" lists and retrieve by individual comment ID.
+  - deleted flag: to preserve the threading structure of remaining comments, deleted items are retained as placeholders but not displayed. We can either delete the "text" and "subject" fields when marking deleted, or keep them and let moderators see them.
+
+policy_comments_threaded:
+  Easy retrieval of comments in thread structure. Column name is <parentID>:<childID>:<childID> etc. according to nested structure. This means we can slice query by, say, <parentID>:<childID> to get time-ordered comments within any nesting level.
 
 misc:
   Contains various single-row stuff: quick-lookups to avoid the need to iterate all keys on every request, and provide things in sorted order; runtime and config data:
