@@ -1,15 +1,8 @@
 TODO: changes needed:
 ---------------------
 
-- Policy tags. Owner (and possibly other people?) can assign any number of tags to a policy.
-  - Users can create tags with any text, they're added to a central list.
-    (tag name -> tag ID, as for usernames; allows renaming; same tricks as with username to prevent duplicate inserts: write with decreasing timestamp, read back again before using.)
-  - Users with "moderate_tags" role can:
-    - delete tags
-    - merge one tag into another
-    - rename tags
-  - Need efficient way to list all policies with a given tag, and also all policies which have a given set of tags.
-    (for "related policies" feature)
+- Need efficient way to list all policies with a given tag, and also all policies which have a given set of tags.
+  (for "related policies" feature)
 
 - "hot categories" data (trending categories) - categories plus some kind of activity metric.
 
@@ -98,6 +91,14 @@ categories: (key = <categoryID> : timeUUID) {
     description: text
 }
 
+tags: (key = <tagID> : timeUUID) {
+    name: text
+    edited_by: <userID>
+    last_changed: time
+    last_used: time
+    [deleted: boolean]
+}
+
 policies: (key = <policyID> : timeUUID) {
     state: "active" or "merged" or "deleted" or "pending-deletion" or "retired"
     state_changed: <time>
@@ -112,6 +113,7 @@ policies: (key = <policyID> : timeUUID) {
     finalized_votes: int:timeUUID
     merged_from_<policyID> ...: [] (or timestamp maybe, or userID) 
     merged_to: <policyID>
+    tag_<tagID> ...: <userID>
 }
 
 user_policy_votes: (key = <userID> : timeUUID) { - super column family
@@ -202,6 +204,10 @@ misc["active-categories"]: {
     <categoryName> ...: <categoryID>
 }
 
+misc["tags-by-name"]: {
+    <tagName> ...: <tagID>
+}
+
 misc["webapp-instances"]: {
     <ipaddr> ...: (nothing), TTL say 5 mins
 }
@@ -238,12 +244,24 @@ users:
 categories:
   Fixed set of items: Education, Tax, Health etc. Probably we will set these at startup, don't bother with UI for now.
 
+tags:
+  Tags that can be applied to policies, e.g. "capital gains tax". Policies can have any number of tags.
+  We don't try very hard to prevent duplicate IDs for the same name (if people assign them at the same time) - we need to be able to merge tags anyway, so we'll just have a background process to merge duplicates.
+  - Renaming tags: add new entry to misc["tags-by-name"], then delete old entry, then update "tags".
+  - Merging/deleting tags:
+    - Loser tag gets its ID replaced or removed from all policy records, setting "deleted" and "last_used" fields on loser tag if we find any.
+    - If there was nothing to replace:
+      - If last_used is more than GC_GRACE_SECONDS ago, delete it from tags.
+      - Else set last_used and leave record in tags for now.
+    - Winner of merges is in misc["tags-by-name"].
+
 policies:
   Policy current config and calculated totals.
   - total_votes: cached count that resulted from the last policy_new_votes change. Any operation that changes policy_new_votes will then read back, calculate and write this column, with the write timestamp set to the time we started the read back. Also, we'll have a periodic background process (say, every few minutes) that recalculates it - last resort protection against failures in the recalc following any given update.
   - finalized_votes: This is the count of all the votes that have been "finalized" and copied to "policy_vote_history", i.e. they are old enough that we can be sure that all writes have arrived and conflicts are resolved. This provides the base value to which increments in policy_new_votes are added when recalculating policies.total_votes. The timeUUID is the "version" from the latest vote included in the count - in a single column because it's critical they're always updated atomically together.
   - state: normally "active" which means it's available for user votes. Other states: "deletion-pending", "deleted".
   - Deleting a policy (e.g. due co conflict at creation - see user_policy_votes; or for abusive stuff): just set the state to "pending-deletion". The background processes take care of the rest. Also try to delete from misc["active-policies"] (makes immediately invisible) but ignore failure, but background process will tidy up if this write fails.
+  - Set tags.last_used when assigned.
 
 user_policy_votes:
   Each row is the user vote history for a single user across all policies. Change in votes and new total votes per policy for this user is in policyid-named columns in each record. The structure is designed to cope - in the absence of a locking mechanism - with multiple vote submits by the same user, by detecting conflicting writes and garbage-collecting any child updates whose parent writes lost the conflict resolution.
@@ -352,6 +370,10 @@ misc:
   misc["active-categories"]:
   - list of all categories.
 
+  misc["tags-by-name"]:
+  - index of tag name -> tag ID, to allow name lookup and prefix queries for tag name autocomplete.
+  If duplicate tags get created for a name, the one in here will be the "live" one and the others will get cleaned up and merged later.
+
   misc["webapp-instances"]:
   - each webapp's background runner reinserts its value every (say) 2 mins.
     The column TTL ensures the entry expires after a while if the server dies.
@@ -409,6 +431,7 @@ Tasks:
 
 - Apply policy deletions. "deletion" is an "obliterate" operation used when there's an edit conflict at policy creation, - see user_policy_votes; this will be rare; or for when someone creates something abusive. Find policies with state="deletion-pending" which have been in that state longer than GC_GRACE_SECONDS, and delete all records for that ID elsewhere in the system (expensive), then set state to "deleted" and leave there.
 
+- Merge duplicate tags. Read all records from tags table, find duplicates: winner is the one that is in misc["tags-by-name"], use merge/delete algorithm as described in "tags" above. Also ensure misc["tags-by-name"] is up-to-date - delete stray entries (lost write on rename), and add missing entries (lost write on tag creation).
 
 Roles in the system:
 --------------------
