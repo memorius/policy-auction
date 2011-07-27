@@ -410,6 +410,32 @@ Tasks:
 - Apply policy deletions. "deletion" is an "obliterate" operation used when there's an edit conflict at policy creation, - see user_policy_votes; this will be rare; or for when someone creates something abusive. Find policies with state="deletion-pending" which have been in that state longer than GC_GRACE_SECONDS, and delete all records for that ID elsewhere in the system (expensive), then set state to "deleted" and leave there.
 
 
+Roles in the system:
+--------------------
+Normal user permissions: probably everyone will have these initially, but may be useful to be able to remove them for users who are abusive:
+
+- Log in
+- Create policy
+- Create tag
+- Start new comment threads
+- Reply to existing comment threads
+- Report items (policies, tags, comments) for abuse
+
+Moderator/admin permissions:
+
+- Administer users
+- Edit policies: category
+- Edit policies: name / description
+- Edit policies: merge policies
+- Edit policies: delete
+- Edit policies: retire
+- Moderate comments: delete
+- Moderate comments: edit
+- Edit tags: delete
+- Edit tags: edit/rename
+- Edit tags: merge
+
+
 Questions remaining:
 --------------------
 - Detection of duplicate accounts. Do we require users to have unique email addresses? What else?
