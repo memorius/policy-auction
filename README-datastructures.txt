@@ -1,10 +1,6 @@
 TODO: changes needed:
 ---------------------
 
-- Policy categories: fixed set of items: Education, Tax, Health etc.
-
-- Policies are in exactly one category, set at creation. But editable I guess?
-
 - Policy tags. Owner (and possibly other people?) can assign any number of tags to a policy.
   - Users can create tags with any text, they're added to a central list.
     (tag name -> tag ID, as for usernames; allows renaming; same tricks as with username to prevent duplicate inserts: write with decreasing timestamp, read back again before using.)
@@ -97,12 +93,18 @@ users: (key = <userID> : timeUUID) {
     maybe other user data as needed - login history, password reset mechanism, etc.
 }
 
+categories: (key = <categoryID> : timeUUID) {
+    short_name: text
+    description: text
+}
+
 policies: (key = <policyID> : timeUUID) {
     state: "active" or "merged" or "deleted" or "pending-deletion" or "retired"
     state_changed: <time>
     short_name: text
     description: text
     link ...:
+    category: <categoryID>
     party: <partyID>
     owner: <userID>
     last_edit_date: <time>
@@ -196,6 +198,10 @@ misc["active-parties"]: {
     <partyName> ...: <partyID>
 }
 
+misc["active-categories"]: {
+    <categoryName> ...: <categoryID>
+}
+
 misc["webapp-instances"]: {
     <ipaddr> ...: (nothing), TTL say 5 mins
 }
@@ -228,6 +234,9 @@ users:
   - Roles: columns present to indicate role_admin, role_edit_policies, role_edit_users etc. Secondary indexes on these for user config screens.
   - Watchlist: add policyIDs as policy_watchlist_ columns.
   - Other user data as needed - last login etc.
+
+categories:
+  Fixed set of items: Education, Tax, Health etc. Probably we will set these at startup, don't bother with UI for now.
 
 policies:
   Policy current config and calculated totals.
@@ -339,6 +348,9 @@ misc:
   misc["active-parties"]:
   - list of all active party IDs, updated whenever they're added/disabled.
     As above, key is whatever we want to sort by, value is whatever we need in the list view.
+
+  misc["active-categories"]:
+  - list of all categories.
 
   misc["webapp-instances"]:
   - each webapp's background runner reinserts its value every (say) 2 mins.
