@@ -127,7 +127,7 @@ user_policy_votes: (key = <userID> : timeUUID) { - super column family
         prev_version: timeUUID
         votes_<policyID> ... : increment:penaltyincrement:newtotal:penaltytotal (ints)
         [policy_created: <policyID>]
-        cassandra timestamp = (- now) so oldest wins
+        cassandra timestamp = time of submitting vote, so newest wins
     }
 }
 
@@ -267,18 +267,23 @@ user_policy_votes:
   Each row is the user vote history for a single user across all policies. Change in votes and new total votes per policy for this user is in policyid-named columns in each record. The structure is designed to cope - in the absence of a locking mechanism - with multiple vote submits by the same user, by detecting conflicting writes and garbage-collecting any child updates whose parent writes lost the conflict resolution.
   - New user accounts receive a single votes_000000 entry with zero vote allocations.
   - When reading data for user to edit vote allocations, it includes "prev_version" - this is used to chain the records together.
-  - When user saves their new allocation, we write a pending_votes entry, with "version" set to a new timeUUID, and "prev_version" set to the basis data we previously read. Then we propagate this information to policy_new_votes for all the policies so it can be efficiently used to calculate total_votes and go into the aggregate history. That's a distributed write, so could fail at any step; a background process will clean this up, and pending_votes entries stay there until one or other process successfully completes those writes and the following total_votes recalc.
-  - The Cassandra timestamp on these updates will be DECREASING with time; this means that when there are conflicting updates in user_policy_votes.votes_ and in policy_new_votes, the first update will eventually win.
+  - When user saves their new allocation, we write a pending_votes entry, with "version" set to a new timeUUID, and "prev_version" set to the basis data we previously read. Then we propagate this information to policy_new_votes for all the policies that have non-zero votes*, so it can be efficiently used to calculate total_votes and go into the aggregate history. That's a distributed write, so could fail at any step; a background process will clean this up, and pending_votes entries stay there until one or other process successfully completes all those writes and the following total_votes recalc.
+    * Important: the exclusion of zero-increment votes is an optimization: the zero votes are only needed (to resolve the conflicts in policy_new_votes across all policies submits two conflicting vote allocations to different policies) if there is actually a conflict to resolve in policy_new_votes, but there may be a lot of them so we avoid writing them unless we have to. We handle this by writing them later if a conflict is actually found when reading back user_policy_votes.
+  - When there are conflicting updates in user_policy_votes.votes_ and in policy_new_votes, the last update for the earliest starting point will eventually win, which is probably what the user will expect.
   - Once written to policy_new_votes, the pending entry is written as a user_policy_votes.votes_<prev_version> supercolumn, with timestamp set the same as the pending item, then the pending supercolumn is deleted.
   - Note the 'version' and 'prev' items are deliberately inverted between pending and non-pending: the pending ones are intended to NOT collide until propagated to policy_new_votes, so that the conflict resolution can occur there when the vote counting happens; the non-pending ones collide here and the oldest one wins.
   - "Penalty" votes: when withdrawing votes from a policy, you only get back a percentage (say 50% - see voting config "vote_withdrawal_penalty_percentage") of the votes. This must participate in conflict resolution so is stored in the vote records.
     - Withdrawals are represented as a negative vote against the policy (conceptually, decrement of policy total), and a negative "penalty" value associated with that vote decrement (conceptually, decrement of the user's balance) - e.g. if you withdraw 100 votes, you record -100 vote increment, and -50 penalty.
     - Each user vote record also tracks the cumulative total of penalty votes per policy per for this user, so we don't have to go all the way back through the chain to calculate it. We track it per policy so we can ignore it for deleted policies.
   - When user creates a policy, the records include the created policyID and the initial mandatory vote allocation to  the new policy.
-  - To determine the list of entries which add up to make the user's current vote allocation, taking into account conflict resolution, read all the user_policy_votes.votes_ supercolumns, organize by version -> prev_version, and find the newest version that has an unbroken chain of extant prev_version links.
+  - To determine the list of entries which add up to make the user's current vote allocation, taking into account conflict resolution:
+    - First propagate any pending_votes_ records.
+    - Read all the user_policy_votes.votes_ supercolumns, organize by version -> prev_version, and find the newest version that has an unbroken chain of extant prev_version links.
     - If there's a conflict, the chain will be broken for the newer ones whose basis lost the conflict resolution, because they collide since they write the same votes_<prev_version> item.
-      - When we find such items whose parent doesn't exist, then we delete them immediately.
+      - When we find such items whose parent doesn't exist, then we:
+        - Write zero-increment vote records to policy_new_votes, with timestamp and version for the item which WON the conflict, for each policy in the item which LOST the conflict which has a non-zero vote record. This late write is an optimisation and is needed to make the cross-policy conflict resolution work correctly.
       - If they include policy creations, then we delete the policy. This eventually cleans up (albeit after temporary exposure to other users) if someone manages to double-create, which would double-spend their votes.
+      - When those writes have succeeded, delete the conflicted item from user_policy_votes.
     - We could keep a timestamp of prev_version up to which we have resolved everything. Need to go back at least GC_GRACE_SECONDS each time though.
   - Ignore allocations to any policies that have since been marked deleted.
   - Combine allocations to any policies that are marked merged - only show the merge target.
@@ -287,7 +292,7 @@ user_policy_votes:
 
 policy_new_votes:
   This records vote allocation changes as users add them. It provides "distributed vote counting" - allows efficient recalculation of current total votes for a policy by reading only one row.
-  - Records are created from user_policy_votes.pending_votes, one for every policy, including those receiving no change in votes - zero-increment ones are still needed for correct conflict resolution.
+  - Records are created from user_policy_votes.pending_votes, one for every policy that receives a non-zero change in votes (and sometimes zero votes if a conflict was found, see user_policy_votes).
   - All columns come from the corresponding user_policy_votes.pending_votes_ record.
   - Records remain here for a while (configurable in "misc["config"]) until we can be certain we have all the data for that time, even in the event of node failure and recovery. Until then we can still make vote counts, but it's possible they might change later.
   - To recalculate the current vote allocation for a policy:
@@ -432,6 +437,7 @@ Tasks:
 - Apply policy deletions. "deletion" is an "obliterate" operation used when there's an edit conflict at policy creation, - see user_policy_votes; this will be rare; or for when someone creates something abusive. Find policies with state="deletion-pending" which have been in that state longer than GC_GRACE_SECONDS, and delete all records for that ID elsewhere in the system (expensive), then set state to "deleted" and leave there.
 
 - Merge duplicate tags. Read all records from tags table, find duplicates: winner is the one that is in misc["tags-by-name"], use merge/delete algorithm as described in "tags" above. Also ensure misc["tags-by-name"] is up-to-date - delete stray entries (lost write on rename), and add missing entries (lost write on tag creation).
+
 
 Roles in the system:
 --------------------
