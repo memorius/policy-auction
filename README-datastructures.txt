@@ -1,28 +1,14 @@
 TODO: changes needed:
 ---------------------
 
-- Need efficient way to list all policies with a given tag, and also all policies which have a given set of tags.
-  (for "related policies" feature)
-
 - "hot categories" data (trending categories) - categories plus some kind of activity metric.
 
 - "hot tags" data (trending tags) - tags plus some kind of activity metric.
-
-- Tag cloud: tags plus number-of-policies-tagged.
 
 - User profile needs to provide:
   You have N unspent pollies.
   You have created N policies.
   You have voted for N policies.
-
-- Featured policies on front page.
-
-- "Report this" feature:
-  - For policies
-  - For comments
-  - For tags
-  - For login and registration problems
-  These can all work the same way - write a timestamped record, send an email to moderators/admins list.
 
 - Policy pages need to show current ranking (within the 3-day window), neighbouring policies in the ranking, and difference from the one above and below - .g. "N votes needed to beat <nearest policy>".
   The info is there in policy_ranking_current[<int>"-day"], just need operations for it. Which objects do these belong to?
@@ -72,6 +58,8 @@ Pseudocode. '...' means a variable series of columns with names varying by date 
 
 Re. use of super column families: for user_policy_votes and policy_new_votes, we can either use supercolumns or a concatenated value in a single column; it's important these updates be atomic, so the latter may be necessary for that: need to check whether supercolumn timestamps and write visibility apply to the individual subcolumns.
 
+Main keyspace with replication factor 3, all writes AND reads with consistency level 2:
+
 users: (key = <userID> : timeUUID) {
     username: text
     email: text
@@ -97,6 +85,7 @@ tags: (key = <tagID> : timeUUID) {
     last_changed: time
     last_used: time
     [deleted: boolean]
+    policy_<policyID> ... : policy name (TTL some multiple of the cycle time of the update-policies background process)
 }
 
 policies: (key = <policyID> : timeUUID) {
@@ -192,27 +181,67 @@ policy_comments_threaded: (key = <policyID> : timeUUID) {
     <parentTimeUUID>[:<childTimeUUID>][:<childTimeUUID>...] ...: nothing
 }
 
-misc["active-policies"]: {
+moderation["policy"] {
+    <timeUUID> : {
+        policy_id: <policyID>
+        reporting_user: <userID>
+        reason: text
+    }
+}
+
+moderation["policy_comment"] {
+    <timeUUID> : {
+        comment_id: <tagID>
+        reporting_user: <userID>
+        reason: text
+    }
+}
+
+moderation["tag"] {
+    <timeUUID> : {
+        tag_id: <tagID>
+        reporting_user: <userID>
+        reason: text
+    }
+}
+
+moderation["user"] {
+    <timeUUID> : {
+        user_id: <userID>
+        reporting_user: <userID>
+        reason: text
+    }
+}
+
+moderation["login"] {
+    <timeUUID> : {
+        user_id: <userID> (if known)
+        user_name: text
+        reason: text
+    }
+}
+
+memcache["active-policies"]: {
     <policyName> ...: <policyID>
 }
 
-misc["active-parties"]: {
+memcache["active-parties"]: {
     <partyName> ...: <partyID>
 }
 
-misc["active-categories"]: {
+memcache["active-categories"]: {
     <categoryName> ...: <categoryID>
 }
 
-misc["tags-by-name"]: {
+memcache["tags-by-name"]: {
     <tagName> ...: <tagID>
 }
 
-misc["webapp-instances"]: {
+memcache["webapp-instances"]: {
     <ipaddr> ...: (nothing), TTL say 5 mins
 }
 
-misc["voting-config"]: {
+memcache["voting-config"]: {
     vote_finalize_delay_seconds: int
     ranking_window_days: int (3)
     user_vote_salary_frequency_days: int (7)
@@ -221,13 +250,37 @@ misc["voting-config"]: {
     vote_withdrawal_penalty_percentage: int (50)
 }
 
+memcache["featured-policies"]: {
+    <policyID> ... : (nothing)
+}
+
 misc["vote-history-dates"]: {
     <date> : (nothing)
 }
 
-log: (key = timeUUID) {
-    server_ipaddr: <string> (secondary indexed)
-    something...
+misc["log-hours"]: {
+    <date>:<hour> : (nothing)
+}
+
+
+In a separate keyspace, so we can set different replication / consistency rules:
+
+log: (key = <date>:<hour>) {
+    <timeUUID> ... : {
+        server_ip: <string>
+        category: ERROR/INFO etc
+        something... text/data
+    }
+}
+
+performance: (key = <date>:<hour>) {
+    <timeUUID> ... : {
+        server_ip: <string>
+        interval_length: millis
+        servlet request count this interval
+        cassandra query count this interval
+        load average, jvm and system memory stats etc
+    }
 }
 
 
@@ -247,20 +300,21 @@ categories:
 tags:
   Tags that can be applied to policies, e.g. "capital gains tax". Policies can have any number of tags.
   We don't try very hard to prevent duplicate IDs for the same name (if people assign them at the same time) - we need to be able to merge tags anyway, so we'll just have a background process to merge duplicates.
-  - Renaming tags: add new entry to misc["tags-by-name"], then delete old entry, then update "tags".
+  - policies_<policyID>: has limited TTL, inserted when assigning a tag to a policy, and reinserted occasionally by a background process, so we don't need to worry about lost inserts or deletes when adding/removing tags from policies.
+  - Renaming tags: add new entry to memcache["tags-by-name"], then delete old entry, then update "tags".
   - Merging/deleting tags:
     - Loser tag gets its ID replaced or removed from all policy records, setting "deleted" and "last_used" fields on loser tag if we find any.
     - If there was nothing to replace:
-      - If last_used is more than GC_GRACE_SECONDS ago, delete it from tags.
+      - If last_used is more than GC_GRACE_SECONDS ago, delete row from tags.
       - Else set last_used and leave record in tags for now.
-    - Winner of merges is in misc["tags-by-name"].
+    - Winner of merges is in memcache["tags-by-name"].
 
 policies:
   Policy current config and calculated totals.
   - total_votes: cached count that resulted from the last policy_new_votes change. Any operation that changes policy_new_votes will then read back, calculate and write this column, with the write timestamp set to the time we started the read back. Also, we'll have a periodic background process (say, every few minutes) that recalculates it - last resort protection against failures in the recalc following any given update.
   - finalized_votes: This is the count of all the votes that have been "finalized" and copied to "policy_vote_history", i.e. they are old enough that we can be sure that all writes have arrived and conflicts are resolved. This provides the base value to which increments in policy_new_votes are added when recalculating policies.total_votes. The timeUUID is the "version" from the latest vote included in the count - in a single column because it's critical they're always updated atomically together.
   - state: normally "active" which means it's available for user votes. Other states: "deletion-pending", "deleted".
-  - Deleting a policy (e.g. due co conflict at creation - see user_policy_votes; or for abusive stuff): just set the state to "pending-deletion". The background processes take care of the rest. Also try to delete from misc["active-policies"] (makes immediately invisible) but ignore failure, but background process will tidy up if this write fails.
+  - Deleting a policy (e.g. due co conflict at creation - see user_policy_votes; or for abusive stuff): just set the state to "pending-deletion". The background processes take care of the rest. Also try to delete from memcache["active-policies"] (makes immediately invisible) but ignore failure, but background process will tidy up if this write fails.
   - Set tags.last_used when assigned.
 
 user_policy_votes:
@@ -294,7 +348,7 @@ policy_new_votes:
   This records vote allocation changes as users add them. It provides "distributed vote counting" - allows efficient recalculation of current total votes for a policy by reading only one row.
   - Records are created from user_policy_votes.pending_votes, one for every policy that receives a non-zero change in votes (and sometimes zero votes if a conflict was found, see user_policy_votes).
   - All columns come from the corresponding user_policy_votes.pending_votes_ record.
-  - Records remain here for a while (configurable in "misc["config"]) until we can be certain we have all the data for that time, even in the event of node failure and recovery. Until then we can still make vote counts, but it's possible they might change later.
+  - Records remain here for a while (configurable in "memcache["voting-config"]) until we can be certain we have all the data for that time, even in the event of node failure and recovery. Until then we can still make vote counts, but it's possible they might change later.
   - To recalculate the current vote allocation for a policy:
     - Read policies.finalized_votes -> count and boundary timeUUID. Start with this count. Figure out which day is the last-fully-finalized day.
     - Init daily vote counts to zero for each day since last finalized day.
@@ -315,7 +369,7 @@ policy_new_votes:
 
 policy_vote_history:
   History of "finalized" votes. Grouped into a row per date for convenient retrieval.
-  Every so often, records from policy_new_votes whose "version" (not "prev_version") is old enough (misc["voting-config"].vote_finalize_delay_seconds) are:
+  Every so often, records from policy_new_votes whose "version" (not "prev_version") is old enough (memcache["voting-config"].vote_finalize_delay_seconds) are:
   - copied to the appropriate row of policy_vote_history
     We discard any zero values, and we follow the same duplicate-history rules as described under policy_new_votes, except that we actually discard (by not copying them) the duplicate records.
   - misc["vote-history-dates"] is updated
@@ -359,39 +413,69 @@ policy_comments:
 policy_comments_threaded:
   Easy retrieval of comments in thread structure. Column name is <parentID>:<childID>:<childID> etc. according to nested structure. This means we can slice query by, say, <parentID>:<childID> to get time-ordered comments within any nesting level.
 
-misc:
-  Contains various single-row stuff: quick-lookups to avoid the need to iterate all keys on every request, and provide things in sorted order; runtime and config data:
+moderation:
+  Time-ordered items that have been flagged for moderation ("Report this" feature) by users of the system.
+  This will be the mechanism for reporting abusive comments/policy creation/tags/users, and also for reporting user login problems. 
+  We'll have a UI for those with moderator permissions to view these and delete them (or archive them somewhere maybe) once the appropriate action has been taken.
+  Split into "policies", "tags", "comments", "users" categories since they may have separate permissions.
+  When someone reports something, we can let them enter an optional reason, and we record their userID if they're logged in.
 
-  misc["active-policies"]:
+memcache:
+  Contains various single-row stuff for quick-lookups to avoid the need to iterate all keys on every request, and provide things in sorted order; runtime and config data.
+  This is for small-ish rows so in-memory row cache can be enabled.
+
+  memcache["active-policies"]:
   - list of all active policy IDs, updated whenever they're added/disabled.
     Key is whatever we want to sort by - the name, or party+name, or date, or something.
     Value can be the ID, or make it a supercolumn with more data as needed.
     Probably pretty much every request will read this.
 
-  misc["active-parties"]:
+  memcache["active-parties"]:
   - list of all active party IDs, updated whenever they're added/disabled.
     As above, key is whatever we want to sort by, value is whatever we need in the list view.
 
-  misc["active-categories"]:
+  memcache["active-categories"]:
   - list of all categories.
 
-  misc["tags-by-name"]:
+  memcache["tags-by-name"]:
   - index of tag name -> tag ID, to allow name lookup and prefix queries for tag name autocomplete.
   If duplicate tags get created for a name, the one in here will be the "live" one and the others will get cleaned up and merged later.
 
-  misc["webapp-instances"]:
+  memcache["webapp-instances"]:
   - each webapp's background runner reinserts its value every (say) 2 mins.
     The column TTL ensures the entry expires after a while if the server dies.
     Main purpose is to allow each background runner to easily determine how many webapp nodes are in the cluster, so it can set frequencies of background tasks accordingly, and maybe other monitoring info as needed.
 
-  misc["voting-config"]:
+  memcache["voting-config"]:
   - current_votes_finalize_delay: seconds to keep items in policy_new_votes waiting for conflict resolution before background process "finalizes" them as above and archives to policy_vote_history. This has to be the same as Cassandra GC_GRACE_SECONDS, since that's the longest it can possibly take (in the event of server failure and recovery) for late writes to reappear (e.g. a failed write that actually made it to disk on a machine just before it dies, which later recovers). It's probably a few days.
+
+  memcache["featured-policies"]:
+    - policy IDs listed here appear in "featured policies" list on front page.
+
+misc:
+  One-row datasets for which we may not want row caching enabled.
 
   misc["vote-history-dates"]:
     - for driving iteration over all date records in the system. Updated when finalizing votes to vote history.
 
+  misc["log-hours"]:
+    - for driving iteration over all log records in the system. Low write load. Updated about once per hour per node when writing log or performance log records.
+
+
+In a separate keyspace, so we can set different replication / consistency rules:
+  Logging can use write consistency level 1 (or ANY, or don't care) and read consistency level something-else (with WF 1 it needs to be ALL to guarantee seeing everything; or allow manually falling back to lower levels so we can still read something if some nodes are down):
+
 log:
-  We can use Cassandra for some of the logging from the webapps, system activity records, etc.
+  Logging from the webapps:
+    - Activity/audit logging
+    - Temporary debug logging
+
+performance:
+    - Periodic performance log records, etc.
+
+Both are grouped in rows by hour.
+TTL can be set for records that we don't need to keep for auditing, say a few days or a few weeks.
+We first add a column to misc["log-hours"] if we haven't written it yet for this server and hour.
 
 
 Other stuff:
@@ -407,7 +491,7 @@ Merging policies:
   - Whenever we recalculate the vote count for a merge-victim policy, we then trigger a recalc for its merged_to policy. This takes care of late votes and updating of rankings.
   - Policies marked as "merged" will not show vote counts or rankings on their edit page (and won't participate in ranking recalcs), but just a link to the merge result policy.
 
-Activities that do things with policies (e.g. show/edit user votes for policies) must check the state for the policyID. Checking in misc["active-policies"] should generally be enough. There's no locking so it's impossible to make setting the policy inactive behave as an instant cutoff; the best we could do is have a timestamp and retrospectively undo stuff. Probably not a big deal... and if we design for it, we can do things like cache the list of active policies for a few minutes in each webapp.
+Activities that do things with policies (e.g. show/edit user votes for policies) must check the state for the policyID. Checking in memcache["active-policies"] should generally be enough. There's no locking so it's impossible to make setting the policy inactive behave as an instant cutoff; the best we could do is have a timestamp and retrospectively undo stuff. Probably not a big deal... and if we design for it, we can do things like cache the list of active policies for a few minutes in each webapp.
 
 Similar considerations with deleted users.
 
@@ -436,7 +520,9 @@ Tasks:
 
 - Apply policy deletions. "deletion" is an "obliterate" operation used when there's an edit conflict at policy creation, - see user_policy_votes; this will be rare; or for when someone creates something abusive. Find policies with state="deletion-pending" which have been in that state longer than GC_GRACE_SECONDS, and delete all records for that ID elsewhere in the system (expensive), then set state to "deleted" and leave there.
 
-- Merge duplicate tags. Read all records from tags table, find duplicates: winner is the one that is in misc["tags-by-name"], use merge/delete algorithm as described in "tags" above. Also ensure misc["tags-by-name"] is up-to-date - delete stray entries (lost write on rename), and add missing entries (lost write on tag creation).
+- Merge duplicate tags. Read all records from tags table, find duplicates: winner is the one that is in memcache["tags-by-name"], use merge/delete algorithm as described in "tags" above. Also ensure memcache["tags-by-name"] is up-to-date - delete stray entries (lost write on rename), and add missing entries (lost write on tag creation).
+
+- Occasionally (few hours) - update policies per tag: read policies.tag_ records for each policy, write tags.policy_ records with TTL.
 
 
 Roles in the system:
@@ -452,12 +538,14 @@ Normal user permissions: probably everyone will have these initially, but may be
 
 Moderator/admin permissions:
 
-- Administer users
+- Edit users
+- Suspend/ban users
 - Edit policies: category
 - Edit policies: name / description
 - Edit policies: merge policies
 - Edit policies: delete
 - Edit policies: retire
+- Edit policies: mark as featured policy
 - Moderate comments: delete
 - Moderate comments: edit
 - Edit tags: delete
@@ -499,5 +587,34 @@ Policy:
     list current ranking:
 
 Party:
+
+Tag:
+    add tag
+    delete tag
+    rename tag
+    merge tags
+    list all tags
+    list all tags with policy count (for tag cloud)
+    list tags by string prefix
+
+Policy tag allocation:
+    list all policies with a given tag
+    assign tag to policy
+    remove tag from policy
+
+Moderation queue:
+    report login/registration problem
+    report user
+    report policy
+    report comment
+    report tag
+    list login problems for moderation
+    list users for moderation
+    list policies for moderation
+    list comments for moderation
+    list tags for moderation
+    mark item as actioned
+
+Log:
 
 Background operations:
