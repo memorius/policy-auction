@@ -5,14 +5,6 @@ TODO: changes needed:
 
 - "hot tags" data (trending tags) - tags plus some kind of activity metric.
 
-- User profile needs to provide:
-  You have N unspent pollies.
-  You have created N policies.
-  You have voted for N policies.
-
-- Policy pages need to show current ranking (within the 3-day window), neighbouring policies in the ranking, and difference from the one above and below - .g. "N votes needed to beat <nearest policy>".
-  The info is there in policy_ranking_current[<int>"-day"], just need operations for it. Which objects do these belong to?
-
 - Figure out how/when we update policy_ranking_history.
 
 
@@ -568,6 +560,10 @@ User:
       create user record with initial salary balance
       create intitial zero vote record
 
+    get number of policies created
+
+    get number of policies voted for
+        (current ranking only - removing all votes removes it from this count)
 
 User vote allocation:
     add new periodic vote bundle (weekly job, or on demand when user record read):
@@ -584,7 +580,10 @@ User vote allocation:
     delete user:
 
 Policy:
-    list current ranking:
+    list current total votes ranking:
+        ordered list of policy IDs with total vote counts
+    list current N-day ranking:
+        ordered list of policy IDs with in-window vote counts
 
 Party:
 
