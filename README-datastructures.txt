@@ -1,6 +1,17 @@
 TODO: changes needed:
 ---------------------
 
+Daily rankings - want to show history of total and 3-day rankings over the last week.
+
+Dissolve rate - when policies are merged: refund with the usual penalty rate for the policy owner, 100% refund for other people who voted on it.
+  - Is this the same for "retired" policies?
+  - What about those deleted due to abuse?
+  - Can we do this by writing a user_policy_votes record for the owner with appropriate penalty? Note we have to handle the fact that the policy has been merged/disabled but still include the penalty in the count.
+
+- Comments per category as well as per policy:
+  - this can maybe just work by aggregating in the UI the comments for all policies in a category.
+  - unless we need people to be able to have discussion on the category too, e.g. about proposing new policies?
+
 - "hot categories" data (trending categories) - categories plus some kind of activity metric.
 
 - "hot tags" data (trending tags) - tags plus some kind of activity metric.
@@ -58,17 +69,49 @@ users: (key = <userID> : timeUUID) {
     password_hash: binary
     first_name: text
     last_name: text
-    show_real_name: boolean
+    publish_real_name: boolean
+    publish_votes: boolean
     vote_salary_last_paid_timestamp: time
     vote_salary_<date> ...: int (never changed once written)
     role_XXX: [nothing]
     policy_watchlist_<policyID>: [nothing]
-    maybe other user data as needed - login history, password reset mechanism, etc.
+    last_login: <time>
+    last_active: <time>
+    login_<timestamp> ... : nothing
+    active_<date>_ipaddress ... : nothing
+    comments_<commentID> ... : nothing
+    anonymous_<anonymous_users cookie>
+    maybe other user data as needed - password reset mechanism, etc.
+}
+
+user_messages: (key = <userID> : timeUUID) {
+    <timeUUID> ... : {
+        message_type: <messageTypeID>
+        other named fields as appropriate, e.g. policyID, ...
+    }
+}
+
+anonymous_users: (key = cookie) {
+    first_seen: time
+    last_seen: time
+    active_<date>_ipaddress ... : nothing
+    comments_<commentID> ... : nothing
+    user_id_<userID> ... : nothing
+    [comment_hash: <random hash value>]
+}
+
+ipaddresses: (key = IPAddress) {
+    first_seen: time
+    last_seen: time
+    active_<date>_{anon_<anonUserID>|user_<userID>} ... : nothing
+    comments_<commentID> ... : nothing
+    [comment_hash: <randomly generated string>]
 }
 
 categories: (key = <categoryID> : timeUUID) {
     short_name: text
     description: text
+    policy_<policyID> ... : policy name (TTL some multiple of the cycle time of the update-policies background process)
 }
 
 tags: (key = <tagID> : timeUUID) {
@@ -85,6 +128,11 @@ policies: (key = <policyID> : timeUUID) {
     state_changed: <time>
     short_name: text
     description: text
+    rationale: text
+    costs_to_taxpayers: text
+    who_affected: text
+    how_affected: text
+    is_party_official: boolean
     link ...:
     category: <categoryID>
     party: <partyID>
@@ -160,6 +208,9 @@ policy_comments: (key = <policyID> : timeUUID) {
     <commentID> : timeUUID ...: { // ID is the creation time
         parent_id: <commentID>
         user_id: <userID>
+          or:
+          anonymous_user_id: <userID>
+        ip_address: addr
         subject: text
         body: text
         edited: time
@@ -242,8 +293,16 @@ memcache["voting-config"]: {
     vote_withdrawal_penalty_percentage: int (50)
 }
 
+memcache["email-config"] {
+    default_email_frequency: "daily"
+}
+
 memcache["featured-policies"]: {
     <policyID> ... : (nothing)
+}
+
+memcache["message-types"]: {
+    <messageID> ... : formatstring
 }
 
 misc["vote-history-dates"]: {
@@ -284,10 +343,30 @@ users:
   - password_hash: bcrypt hash of password.
   - Roles: columns present to indicate role_admin, role_edit_policies, role_edit_users etc. Secondary indexes on these for user config screens.
   - Watchlist: add policyIDs as policy_watchlist_ columns.
+  - List of comment IDs this user has created.
+  - When user logs in, add the anonymous_users ID to users.anonymous_ list, and the userID to the anonymous_users.user_id_ list - useful for moderation.
   - Other user data as needed - last login etc.
+
+user_messages:
+  The system will add entries here to notify users of things, e.g. that their policy has been merged, etc. Shown at login and in user profile; users can delete entries when read. The columns are named inputs to String.format for the appropriate message text ID.
+
+ipaddresses:
+  When any user accesses the system:
+    - a record is created here with first_seen if not present
+    - the last_seen column is updated
+    - an active_ date column is written
+  The hash is shown with the comment if the user wasn't logged in. If they WERE logged in, probably don't show it - registered users gain the privilege of not disclosing who they share an IP with.
+
+anonymous_users:
+  When non-logged-in users access the system, they're given a persistent random cookie.
+    - a record is created here with first_seen if not present
+    - the last_seen column is updated
+    - active_ date is written
+  Users need not be registered or logged in to post comments. If these non-logged-in users post comments, the anonymous ID (from the cookie) is recorded instead of the userID; and the random strings from both the anonymous_users record and from the ipaddresses record are generated and stored if not used yet, then shown with all comments matching that record.
 
 categories:
   Fixed set of items: Education, Tax, Health etc. Probably we will set these at startup, don't bother with UI for now.
+  - policies_<policyID>: has limited TTL, inserted when assigning a category to a policy, and reinserted occasionally by a background process, so we don't need to worry about lost inserts or deletes when changing category for a policy.
 
 tags:
   Tags that can be applied to policies, e.g. "capital gains tax". Policies can have any number of tags.
@@ -401,6 +480,7 @@ policy_ranking_history:
 policy_comments:
   Time-ordered comments for each policy. Stored this way so we can time-slice query for "what's new" lists and retrieve by individual comment ID.
   - deleted flag: to preserve the threading structure of remaining comments, deleted items are retained as placeholders but not displayed. We can either delete the "text" and "subject" fields when marking deleted, or keep them and let moderators see them.
+  When creating comments, write a "comments_" column to ipaddresses, and to either users or anonymous_users, with that comment ID.
 
 policy_comments_threaded:
   Easy retrieval of comments in thread structure. Column name is <parentID>:<childID>:<childID> etc. according to nested structure. This means we can slice query by, say, <parentID>:<childID> to get time-ordered comments within any nesting level.
@@ -443,6 +523,10 @@ memcache:
 
   memcache["featured-policies"]:
     - policy IDs listed here appear in "featured policies" list on front page.
+
+  memcache["message-types"]:
+    - String.format strings for user_messages entries so we can change the text as desired.
+    e.g. things like POLICY_MERGED = "Your policy '%{old_policy_name}' was merged into the new policy '%{new_policy_name}'.
 
 misc:
   One-row datasets for which we may not want row caching enabled.
@@ -514,7 +598,7 @@ Tasks:
 
 - Merge duplicate tags. Read all records from tags table, find duplicates: winner is the one that is in memcache["tags-by-name"], use merge/delete algorithm as described in "tags" above. Also ensure memcache["tags-by-name"] is up-to-date - delete stray entries (lost write on rename), and add missing entries (lost write on tag creation).
 
-- Occasionally (few hours) - update policies per tag: read policies.tag_ records for each policy, write tags.policy_ records with TTL.
+- Occasionally (few hours) - fixup policies per category and policies per tag: read policies.category and all policies.tag_ records for each policy, write categories.policy_ and tags.policy_ records with TTL.
 
 
 Roles in the system:
@@ -604,9 +688,9 @@ Policy tag allocation:
 Moderation queue:
     report login/registration problem
     report user
-    report policy
+    report policy (also used for requesting merges)
     report comment
-    report tag
+    report tag (also used for requesting merges)
     list login problems for moderation
     list users for moderation
     list policies for moderation
