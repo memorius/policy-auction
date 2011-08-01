@@ -204,7 +204,7 @@ users_by_name: (key = <username> : text) {
     registered_timestamp: timeUUID
 }
 
-policy_comments: (key = <policyID> : timeUUID) {
+comments: (key = "category_" + <categoryID>|"policy_" + <policyID>) {
     <commentID> : timeUUID ...: { // ID is the creation time
         parent_id: <commentID>
         user_id: <userID>
@@ -220,8 +220,11 @@ policy_comments: (key = <policyID> : timeUUID) {
     }
 }
 
-policy_comments_threaded: (key = <policyID> : timeUUID) {
+comments_threaded: (key = "category_" + <categoryID>|"policy_" + <policyID>) {
     <parentTimeUUID>[:<childTimeUUID>][:<childTimeUUID>...] ...: nothing
+    
+    and:
+    :<parentTimeUUID> // allows querying by ":"-prefix to get top-level threads only
 }
 
 moderation["policy"] {
@@ -232,9 +235,9 @@ moderation["policy"] {
     }
 }
 
-moderation["policy_comment"] {
+moderation["comment"] {
     <timeUUID> : {
-        comment_id: <tagID>
+        comment_id: <commentID>, e.g. "policy_<policyID>:<commentID>"
         reporting_user: <userID>
         reason: text
     }
@@ -477,12 +480,17 @@ policy_ranking_history:
   Keeps historical record of rankings.
   TODO: to be accurate in the face of late-resolved conflicts, we can only update this when copying votes to policy_vote_history. Figure out the data and algorithm for this.
 
-policy_comments:
-  Time-ordered comments for each policy. Stored this way so we can time-slice query for "what's new" lists and retrieve by individual comment ID.
+comments:
+  Time-ordered comments for each policy and category. Stored this way so we can time-slice query for "what's new" lists and retrieve by individual comment ID.
+  A "comment ID" is:
+      "policy_" or "category_"
+      ...plus row key - either the policyID or the categoryID (and others if we need them)
+      ...plus the column name - the comment's own unique timeUUID.
+  Maybe use subinterfaces in the data API for the different IDs / key types, then we can have uniform "get comment" implementations that just look in the different column families.
   - deleted flag: to preserve the threading structure of remaining comments, deleted items are retained as placeholders but not displayed. We can either delete the "text" and "subject" fields when marking deleted, or keep them and let moderators see them.
   When creating comments, write a "comments_" column to ipaddresses, and to either users or anonymous_users, with that comment ID.
 
-policy_comments_threaded:
+comments_threaded:
   Easy retrieval of comments in thread structure. Column name is <parentID>:<childID>:<childID> etc. according to nested structure. This means we can slice query by, say, <parentID>:<childID> to get time-ordered comments within any nesting level.
 
 moderation:
