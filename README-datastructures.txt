@@ -78,9 +78,9 @@ users: (key = <userID> : timeUUID) {
     last_login: <time>
     last_active: <time>
     login_<timestamp> ... : nothing
-    active_<date>_ipaddress ... : nothing
     comments_<commentID> ... : nothing
-    anonymous_<anonymous_users cookie>
+    ip_<date>_ipaddress ... : nothing
+    anonymous_<date>_<anonymous_users cookie>
     maybe other user data as needed - password reset mechanism, etc.
 }
 
@@ -94,9 +94,9 @@ user_messages: (key = <userID> : timeUUID) {
 anonymous_users: (key = cookie) {
     first_seen: time
     last_seen: time
-    active_<date>_ipaddress ... : nothing
+    ip_<date>_<ipaddress> ... : nothing
+    user_<date>_<userID> ... : nothing
     comments_<commentID> ... : nothing
-    user_id_<userID> ... : nothing
     [comment_hash: <random hash value>]
 }
 
