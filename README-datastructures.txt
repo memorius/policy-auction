@@ -3,18 +3,36 @@ TODO: changes needed:
 
 Daily rankings - want to show history of total and 3-day rankings over the last week.
 
-Dissolve rate - when policies are merged: refund with the usual penalty rate for the policy owner, 100% refund for other people who voted on it.
-  - Is this the same for "retired" policies?
-  - What about those deleted due to abuse?
-  - Can we do this by writing a user_policy_votes record for the owner with appropriate penalty? Note we have to handle the fact that the policy has been merged/disabled but still include the penalty in the count.
+Dissolve rate - when policies are replaced/retired: refund with the usual penalty rate for the policy owner, 100% refund for other people who voted on it.
+  - For those deleted due to abuse, refund everything.
+  - Can we do this by writing a user_policy_votes record for the owner with appropriate penalty? Note we have to handle the fact that the policy has been replaced/disabled but still include the penalty in the count.
 
-- Comments per category as well as per policy:
-  - this can maybe just work by aggregating in the UI the comments for all policies in a category.
-  - unless we need people to be able to have discussion on the category too, e.g. about proposing new policies?
+Only owner (or admin) can retire policy.
 
-- "hot categories" data (trending categories) - categories plus some kind of activity metric.
+Users can flag policies for retire-in-favour-of-other.
 
-- "hot tags" data (trending tags) - tags plus some kind of activity metric.
+Owner should be able to indicate "I recommend voting on this other policy instead" when they elect to retire their policy.
+
+Hot tag / category rankings: N-day rankings same as for policies (though separate number-of-days config just in case)
+
+Tag rankings are best recalculated in the background, else it's difficult to keep everything in sync.
+
+  - Whenever we recalc votes for a policy, trigger recalc for each tag currently on that policy.
+    - set needs_votes_recalc
+  - Whenever we add or remove tags from a policy, trigger recalc for each tag involved.
+    - set needs_votes_recalc
+  - Background process (a few minutes) does full-cluster query on the indexed needs_votes_recalc column,
+    and for each one:
+    - Read list of policies
+    - Read and add up all their vote totals
+    - Insert tags.total_votes
+    - Insert into tag_ranking_current
+    TODO
+
+
+tag_ranking_current[<int>"-day"] {
+    <date>_<tagID> ...: <votecount>:short_name, with TTL set to expire at end of Nth day
+}
 
 - Figure out how/when we update policy_ranking_history.
 
@@ -117,6 +135,8 @@ categories: (key = <categoryID> : timeUUID) {
 tags: (key = <tagID> : timeUUID) {
     name: text
     edited_by: <userID>
+    needs_votes_recalc: boolean (secondary indexed)
+    total_votes: int
     last_changed: time
     last_used: time
     [deleted: boolean]
@@ -124,7 +144,7 @@ tags: (key = <tagID> : timeUUID) {
 }
 
 policies: (key = <policyID> : timeUUID) {
-    state: "active" or "merged" or "deleted" or "pending-deletion" or "retired"
+    state: "active" or "replaced" or "deleted" or "pending-deletion" or "retired"
     state_changed: <time>
     short_name: text
     description: text
@@ -140,8 +160,8 @@ policies: (key = <policyID> : timeUUID) {
     last_edit_date: <time>
     total_votes: int
     finalized_votes: int:timeUUID
-    merged_from_<policyID> ...: [] (or timestamp maybe, or userID) 
-    merged_to: <policyID>
+    replaces_<policyID> ...: [] (or timestamp maybe, or userID) 
+    replaced_by: <policyID>
     tag_<tagID> ...: <userID>
 }
 
@@ -351,7 +371,7 @@ users:
   - Other user data as needed - last login etc.
 
 user_messages:
-  The system will add entries here to notify users of things, e.g. that their policy has been merged, etc. Shown at login and in user profile; users can delete entries when read. The columns are named inputs to String.format for the appropriate message text ID.
+  The system will add entries here to notify users of things, e.g. that their policy has been retired, etc. Shown at login and in user profile; users can delete entries when read. The columns are named inputs to String.format for the appropriate message text ID.
 
 ipaddresses:
   When any user accesses the system:
@@ -413,8 +433,7 @@ user_policy_votes:
       - If they include policy creations, then we delete the policy. This eventually cleans up (albeit after temporary exposure to other users) if someone manages to double-create, which would double-spend their votes.
       - When those writes have succeeded, delete the conflicted item from user_policy_votes.
     - We could keep a timestamp of prev_version up to which we have resolved everything. Need to go back at least GC_GRACE_SECONDS each time though.
-  - Ignore allocations to any policies that have since been marked deleted.
-  - Combine allocations to any policies that are marked merged - only show the merge target.
+  - Ignore allocations to any policies that have since been marked deleted, replaced or retired.
   - To calculate unallocated votes, add up all the vote salary entries; then take the last conflict-resolved votes_ entry, subtract from the salary the sum of its newtotal values for all policies, then subtract from this the sum of the penaltytotal values.
   - Propagating to policy_new_votes: see below.
 
@@ -534,7 +553,7 @@ memcache:
 
   memcache["message-types"]:
     - String.format strings for user_messages entries so we can change the text as desired.
-    e.g. things like POLICY_MERGED = "Your policy '%{old_policy_name}' was merged into the new policy '%{new_policy_name}'.
+    e.g. things like POLICY_RETIRED = "The policy '%{old_policy_name}' that you voted on was retired. The owner suggests you vote on '%{new_policy_name}' instead."
 
 misc:
   One-row datasets for which we may not want row caching enabled.
@@ -565,17 +584,12 @@ We first add a column to misc["log-hours"] if we haven't written it yet for this
 Other stuff:
 ------------
 Merging policies:
-  We want to treat the finalized vote history as immutable rather than trying to rewrite it with new IDs, and we want to show the owning user what has happened to their policy. So to merge, we:
-    - Create a new policies record to represent the merged policies.
-    - Mark the old ones as "state=merged" and "merged_to=<newPolicyID>".
-    - Add merged_from_ columns in the new policy for each of the old ones.
-    - The new merge-result policy will start with its finalized vote count at zero:now.
-  Various vote-handling code needs to be merge-aware:
-  - Whenever we recalculate the vote count for a merge-target policy, we add to it the current policies.total_votes from all of its merged_from_ policies.
-  - Whenever we recalculate the vote count for a merge-victim policy, we then trigger a recalc for its merged_to policy. This takes care of late votes and updating of rankings.
-  - Policies marked as "merged" will not show vote counts or rankings on their edit page (and won't participate in ranking recalcs), but just a link to the merge result policy.
+  We don't support this; we support "retiring" with a suggested alternative policy to vote on.
+  Users who voted on the retired policy get all their votes back so they can allocate them again.
+  Votes are not automatically allocated to the alternative policy.
+  Policies marked as "retired" will not show vote counts or rankings on their edit page (and won't participate in ranking recalcs), but just a link to the suggested replacement policy.
 
-Activities that do things with policies (e.g. show/edit user votes for policies) must check the state for the policyID. Checking in memcache["active-policies"] should generally be enough. There's no locking so it's impossible to make setting the policy inactive behave as an instant cutoff; the best we could do is have a timestamp and retrospectively undo stuff. Probably not a big deal... and if we design for it, we can do things like cache the list of active policies for a few minutes in each webapp.
+Activities that do things with policies (e.g. show/edit user votes for policies) must check the state for the policyID. Checking in memcache["active-policies"] should generally be enough. There's no locking so it's impossible to make setting the policy retired behave as an instant cutoff; the best we could do is have a timestamp and retrospectively undo stuff. Probably not a big deal... and if we design for it, we can do things like cache the list of active policies for a few minutes in each webapp.
 
 Similar considerations with deleted users.
 
@@ -596,11 +610,11 @@ Tasks:
 
 - TODO: what updates needed for lost writes in the 3-day ranking calculation?
 
-- Every few minutes, recalc policies.total_votes for each one (last-resort protection against failures during recalc after updates to policy_new_votes). Note this is still needed given the use of user_policy_votes and pending_votes: for example, we have to update the merge target policy if we lose stuff part-way through marking it as merged.
+- Every few minutes, recalc policies.total_votes for each one (last-resort protection against failures during recalc after updates to policy_new_votes). Note this is still needed given the use of user_policy_votes and pending_votes.
 
 - Rarely, check for stray entries in users_by_name with no entry in users, and vice versa; these can result from failures part-way through the user registration process or simultaneous registration of same username; just delete them if last modified more than GC_GRACE_SECONDS ago so the username is freed up for reuse.
 
-- Every few minutes, update active-policies / active-parties records from entries in policies and parties and their states: caters for lost writes when deleting/creating/merging policies/parties.
+- Every few minutes, update active-policies / active-parties records from entries in policies and parties and their states: caters for lost writes when deleting/creating policies/parties.
 
 - Apply policy deletions. "deletion" is an "obliterate" operation used when there's an edit conflict at policy creation, - see user_policy_votes; this will be rare; or for when someone creates something abusive. Find policies with state="deletion-pending" which have been in that state longer than GC_GRACE_SECONDS, and delete all records for that ID elsewhere in the system (expensive), then set state to "deleted" and leave there.
 
@@ -619,6 +633,7 @@ Normal user permissions: probably everyone will have these initially, but may be
 - Start new comment threads
 - Reply to existing comment threads
 - Report items (policies, tags, comments) for abuse
+- Edit policies: suggest replacement policies
 
 Moderator/admin permissions:
 
@@ -626,7 +641,6 @@ Moderator/admin permissions:
 - Suspend/ban users
 - Edit policies: category
 - Edit policies: name / description
-- Edit policies: merge policies
 - Edit policies: delete
 - Edit policies: retire
 - Edit policies: mark as featured policy
