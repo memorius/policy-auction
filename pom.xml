@@ -22,10 +22,52 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.tapestry</groupId>
+            <artifactId>tapestry-ioc</artifactId>
+            <version>${tapestry-release-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tapestry</groupId>
+            <artifactId>tapestry5-annotations</artifactId>
+            <version>${tapestry-release-version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>me.prettyprint</groupId>
             <artifactId>hector-core</artifactId>
             <version>0.8.0-1</version>
         </dependency>
+
+        <!-- Hector dependencies, here so we can set specific versions -->
+        <dependency>
+            <groupId>org.apache.cassandra</groupId>
+            <artifactId>cassandra-all</artifactId>
+            <version>0.8.1</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.cassandra</groupId>
+            <artifactId>cassandra-thrift</artifactId>
+            <version>0.8.1</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.thrift</groupId>
+            <artifactId>libthrift</artifactId>
+            <version>0.6.1</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.1</version>
+            <scope>compile</scope>
+        </dependency>
+
 
         <!-- A dependency on either JUnit or TestNG is required, or the surefire plugin (which runs the tests)
 will fail, preventing Maven from packaging the WAR. Tapestry includes a large number
@@ -59,7 +101,6 @@ of testing facilities designed for use with TestNG (http://testng.org/), so it's
             <version>2.5</version>
             <scope>provided</scope>
         </dependency>
-
     </dependencies>
     <build>
         <finalName>policy-auction</finalName>
