@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cassandra_version='0.8.1'
+cassandra_version='0.8.2'
 
 trap_err () {
     err=$?
@@ -39,11 +39,6 @@ trap trap_err ERR && set -o errexit
 check_not_directory "$cassandra_log"
 check_not_directory "$cassandra_data"
 check_not_directory "$cassandra_bin"
-
-# See here for other mirrors: http://www.apache.org/dyn/closer.cgi?path=/cassandra/0.8.1/apache-cassandra-0.8.1-bin.tar.gz
-# cd downloaded
-# wget "http://www.bizdirusa.com/mirrors/apache/cassandra/${cassandra_version}/${cassandra_tar}"
-# cd ..
 
 cassandra_tar="downloaded/apache-cassandra-${cassandra_version}-bin.tar.gz"
 
