@@ -34,6 +34,8 @@ public class AppModule
         // Use our Cassandra implementation.
         // TODO: make this bind conditional on properties or something if we have more than one implementation.
         // TODO: use tapestry methods of getting config properties (hosts etc) to the hector service.
+        //       this will work by auto-injection of other services into constructor args:
+        //       see here: http://tapestry.apache.org/defining-tapestry-ioc-services.html
         binder.bind(DAOManager.class, HectorCassandraDAOManagerImpl.class);
     }
 

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
@@ -19,6 +18,7 @@ import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 import net.retakethe.policyauction.data.api.PolicyID;
 import net.retakethe.policyauction.data.api.PolicyManager;
+import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.entities.Policy;
 
 /**
@@ -56,11 +56,6 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
         }
     }
 
-    private static final String POLICIES_COLUMN_FAMILY = "policies";
-
-    private static final String SHORT_NAME = "short_name";
-    private static final String DESCRIPTION = "description";
-
     private final Keyspace _keyspace;
 
     public HectorPolicyManagerImpl(Keyspace keyspace) {
@@ -81,10 +76,11 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
         HectorPolicyIDImpl idImpl = getPolicyIDImpl(policyID);
         SliceQuery<UUID, String, String> q =
             HFactory.createSliceQuery(_keyspace,
-                    UUIDSerializer.get(), StringSerializer.get(), StringSerializer.get())
-                .setColumnFamily(POLICIES_COLUMN_FAMILY)
+                    Schema.POLICIES.getKeySerializer(), StringSerializer.get(), StringSerializer.get())
+                .setColumnFamily(Schema.POLICIES.getName())
                 .setKey(idImpl.getUUID())
-                .setColumnNames(SHORT_NAME, DESCRIPTION);
+                .setColumnNames(Schema.POLICIES.SHORT_NAME.getName(),
+                                Schema.POLICIES.DESCRIPTION.getName());
         QueryResult<ColumnSlice<String, String>> result = q.execute();
         ColumnSlice<String, String> cs = result.get();
         if (cs == null) {
@@ -92,8 +88,8 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
             throw new NoSuchPolicyException(policyID);
         }
 
-        String shortName = getStringColumnOrNull(cs, SHORT_NAME);
-        String description = getStringColumnOrNull(cs, DESCRIPTION);
+        String shortName = getStringColumnOrNull(cs, Schema.POLICIES.SHORT_NAME.getName());
+        String description = getStringColumnOrNull(cs, Schema.POLICIES.DESCRIPTION.getName());
 
         return new Policy(idImpl, shortName, description);
     }
@@ -111,21 +107,20 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
 
     @Override
     public List<Policy> getAllPolicies() {
-        RangeSlicesQuery<UUID, String, String> rangeSlicesQuery =
-            HFactory.createRangeSlicesQuery(_keyspace,
-                    UUIDSerializer.get(), StringSerializer.get(), StringSerializer.get())
-                .setColumnFamily(POLICIES_COLUMN_FAMILY)
-                // TODO: may need paging of data once we have more than a few hundred.
-                //       This may need some sort of indexing since we're using RandomPartitioner,
-                //       in order to return them in a useful order.
-                .setRowCount(1000)
-                // TODO: needed?
-                // .setKeys("fake_key_0", "fake_key_4");
-                // TODO: needed?
-                // .setRange("", "", false, 3)
-                .setColumnNames(SHORT_NAME, DESCRIPTION);
+        @SuppressWarnings("unchecked") // generic array creation
+        RangeSlicesQuery<UUID, String, String> query =
+                Schema.POLICIES.createRangeSlicesQuery(_keyspace,
+                        Schema.POLICIES.SHORT_NAME,
+                        Schema.POLICIES.DESCRIPTION);
 
-        QueryResult<OrderedRows<UUID, String, String>> result = rangeSlicesQuery.execute();
+        // TODO: may need paging of data once we have more than a few hundred.
+        //       This may need some sort of indexing since we're using RandomPartitioner,
+        //       in order to return them in a useful order.
+        query.setRowCount(1000);
+        // TODO: needed?
+        // query.setKeys("fake_key_0", "fake_key_4");
+
+        QueryResult<OrderedRows<UUID, String, String>> result = query.execute();
 
         OrderedRows<UUID, String, String> orderedRows = result.get();
         if (orderedRows == null) {
@@ -142,12 +137,12 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
 
             String shortName;
             try {
-                shortName = getNonNullStringColumn(cs, SHORT_NAME);
+                shortName = getNonNullStringColumn(cs, Schema.POLICIES.SHORT_NAME.getName());
             } catch (NoSuchColumnException e) {
                 continue; // Tombstone (deleted item) reappeared in range scan. Ignore, will eventually be GC'd.
             }
 
-            String description = getStringColumnOrNull(cs, DESCRIPTION);
+            String description = getStringColumnOrNull(cs, Schema.POLICIES.DESCRIPTION.getName());
 
             policies.add(new Policy(new HectorPolicyIDImpl(row.getKey()), shortName, description));
         }
@@ -158,14 +153,15 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
     @Override
     public void persist(Policy policy) {
         UUID policyID = getInternalPolicyID(policy);
-        Mutator<UUID> mutator = HFactory.createMutator(_keyspace, UUIDSerializer.get())
-                .addInsertion(policyID, POLICIES_COLUMN_FAMILY,
-                              HFactory.createStringColumn(SHORT_NAME, policy.getShortName()))
-                .addInsertion(policyID, POLICIES_COLUMN_FAMILY,
-                              HFactory.createStringColumn(DESCRIPTION, policy.getDescription()));
+
+        Mutator<UUID> m = Schema.POLICIES.createMutator(_keyspace);
+
+        Schema.POLICIES.addExistsMarker(m, policyID);
+        Schema.POLICIES.SHORT_NAME.addInsertion(m, policyID, policy.getShortName());
+        Schema.POLICIES.DESCRIPTION.addInsertion(m, policyID, policy.getDescription());
 
         // TODO: error handling? Throws HectorException.
-        mutator.execute();
+        m.execute();
     }
 
     private UUID getInternalPolicyID(Policy policy) {

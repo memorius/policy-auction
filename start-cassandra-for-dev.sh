@@ -44,12 +44,9 @@ full_log_dir="$(readlink -mnq "${cassandra_log}")"
 full_data_dir="$(readlink -mnq "${cassandra_data}")"
 full_conf_dir="$(readlink -mnq "${cassandra_conf}")"
 
-for f in "${cassandra_conf}/cassandra.yaml" "${cassandra_conf}/log4j-server.properties" ; do
-    rm -f "$f"
-    cp "$f.template" "$f"
-    sed -i -r 's!%%cassandra_log_dir%%!'"${full_log_dir}!" "$f"
-    sed -i -r 's!%%cassandra_data_dir%%!'"${full_data_dir}!" "$f"
-done
+replace_data_and_log_dir_placeholders "${full_data_dir}" "${full_log_dir}" \
+    "${cassandra_conf}/cassandra.yaml" \
+    "${cassandra_conf}/log4j-server.properties"
 
 # Tell cassandra where our config scripts are then start it in the foreground
 export CASSANDRA_CONF="$full_conf_dir"

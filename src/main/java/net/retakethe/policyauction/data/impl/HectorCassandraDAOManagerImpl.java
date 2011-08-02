@@ -1,13 +1,10 @@
 package net.retakethe.policyauction.data.impl;
 
-import me.prettyprint.cassandra.service.CassandraHostConfigurator;
-import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
-import me.prettyprint.hector.api.exceptions.HectorException;
-import me.prettyprint.hector.api.factory.HFactory;
 import net.retakethe.policyauction.data.api.DAOManager;
-import net.retakethe.policyauction.data.api.PolicyManager;
+import net.retakethe.policyauction.services.AppModule;
+
+import org.apache.tapestry5.ioc.annotations.Inject;
 
 /**
  * Data access using Apache Cassandra via Hector library.
@@ -21,47 +18,53 @@ import net.retakethe.policyauction.data.api.PolicyManager;
  */
 public class HectorCassandraDAOManagerImpl implements DAOManager {
 
-    private static final String KEYSPACE_NAME = "policy_auction";
+    public static final String MAIN_KEYSPACE_NAME = "policy_auction";
 
     /**
-     * Threadsafe
+     * I <i>think</i> Keyspace is threadsafe
      */
-    private final Cluster _cluster;
+    private final Keyspace _mainKeyspace;
+
+    private final HectorPolicyManagerImpl _policyManager;
+
+    private final HectorCassandraKeyspaceManager _keyspaceManager;
 
     /**
-     * I <i>think</i> this is threadsafe
-     */
-    private final Keyspace _keyspace;
-
-    private final PolicyManager _policyManager;
-
-    /**
+     * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
+     *
      * @throws InitializationException
      */
+    @Inject // This in the one to call from AppModule to register this as a service
     public HectorCassandraDAOManagerImpl() {
-        _cluster = HFactory.getOrCreateCluster("policy_auction_cluster",
-                new CassandraHostConfigurator("localhost:9160"));
+        this("localhost", 9160);
+    }
 
-        KeyspaceDefinition keyspaceDef;
-        try {
-            keyspaceDef = _cluster.describeKeyspace(KEYSPACE_NAME);
-        } catch (HectorException e) {
-            throw new InitializationException("Cannot retrieve cassandra keyspace '" + KEYSPACE_NAME + "':"
-                    + " check the cluster has been started before webapp startup - see dev docs.");
+    /**
+     * Constructor used in testing
+     *
+     * @throws InitializationException
+     */
+    public HectorCassandraDAOManagerImpl(String address, int port) {
+        if (address == null) {
+            throw new IllegalArgumentException("address must not be null");
         }
+        _keyspaceManager = new HectorCassandraKeyspaceManager(address + ':' + String.valueOf(port));
 
-        if (keyspaceDef == null) {
-            throw new InitializationException("Cassandra keyspace '" + KEYSPACE_NAME + "' not found."
-                    + " Cluster must be manually initialized before webapp startup - see dev docs.");
-        }
+        _mainKeyspace = _keyspaceManager.getKeyspace(MAIN_KEYSPACE_NAME);
 
-        _keyspace = HFactory.createKeyspace(KEYSPACE_NAME, _cluster);
+        _policyManager = new HectorPolicyManagerImpl(_mainKeyspace);
+    }
 
-        _policyManager = new HectorPolicyManagerImpl(_keyspace);
+    public void destroy() {
+        _keyspaceManager.destroy();
+    }
+
+    public Keyspace getMainKeyspace() {
+        return _mainKeyspace;
     }
 
     @Override
-    public PolicyManager getPolicyManager() {
+    public HectorPolicyManagerImpl getPolicyManager() {
         return _policyManager;
     }
 
