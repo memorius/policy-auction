@@ -1,5 +1,6 @@
 package net.retakethe.policyauction.data.impl;
 
+import me.prettyprint.cassandra.model.QuorumAllConsistencyLevelPolicy;
 import me.prettyprint.hector.api.Keyspace;
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.services.AppModule;
@@ -51,6 +52,7 @@ public class HectorCassandraDAOManagerImpl implements DAOManager {
         _keyspaceManager = new HectorCassandraKeyspaceManager(address + ':' + String.valueOf(port));
 
         _mainKeyspace = _keyspaceManager.getKeyspace(MAIN_KEYSPACE_NAME);
+        _mainKeyspace.setConsistencyLevelPolicy(new QuorumAllConsistencyLevelPolicy());
 
         _policyManager = new HectorPolicyManagerImpl(_mainKeyspace);
     }
