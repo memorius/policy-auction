@@ -69,16 +69,27 @@ public class ColumnFamily<K> {
         return HFactory.createMutator(ks, getKeySerializer());
     }
 
-    @SuppressWarnings("unchecked") // Generic array creation
+    /**
+     * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, can be empty,
+     *      must be columns belonging to this ColumnFamily.
+     */
     public <N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, Column<K, N, V>... columns) {
         List<N> columnNames = new ArrayList<N>(columns.length);
         for (Column<K, N, V> column : columns) {
+            if (column.getColumnFamily() != this) {
+                throw new IllegalArgumentException("Column '" + column.getName() + "' is from column family '"
+                        + column.getColumnFamily().getName() + "', expected this column family '" + getName() + "'");
+            }
             columnNames.add(column.getName());
         }
+
+        @SuppressWarnings("unchecked") // Generic array creation
+        N[] columnNamesArray = columnNames.toArray((N[]) new Object[columns.length]);
+
         return HFactory.createRangeSlicesQuery(ks, getKeySerializer(),
                 columns[0].getNameSerializer(), columns[0].getValueSerializer())
                 .setColumnFamily(getName())
-                .setColumnNames(columnNames.toArray((N[]) new Object[columns.length]));
+                .setColumnNames(columnNamesArray);
     }
 
     /**
