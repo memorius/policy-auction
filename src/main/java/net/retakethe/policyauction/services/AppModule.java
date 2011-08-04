@@ -3,7 +3,7 @@ package net.retakethe.policyauction.services;
 import java.io.IOException;
 
 import net.retakethe.policyauction.data.api.DAOManager;
-import net.retakethe.policyauction.data.impl.HectorCassandraDAOManagerImpl;
+import net.retakethe.policyauction.data.impl.HectorDAOManagerImpl;
 
 import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
@@ -36,7 +36,7 @@ public class AppModule
         // TODO: use tapestry methods of getting config properties (hosts etc) to the hector service.
         //       this will work by auto-injection of other services into constructor args:
         //       see here: http://tapestry.apache.org/defining-tapestry-ioc-services.html
-        binder.bind(DAOManager.class, HectorCassandraDAOManagerImpl.class);
+        binder.bind(DAOManager.class, HectorDAOManagerImpl.class);
     }
 
     public static void contributeApplicationDefaults(

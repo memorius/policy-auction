@@ -12,14 +12,14 @@ import me.prettyprint.hector.api.factory.HFactory;
  *
  * @author Nick Clarke
  */
-public class HectorCassandraKeyspaceManager {
+public class HectorKeyspaceManager {
 
     /**
      * Threadsafe
      */
     private Cluster _cluster;
 
-    public HectorCassandraKeyspaceManager(String hostAndPort) {
+    public HectorKeyspaceManager(String hostAndPort) {
         _cluster = HFactory.getOrCreateCluster("policy_auction_cluster",
                 new CassandraHostConfigurator(hostAndPort));
     }

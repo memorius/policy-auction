@@ -9,7 +9,7 @@ import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
-import net.retakethe.policyauction.data.impl.HectorCassandraDAOManagerImpl;
+import net.retakethe.policyauction.data.impl.HectorDAOManagerImpl;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 
@@ -28,7 +28,7 @@ public abstract class HectorTestBase {
     private static final Logger logger = LoggerFactory.getLogger(HectorTestBase.class);
 
     private boolean runningInTestSuite = false;
-    private HectorCassandraDAOManagerImpl daoManager;
+    private HectorDAOManagerImpl daoManager;
 
     @BeforeClass
     public void setupCassandraAndDAOManager() {
@@ -42,7 +42,7 @@ public abstract class HectorTestBase {
         // else we're running ALL the tests, and TestCassandraManager is run as a test class,
         // so its @BeforeSuite method is called before the first test.
 
-        daoManager = new HectorCassandraDAOManagerImpl("localhost", TestCassandraManager.getCassandraRpcPort());
+        daoManager = new HectorDAOManagerImpl("localhost", TestCassandraManager.getCassandraRpcPort());
         logger.info("HectorTestBase.setupCassandraAndDAOManager finished");
     }
 
@@ -63,7 +63,7 @@ public abstract class HectorTestBase {
         logger.info("HectorTestBase.teardownDAOManagerAndCassandra finished");
     }
 
-    protected HectorCassandraDAOManagerImpl getDAOManager() {
+    protected HectorDAOManagerImpl getDAOManager() {
         return daoManager;
     }
 

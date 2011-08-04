@@ -17,7 +17,7 @@ import org.apache.tapestry5.ioc.annotations.Inject;
  *
  * @author Nick Clarke
  */
-public class HectorCassandraDAOManagerImpl implements DAOManager {
+public class HectorDAOManagerImpl implements DAOManager {
 
     public static final String MAIN_KEYSPACE_NAME = "policy_auction";
 
@@ -28,7 +28,7 @@ public class HectorCassandraDAOManagerImpl implements DAOManager {
 
     private final HectorPolicyManagerImpl _policyManager;
 
-    private final HectorCassandraKeyspaceManager _keyspaceManager;
+    private final HectorKeyspaceManager _keyspaceManager;
 
     /**
      * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
@@ -36,7 +36,7 @@ public class HectorCassandraDAOManagerImpl implements DAOManager {
      * @throws InitializationException
      */
     @Inject // This in the one to call from AppModule to register this as a service
-    public HectorCassandraDAOManagerImpl() {
+    public HectorDAOManagerImpl() {
         this("localhost", 9160);
     }
 
@@ -45,11 +45,11 @@ public class HectorCassandraDAOManagerImpl implements DAOManager {
      *
      * @throws InitializationException
      */
-    public HectorCassandraDAOManagerImpl(String address, int port) {
+    public HectorDAOManagerImpl(String address, int port) {
         if (address == null) {
             throw new IllegalArgumentException("address must not be null");
         }
-        _keyspaceManager = new HectorCassandraKeyspaceManager(address + ':' + String.valueOf(port));
+        _keyspaceManager = new HectorKeyspaceManager(address + ':' + String.valueOf(port));
 
         _mainKeyspace = _keyspaceManager.getKeyspace(MAIN_KEYSPACE_NAME);
         _mainKeyspace.setConsistencyLevelPolicy(new QuorumAllConsistencyLevelPolicy());
