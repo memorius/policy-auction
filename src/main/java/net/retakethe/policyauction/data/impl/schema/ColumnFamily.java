@@ -100,7 +100,7 @@ public class ColumnFamily<K> {
      * <p>
      * Its absence (value doesn't matter) is used in range-slice queries to filter out deleted tombstone rows
      * when there is no other suitable column to filter with - e.g. when querying with setReturnKeysOnly().
-     * See HectorTestBase#cleanColumnFamily for an example.
+     * See HectorDAOTestBase#cleanColumnFamily for an example.
      * See here for more info on tombstones: {@link "http://wiki.apache.org/cassandra/FAQ#range_ghosts"}.
      */
     public void addExistsMarker(Mutator<K> mutator, K key) {

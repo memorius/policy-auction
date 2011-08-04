@@ -10,9 +10,9 @@ import net.retakethe.policyauction.entities.Policy;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import _fixtures.CleanDbEveryMethodHectorTestBase;
+import _fixtures.CleanDbEveryMethodHectorDAOTestBase;
 
-public class HectorPolicyManagerImplTest extends CleanDbEveryMethodHectorTestBase {
+public class HectorPolicyManagerImplTest extends CleanDbEveryMethodHectorDAOTestBase {
 
     private HectorPolicyManagerImpl manager;
 
