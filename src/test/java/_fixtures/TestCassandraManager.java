@@ -25,7 +25,7 @@ public final class TestCassandraManager {
      * <p>
      * When running single tests from Eclipse, {@link HectorTestBase} calls this explicitly.
      */
-    @BeforeSuite
+    @BeforeSuite(groups = {"dao"})
     public static void setupCassandra() {
         logger.info("TestCassandraManager.setupCassandra starting");
         testCassandra = new TestCassandra();
@@ -39,7 +39,7 @@ public final class TestCassandraManager {
      * <p>
      * When running single tests from Eclipse, {@link HectorTestBase} calls this explicitly.
      */
-    @AfterSuite
+    @AfterSuite(groups = {"dao"})
     public static void teardownCassandra() {
         logger.info("TestCassandraManager.teardownCassandra starting");
         testCassandra.teardown();

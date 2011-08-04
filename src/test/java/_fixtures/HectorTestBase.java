@@ -30,7 +30,7 @@ public abstract class HectorTestBase {
     private boolean runningInTestSuite = false;
     private HectorDAOManagerImpl daoManager;
 
-    @BeforeClass
+    @BeforeClass(groups = {"dao"})
     public void setupCassandraAndDAOManager() {
         logger.info("HectorTestBase.setupCassandraAndDAOManager starting");
         runningInTestSuite = TestCassandraManager.isInitialized();
@@ -46,7 +46,7 @@ public abstract class HectorTestBase {
         logger.info("HectorTestBase.setupCassandraAndDAOManager finished");
     }
 
-    @AfterClass
+    @AfterClass(groups = {"dao"})
     public void teardownDAOManagerAndCassandra() {
         logger.info("HectorTestBase.teardownDAOManagerAndCassandra starting");
         daoManager.destroy();

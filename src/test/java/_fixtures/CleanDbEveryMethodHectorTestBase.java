@@ -4,7 +4,7 @@ import org.testng.annotations.BeforeMethod;
 
 public abstract class CleanDbEveryMethodHectorTestBase extends HectorTestBase {
 
-    @BeforeMethod
+    @BeforeMethod(groups = {"dao"})
     public void cleanDB() {
         cleanCassandraDB();
     }

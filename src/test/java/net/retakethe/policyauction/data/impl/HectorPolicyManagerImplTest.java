@@ -16,12 +16,12 @@ public class HectorPolicyManagerImplTest extends CleanDbEveryMethodHectorTestBas
 
     private HectorPolicyManagerImpl manager;
 
-    @BeforeMethod
+    @BeforeMethod(groups = {"dao"})
     public void setupManager() {
         manager = getDAOManager().getPolicyManager();
     }
 
-    @Test
+    @Test(groups = {"dao"})
     public void testCreatePersistGetPolicy() throws NoSuchPolicyException {
         Policy p = manager.createPolicy();
         p.setDescription("My policy");
@@ -34,7 +34,7 @@ public class HectorPolicyManagerImplTest extends CleanDbEveryMethodHectorTestBas
         assertEquals(retrieved.getShortName(), p.getShortName());
     }
 
-    @Test
+    @Test(groups = {"dao"})
     public void testGetAllPolicies() {
         Policy p1 = manager.createPolicy();
         p1.setDescription("My policy 1");
