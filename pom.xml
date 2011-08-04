@@ -133,6 +133,18 @@ of testing facilities designed for use with TestNG (http://testng.org/), so it's
                     </requestLog>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.9</version>
+                <configuration>
+                    <!-- Restrict memory usage - the embedded Cassandra executed by the unit tests may try to
+                         allocate and lock the JVM memory max at startup, which may fail if the JVM picks a
+                         large default max limit. -->
+                    <argLine>-Xmx512m</argLine>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
