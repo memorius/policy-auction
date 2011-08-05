@@ -1,5 +1,7 @@
 package net.retakethe.policyauction.data.impl;
 
+import static net.retakethe.policyauction.util.CollectionUtils.list;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -107,11 +109,10 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAO implements Policy
 
     @Override
     public List<Policy> getAllPolicies() {
-        @SuppressWarnings("unchecked") // generic array creation
         RangeSlicesQuery<UUID, String, String> query =
                 Schema.POLICIES.createRangeSlicesQuery(_keyspace,
-                        Schema.POLICIES.SHORT_NAME,
-                        Schema.POLICIES.DESCRIPTION);
+                        list(Schema.POLICIES.SHORT_NAME,
+                             Schema.POLICIES.DESCRIPTION));
 
         // TODO: may need paging of data once we have more than a few hundred.
         //       This may need some sort of indexing since we're using RandomPartitioner,

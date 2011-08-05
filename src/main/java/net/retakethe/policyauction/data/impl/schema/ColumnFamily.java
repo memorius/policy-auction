@@ -1,6 +1,5 @@
 package net.retakethe.policyauction.data.impl.schema;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,6 +9,7 @@ import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.QueryFactory;
 
 /**
  * Enum-like class for Cassandra Column Families.
@@ -73,23 +73,8 @@ public class ColumnFamily<K> {
      * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, can be empty,
      *      must be columns belonging to this ColumnFamily.
      */
-    public <N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, Column<K, N, V>... columns) {
-        List<N> columnNames = new ArrayList<N>(columns.length);
-        for (Column<K, N, V> column : columns) {
-            if (column.getColumnFamily() != this) {
-                throw new IllegalArgumentException("Column '" + column.getName() + "' is from column family '"
-                        + column.getColumnFamily().getName() + "', expected this column family '" + getName() + "'");
-            }
-            columnNames.add(column.getName());
-        }
-
-        @SuppressWarnings("unchecked") // Generic array creation
-        N[] columnNamesArray = columnNames.toArray((N[]) new Object[columns.length]);
-
-        return HFactory.createRangeSlicesQuery(ks, getKeySerializer(),
-                columns[0].getNameSerializer(), columns[0].getValueSerializer())
-                .setColumnFamily(getName())
-                .setColumnNames(columnNamesArray);
+    public <N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, List<Column<K, N, V>> columns) {
+        return QueryFactory.createRangeSlicesQuery(ks, this, columns);
     }
 
     /**

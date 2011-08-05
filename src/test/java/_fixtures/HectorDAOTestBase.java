@@ -1,5 +1,7 @@
 package _fixtures;
 
+import static net.retakethe.policyauction.util.CollectionUtils.list;
+
 import java.util.List;
 
 import me.prettyprint.hector.api.Keyspace;
@@ -10,7 +12,9 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.HectorDAOManagerImpl;
+import net.retakethe.policyauction.data.impl.schema.Column;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.ColumnFamily.ExistsColumn;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 
 import org.slf4j.Logger;
@@ -87,9 +91,9 @@ public abstract class HectorDAOTestBase {
             // Use of the common-to-all-CFs "EXISTS" column allows us to omit tombstone rows:
             // they will be present in the result but will lack this column.
 
-            // TODO: fix up
-            @SuppressWarnings("unchecked") // generic array creation, ok
-            RangeSlicesQuery<K, String, byte[]> query = cf.createRangeSlicesQuery(ks, cf.EXISTS);
+            ExistsColumn<K> existsColumn = cf.EXISTS;
+            RangeSlicesQuery<K, String, byte[]> query = cf.createRangeSlicesQuery(ks,
+                    list((Column<K, String, byte[]>) existsColumn));
 
             query.setRowCount(100000);
             QueryResult<OrderedRows<K, String, byte[]>> result = query.execute();
@@ -104,7 +108,7 @@ public abstract class HectorDAOTestBase {
             boolean rowsExist = false;
             for (Row<K, String, byte[]> row : rows) {
                 logger.info("HectorDAOTestBase.cleanCassandraDB: key: " + row.getKey());
-                HColumn<String, byte[]> exists = row.getColumnSlice().getColumnByName(cf.EXISTS.getName());
+                HColumn<String, byte[]> exists = row.getColumnSlice().getColumnByName(existsColumn.getName());
                 if (exists == null) {
                     logger.info("HectorDAOTestBase.cleanCassandraDB: tombstone row");
                     continue;
