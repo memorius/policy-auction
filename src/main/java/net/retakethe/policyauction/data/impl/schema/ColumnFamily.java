@@ -10,6 +10,7 @@ import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
+import net.retakethe.policyauction.data.impl.query.VariableValueTypedMultiGetSliceQuery;
 
 /**
  * Enum-like class for Cassandra Column Families.
@@ -67,6 +68,11 @@ public class ColumnFamily<K> {
 
     public Mutator<K> createMutator(Keyspace ks) {
         return HFactory.createMutator(ks, getKeySerializer());
+    }
+
+    public <N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(Keyspace ks,
+            List<Column<K, N, ?>> columns) {
+        return QueryFactory.createVariableValueTypedMultiGetSliceQuery(ks, this, columns);
     }
 
     /**
