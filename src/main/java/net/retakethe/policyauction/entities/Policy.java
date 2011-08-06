@@ -1,6 +1,7 @@
 package net.retakethe.policyauction.entities;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import net.retakethe.policyauction.data.api.PolicyDAO;
 
@@ -40,5 +41,9 @@ public class Policy implements Serializable {
 
     public void setDescription(String description) {
         policyDAO.setDescription(description);
+    }
+
+    public Date getLastEdited() {
+        return policyDAO.getLastEdited();
     }
 }

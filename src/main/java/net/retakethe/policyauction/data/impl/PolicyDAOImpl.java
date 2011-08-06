@@ -1,5 +1,7 @@
 package net.retakethe.policyauction.data.impl;
 
+import java.util.Date;
+
 import net.retakethe.policyauction.data.api.PolicyDAO;
 
 /**
@@ -11,6 +13,7 @@ public class PolicyDAOImpl implements PolicyDAO {
     private final HectorPolicyIDImpl policyID;
     private String description;
     private String shortName;
+    private Date lastEdited;
 
     public PolicyDAOImpl(HectorPolicyIDImpl policyID) {
         if (policyID == null) {
@@ -19,10 +22,11 @@ public class PolicyDAOImpl implements PolicyDAO {
         this.policyID = policyID;
     }
 
-    public PolicyDAOImpl(HectorPolicyIDImpl policyID, String shortName, String description) {
+    public PolicyDAOImpl(HectorPolicyIDImpl policyID, String shortName, String description, Date lastEdited) {
         this.policyID = policyID;
         this.shortName = shortName;
         this.description = description;
+        this.lastEdited = lastEdited;
     }
 
     @Override
@@ -48,5 +52,10 @@ public class PolicyDAOImpl implements PolicyDAO {
     @Override
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public Date getLastEdited() {
+        return lastEdited;
     }
 }

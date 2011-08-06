@@ -3,6 +3,9 @@ package net.retakethe.policyauction.data.impl;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import net.retakethe.policyauction.data.api.PolicyID;
+import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumn;
+import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumnSlice;
+import net.retakethe.policyauction.data.impl.schema.Column;
 
 /**
  * @author Nick Clarke
@@ -29,6 +32,27 @@ public class AbstractHectorDAOManager {
         String value = col.getValue();
         if (value == null) {
             return null;
+        }
+        return value;
+    }
+
+    protected <N, V> V getColumnOrNull(VariableValueTypedColumnSlice<N> cs, Column<?, N, V> column) {
+        VariableValueTypedColumn<N, V> col = cs.getColumn(column);
+        if (col == null) {
+            return null;
+        }
+        return col.getValue();
+    }
+
+    protected <N, V> V getNonNullColumn(VariableValueTypedColumnSlice<N> cs, Column<?, N, V> column)
+            throws NoSuchColumnException {
+        VariableValueTypedColumn<N, V> col = cs.getColumn(column);
+        if (col == null) {
+            throw new NoSuchColumnException(column.getName().toString());
+        }
+        V value = col.getValue();
+        if (value == null) {
+            throw new NoSuchColumnException(column.getName().toString());
         }
         return value;
     }

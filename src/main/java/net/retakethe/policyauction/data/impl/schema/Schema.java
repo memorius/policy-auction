@@ -1,7 +1,9 @@
 package net.retakethe.policyauction.data.impl.schema;
 
+import java.util.Date;
 import java.util.UUID;
 
+import me.prettyprint.cassandra.serializers.DateSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 /**
@@ -18,11 +20,14 @@ public final class Schema {
 
         public final Column<UUID, String, String> SHORT_NAME;
         public final Column<UUID, String, String> DESCRIPTION;
+        public final Column<UUID, String, Date> LAST_EDITED;
 
         private PoliciesCF() {
             super("policies", UUID.class, UUIDSerializer.get());
             SHORT_NAME = new StringStringColumn<UUID>("short_name", getKeyType(), this);
             DESCRIPTION = new StringStringColumn<UUID>("description", getKeyType(), this);
+            LAST_EDITED = new StringNamedColumn<UUID, Date>("last_edited", getKeyType(), this,
+                    Date.class, DateSerializer.get());
         }
     }
 }

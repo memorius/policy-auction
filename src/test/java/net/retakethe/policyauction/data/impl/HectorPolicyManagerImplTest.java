@@ -1,7 +1,9 @@
 package net.retakethe.policyauction.data.impl;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 
+import java.util.Date;
 import java.util.List;
 
 import net.retakethe.policyauction.data.api.PolicyDAO;
@@ -26,12 +28,16 @@ public class HectorPolicyManagerImplTest extends CleanDbEveryMethodHectorDAOTest
         PolicyDAO p = manager.createPolicy();
         p.setDescription("My policy");
         p.setShortName("My short name");
+
+        Date editedAfter = new Date();
+
         manager.persist(p);
 
         PolicyDAO retrieved = manager.getPolicy(p.getPolicyID());
         assertEquals(retrieved.getPolicyID(), p.getPolicyID());
         assertEquals(retrieved.getDescription(), p.getDescription());
         assertEquals(retrieved.getShortName(), p.getShortName());
+        assertFalse(retrieved.getLastEdited().before(editedAfter));
     }
 
     @Test(groups = {"dao"})
