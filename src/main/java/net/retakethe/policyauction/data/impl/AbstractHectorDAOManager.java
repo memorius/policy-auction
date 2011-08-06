@@ -7,7 +7,7 @@ import me.prettyprint.hector.api.beans.HColumn;
  * @author Nick Clarke
  *
  */
-public class AbstractHectorDAO {
+public class AbstractHectorDAOManager {
 
     public static final class NoSuchColumnException extends Exception {
         private static final long serialVersionUID = 0L;

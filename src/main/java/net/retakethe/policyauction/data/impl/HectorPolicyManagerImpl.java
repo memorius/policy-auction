@@ -26,7 +26,7 @@ import net.retakethe.policyauction.entities.Policy;
 /**
  * @author Nick Clarke
  */
-public class HectorPolicyManagerImpl extends AbstractHectorDAO implements PolicyManager {
+public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements PolicyManager {
 
     private static final class HectorPolicyIDImpl implements PolicyID {
 
