@@ -1,6 +1,7 @@
 package net.retakethe.policyauction.pages.policy;
 
 import net.retakethe.policyauction.data.api.DAOManager;
+import net.retakethe.policyauction.entities.EntityFactory;
 import net.retakethe.policyauction.entities.Policy;
 
 import org.apache.tapestry5.annotations.InjectPage;
@@ -34,7 +35,7 @@ public class EditPolicy {
 
     public Object onSuccess()
     {
-        daoManager.getPolicyManager().persist(policy);
+        daoManager.getPolicyManager().persist(EntityFactory.getPolicyDAO(policy));
         return allPoliciesPage;
     }
 }

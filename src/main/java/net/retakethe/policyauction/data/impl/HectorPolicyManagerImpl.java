@@ -2,7 +2,6 @@ package net.retakethe.policyauction.data.impl;
 
 import static net.retakethe.policyauction.util.CollectionUtils.list;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -18,45 +17,18 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
+import net.retakethe.policyauction.data.api.PolicyDAO;
 import net.retakethe.policyauction.data.api.PolicyID;
 import net.retakethe.policyauction.data.api.PolicyManager;
 import net.retakethe.policyauction.data.impl.schema.Schema;
-import net.retakethe.policyauction.entities.Policy;
+import net.retakethe.policyauction.util.Functional;
+import net.retakethe.policyauction.util.Functional.Filter;
+import net.retakethe.policyauction.util.Functional.SkippedElementException;
 
 /**
  * @author Nick Clarke
  */
 public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements PolicyManager {
-
-    private static final class HectorPolicyIDImpl implements PolicyID {
-
-        private final UUID _uuid;
-
-        public HectorPolicyIDImpl(String idString) {
-            if (idString == null) {
-                throw new IllegalArgumentException("idString must not be null");
-            }
-            _uuid = UUID.fromString(idString);
-        }
-
-        public HectorPolicyIDImpl(UUID uuid) {
-            _uuid = uuid;
-        }
-
-        @Override
-        public String asString() {
-            return _uuid.toString();
-        }
-
-        @Override
-        public String toString() {
-            return asString();
-        }
-
-        public UUID getUUID() {
-            return _uuid;
-        }
-    }
 
     private final Keyspace _keyspace;
 
@@ -74,7 +46,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
     }
 
     @Override
-    public Policy getPolicy(PolicyID policyID) throws NoSuchPolicyException {
+    public PolicyDAO getPolicy(PolicyID policyID) throws NoSuchPolicyException {
         HectorPolicyIDImpl idImpl = getPolicyIDImpl(policyID);
         SliceQuery<UUID, String, String> q =
             HFactory.createSliceQuery(_keyspace,
@@ -93,22 +65,18 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
         String shortName = getStringColumnOrNull(cs, Schema.POLICIES.SHORT_NAME.getName());
         String description = getStringColumnOrNull(cs, Schema.POLICIES.DESCRIPTION.getName());
 
-        return new Policy(idImpl, shortName, description);
-    }
-
-    private HectorPolicyIDImpl getPolicyIDImpl(PolicyID policyID) {
-        return (HectorPolicyIDImpl) policyID;
+        return new PolicyDAOImpl(idImpl, shortName, description);
     }
 
     @Override
-    public Policy createPolicy() {
+    public PolicyDAO createPolicy() {
         UUID uuid = TimeUUIDUtils.getUniqueTimeUUIDinMillis();
         HectorPolicyIDImpl policyID = new HectorPolicyIDImpl(uuid);
-        return new Policy(policyID);
+        return new PolicyDAOImpl(policyID);
     }
 
     @Override
-    public List<Policy> getAllPolicies() {
+    public List<PolicyDAO> getAllPolicies() {
         RangeSlicesQuery<UUID, String, String> query =
                 Schema.POLICIES.createRangeSlicesQuery(_keyspace,
                         list(Schema.POLICIES.SHORT_NAME,
@@ -128,32 +96,34 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
             return Collections.emptyList();
         }
 
-        List<Row<UUID, String, String>> rowList = orderedRows.getList();
-        List<Policy> policies = new ArrayList<Policy>(rowList.size());
-        for (Row<UUID, String, String> row : rowList) {
-            ColumnSlice<String, String> cs = row.getColumnSlice();
-            if (cs == null) {
-                continue;
-            }
+        return Functional.filter(orderedRows.getList(),
+                new Filter<Row<UUID, String, String>, PolicyDAO>() {
+                    @Override
+                    public PolicyDAO filter(Row<UUID, String, String> row) throws SkippedElementException {
+                        ColumnSlice<String, String> cs = row.getColumnSlice();
+                        if (cs == null) {
+                            throw new SkippedElementException();
+                        }
 
-            String shortName;
-            try {
-                shortName = getNonNullStringColumn(cs, Schema.POLICIES.SHORT_NAME.getName());
-            } catch (NoSuchColumnException e) {
-                continue; // Tombstone (deleted item) reappeared in range scan. Ignore, will eventually be GC'd.
-            }
+                        String shortName;
+                        try {
+                            shortName = getNonNullStringColumn(cs, Schema.POLICIES.SHORT_NAME.getName());
+                        } catch (NoSuchColumnException e) {
+                            throw new SkippedElementException();
+                        }
 
-            String description = getStringColumnOrNull(cs, Schema.POLICIES.DESCRIPTION.getName());
+                        String description = getStringColumnOrNull(cs, Schema.POLICIES.DESCRIPTION.getName());
 
-            policies.add(new Policy(new HectorPolicyIDImpl(row.getKey()), shortName, description));
-        }
-
-        return policies;
+                        return new PolicyDAOImpl(new HectorPolicyIDImpl(row.getKey()), shortName, description);
+                    }
+                });
     }
 
     @Override
-    public void persist(Policy policy) {
-        UUID policyID = getInternalPolicyID(policy);
+    public void persist(PolicyDAO policy) {
+        PolicyDAOImpl impl = getImpl(policy, PolicyDAOImpl.class);
+
+        UUID policyID = impl.getPolicyID().getUUID();
 
         Mutator<UUID> m = Schema.POLICIES.createMutator(_keyspace);
 
@@ -163,9 +133,5 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
         // TODO: error handling? Throws HectorException.
         m.execute();
-    }
-
-    private UUID getInternalPolicyID(Policy policy) {
-        return ((HectorPolicyIDImpl) policy.getPolicyID()).getUUID();
     }
 }

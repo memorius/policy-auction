@@ -1,58 +1,44 @@
 package net.retakethe.policyauction.entities;
 
-import net.retakethe.policyauction.data.api.PolicyID;
+import java.io.Serializable;
 
+import net.retakethe.policyauction.data.api.PolicyDAO;
+
+import org.apache.tapestry5.beaneditor.NonVisual;
 import org.apache.tapestry5.beaneditor.Validate;
 
 /**
  * @author Nick Clarke
  */
-public class Policy  {
+public class Policy implements Serializable {
+    private static final long serialVersionUID = 0L;
 
-    private final PolicyID _policyID;
-    private String _description;
-    private String _shortName;
+    private final PolicyDAO policyDAO;
 
-    /**
-     * @param policyID must not be null
-     */
-    public Policy(PolicyID policyID) {
-        if (policyID == null) {
-            throw new IllegalArgumentException("policyID must not be null");
-        }
-        _policyID = policyID;
+    public Policy(PolicyDAO policyDAO) {
+        this.policyDAO = policyDAO;
     }
 
-    /**
-     * @param policyID must not be null
-     * @param shortName can be null
-     * @param description can be null
-     */
-    public Policy(PolicyID policyID, String shortName, String description) {
-        _policyID = policyID;
-        _shortName = shortName;
-        _description = description;
-    }
-
-    public PolicyID getPolicyID() {
-        return _policyID;
+    @NonVisual
+    protected PolicyDAO getPolicyDAO() {
+        return policyDAO;
     }
 
     @Validate("required")
     public String getShortName() {
-        return _shortName;
+        return policyDAO.getShortName();
     }
 
     public void setShortName(String shortName) {
-        _shortName = shortName;
+        policyDAO.setShortName(shortName);
     }
 
     @Validate("required")
     public String getDescription() {
-        return _description;
+        return policyDAO.getDescription();
     }
 
     public void setDescription(String description) {
-        _description = description;
+        policyDAO.setDescription(description);
     }
 }

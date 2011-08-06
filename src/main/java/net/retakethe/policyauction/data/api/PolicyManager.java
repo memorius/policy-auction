@@ -2,7 +2,6 @@ package net.retakethe.policyauction.data.api;
 
 import java.util.List;
 
-import net.retakethe.policyauction.entities.Policy;
 
 /**
  * @author Nick Clarke
@@ -19,11 +18,11 @@ public interface PolicyManager {
 
     PolicyID makePolicyID(String asString);
 
-    Policy getPolicy(PolicyID policyID) throws NoSuchPolicyException;
+    PolicyDAO getPolicy(PolicyID policyID) throws NoSuchPolicyException;
 
-    Policy createPolicy();
+    PolicyDAO createPolicy();
 
-    List<Policy> getAllPolicies();
+    List<PolicyDAO> getAllPolicies();
 
-    void persist(Policy policy);
+    void persist(PolicyDAO policy);
 }

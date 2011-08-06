@@ -2,6 +2,7 @@ package net.retakethe.policyauction.data.impl;
 
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
+import net.retakethe.policyauction.data.api.PolicyID;
 
 /**
  * @author Nick Clarke
@@ -41,4 +42,16 @@ public class AbstractHectorDAOManager {
         return value;
     }
 
+    protected <A, B extends A> B getImpl(A interfaceInstance, Class<B> implClass) {
+        try {
+            return implClass.cast(interfaceInstance);
+        } catch (ClassCastException e) {
+            throw new RuntimeException("The supplied " + interfaceInstance.getClass().getName()
+                    + " is not an instance of the expected implementation class " + implClass.getName());
+        }
+    }
+
+    protected HectorPolicyIDImpl getPolicyIDImpl(PolicyID policyID) {
+        return getImpl(policyID, HectorPolicyIDImpl.class);
+    }
 }
