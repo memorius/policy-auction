@@ -8,20 +8,23 @@ import java.util.List;
  */
 public final class CollectionUtils {
 
-    public static <T> List<T> list(T e1) {
+    public static <T>
+            List<T> list(T e1) {
         List<T> l = new ArrayList<T>(1);
         l.add(e1);
         return l;
     }
 
-    public static <T> List<T> list(T e1, T e2) {
+    public static <T, T1 extends T, T2 extends T>
+            List<T> list(T1 e1, T2 e2) {
         List<T> l = new ArrayList<T>(2);
         l.add(e1);
         l.add(e2);
         return l;
     }
 
-    public static <T> List<T> list(T e1, T e2, T e3) {
+    public static <T, T1 extends T, T2 extends T, T3 extends T>
+            List<T> list(T1 e1, T2 e2, T3 e3) {
         List<T> l = new ArrayList<T>(3);
         l.add(e1);
         l.add(e2);
@@ -29,7 +32,8 @@ public final class CollectionUtils {
         return l;
     }
 
-    public static <T> List<T> list(T e1, T e2, T e3, T e4) {
+    public static <T, T1 extends T, T2 extends T, T3 extends T, T4 extends T>
+            List<T> list(T1 e1, T2 e2, T3 e3, T4 e4) {
         List<T> l = new ArrayList<T>(4);
         l.add(e1);
         l.add(e2);
@@ -38,7 +42,8 @@ public final class CollectionUtils {
         return l;
     }
     
-    public static <T> List<T> list(T e1, T e2, T e3, T e4, T e5) {
+    public static <T, T1 extends T, T2 extends T, T3 extends T, T4 extends T, T5 extends T>
+            List<T> list(T1 e1, T2 e2, T3 e3, T4 e4, T5 e5) {
         List<T> l = new ArrayList<T>(5);
         l.add(e1);
         l.add(e2);
@@ -48,7 +53,8 @@ public final class CollectionUtils {
         return l;
     }
 
-    public static <T> List<T> list(T e1, T e2, T e3, T e4, T e5, T e6) {
+    public static <T, T1 extends T, T2 extends T, T3 extends T, T4 extends T, T5 extends T, T6 extends T>
+            List<T> list(T1 e1, T2 e2, T3 e3, T4 e4, T5 e5, T6 e6) {
         List<T> l = new ArrayList<T>(6);
         l.add(e1);
         l.add(e2);
