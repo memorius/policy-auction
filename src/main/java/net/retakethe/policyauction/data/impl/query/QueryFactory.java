@@ -18,6 +18,28 @@ import net.retakethe.policyauction.util.Functional;
 public final class QueryFactory {
 
     /**
+     * Create a query to return a list of specific columns for one row specified by key.
+     * The columns may contain different value types.
+     *
+     * @param <K> key type
+     * @param <N> column name type
+     * @param cf the ColumnFamily owning the columns
+     * @param columns columns to retrieve, can be empty,
+     *      must be columns belonging to the specified ColumnFamily.
+     */
+    public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
+            Keyspace ks, ColumnFamily<K> cf, List<Column<K, N, ?>> columns, K key) {
+        return new VariableValueTypedSliceQueryImpl<K, N>(ks, cf, columns, key);
+    }
+
+    public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
+            Keyspace ks, ColumnFamily<K> cf,
+            Serializer<N> nameSerializer, N start, N finish,
+            boolean reversed, int count, K key) {
+        return new VariableValueTypedSliceQueryImpl<K, N>(ks, cf, nameSerializer, start, finish, reversed, count, key);
+    }
+
+    /**
      * Create a query to return a list of specific columns for one or more rows specified by key.
      * The columns may contain different value types.
      *
@@ -42,8 +64,7 @@ public final class QueryFactory {
      */
     public static <K, N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(
             Keyspace ks, ColumnFamily<K> cf,
-            Serializer<N> nameSerializer,
-            N start, N finish, boolean reversed, int count) {
+            Serializer<N> nameSerializer, N start, N finish, boolean reversed, int count) {
         return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(ks, cf, nameSerializer, start, finish, reversed, count);
     }
 

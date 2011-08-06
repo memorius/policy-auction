@@ -8,9 +8,12 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
+import me.prettyprint.hector.api.query.SliceQuery;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedMultiGetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
 
 /**
  * Enum-like class for Cassandra Column Families.
@@ -70,9 +73,34 @@ public class ColumnFamily<K> {
         return HFactory.createMutator(ks, getKeySerializer());
     }
 
+    /**
+     * @param columns columns for {@link SliceQuery#setColumnNames(Object...)}, can be empty,
+     *      must be columns belonging to this ColumnFamily.
+     */
+    public <N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(Keyspace ks,
+            List<Column<K, N, ?>> columns, K key) {
+        return QueryFactory.createVariableValueTypedSliceQuery(ks, this, columns, key);
+    }
+
+    public <N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(Keyspace ks,
+            Serializer<N> nameSerializer, N start, N finish, boolean reversed, int count, K key) {
+        return QueryFactory.createVariableValueTypedSliceQuery(ks, this,
+                nameSerializer, start, finish, reversed, count, key);
+    }
+
+    /**
+     * @param columns columns for {@link MultigetSliceQuery#setColumnNames(Object...)}, can be empty,
+     *      must be columns belonging to this ColumnFamily.
+     */
     public <N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(Keyspace ks,
             List<Column<K, N, ?>> columns) {
         return QueryFactory.createVariableValueTypedMultiGetSliceQuery(ks, this, columns);
+    }
+
+    public <N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(Keyspace ks,
+            Serializer<N> nameSerializer, N start, N finish, boolean reversed, int count) {
+        return QueryFactory.createVariableValueTypedMultiGetSliceQuery(ks, this,
+                nameSerializer, start, finish, reversed, count);
     }
 
     /**

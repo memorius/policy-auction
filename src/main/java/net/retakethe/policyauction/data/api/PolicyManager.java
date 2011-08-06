@@ -25,4 +25,6 @@ public interface PolicyManager {
     List<PolicyDAO> getAllPolicies();
 
     void persist(PolicyDAO policy);
+
+    void deletePolicy(PolicyDAO policy);
 }

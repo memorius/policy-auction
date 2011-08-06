@@ -17,9 +17,7 @@ import net.retakethe.policyauction.data.api.PolicyDAO;
 import net.retakethe.policyauction.data.api.PolicyID;
 import net.retakethe.policyauction.data.api.PolicyManager;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumnSlice;
-import net.retakethe.policyauction.data.impl.query.VariableValueTypedMultiGetSliceQuery;
-import net.retakethe.policyauction.data.impl.query.VariableValueTypedRow;
-import net.retakethe.policyauction.data.impl.query.VariableValueTypedRows;
+import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Column;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.util.CollectionUtils;
@@ -56,24 +54,22 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
                 (Column<UUID, String, ?>) Schema.POLICIES.SHORT_NAME,
                 (Column<UUID, String, ?>) Schema.POLICIES.DESCRIPTION,
                 (Column<UUID, String, ?>) Schema.POLICIES.LAST_EDITED);
-        VariableValueTypedMultiGetSliceQuery<UUID, String> query =
-                Schema.POLICIES.createVariableValueTypedMultiGetSliceQuery(_keyspace, list);
-        query.setKeys(key);
+        VariableValueTypedSliceQuery<UUID, String> query =
+                Schema.POLICIES.createVariableValueTypedSliceQuery(_keyspace, list, key);
 
-        QueryResult<VariableValueTypedRows<UUID, String>> queryResult = query.execute();
+        QueryResult<VariableValueTypedColumnSlice<String>> queryResult = query.execute();
 
-        VariableValueTypedRow<UUID, String> row = queryResult.get().getByKey(key);
-        if (row == null) {
-            throw new NoSuchPolicyException(policyID);
-        }
-
-        VariableValueTypedColumnSlice<String> cs = row.getColumnSlice();
+        VariableValueTypedColumnSlice<String> cs = queryResult.get();
 
         String shortName;
         String description;
         Date lastEdited;
         try {
             shortName = getNonNullColumn(cs, Schema.POLICIES.SHORT_NAME);
+        } catch (NoSuchColumnException e) {
+            throw new NoSuchPolicyException(policyID);
+        }
+        try {
             description = getNonNullColumn(cs, Schema.POLICIES.DESCRIPTION);
             lastEdited = getNonNullColumn(cs, Schema.POLICIES.LAST_EDITED);
         } catch (NoSuchColumnException e) {
@@ -126,6 +122,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
                         try {
                             shortName = getNonNullStringColumn(cs, Schema.POLICIES.SHORT_NAME.getName());
                         } catch (NoSuchColumnException e) {
+                            // Tombstone row
                             throw new SkippedElementException();
                         }
 
@@ -155,5 +152,19 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
         // TODO: error handling? Throws HectorException.
         m.execute();
+    }
+
+    @Override
+    public void deletePolicy(PolicyDAO policy) {
+        PolicyDAOImpl impl = getImpl(policy, PolicyDAOImpl.class);
+        UUID policyID = impl.getPolicyID().getUUID();
+
+        Mutator<UUID> m = Schema.POLICIES.createMutator(_keyspace);
+
+        Schema.POLICIES.addRowDeletion(m, policyID);
+
+        m.execute();
+
+        // TODO: this will need to delete from other ColumnFamilies too and trigger recalcs
     }
 }
