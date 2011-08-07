@@ -5,13 +5,11 @@ import java.util.List;
 import me.prettyprint.cassandra.model.ExecutionResult;
 import me.prettyprint.cassandra.model.QueryResultImpl;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.Rows;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
-import net.retakethe.policyauction.data.impl.schema.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 
 /**
@@ -21,30 +19,14 @@ public class VariableValueTypedMultiGetSliceQueryImpl<K, N> implements VariableV
 
     private final MultigetSliceQuery<K, N, Object> wrappedQuery;
 
-    public VariableValueTypedMultiGetSliceQueryImpl(Keyspace ks, ColumnFamily<K> cf, List<NamedColumn<K, N, ?>> columns) {
-        if (columns.isEmpty()) {
-            throw new IllegalArgumentException("At least one column is required");
-        }
-
-        NamedColumn<K, N, ?> firstColumn = columns.get(0);
-        Serializer<N> nameSerializer = firstColumn.getNameSerializer();
-
+    public VariableValueTypedMultiGetSliceQueryImpl(Keyspace ks, ColumnFamily<K, N> cf,
+            List<NamedColumn<K, N, ?>> columns) {
         N[] columnNames = QueryFactory.getColumnNamesUnresolved(cf, columns);
 
         wrappedQuery = HFactory.createMultigetSliceQuery(ks, cf.getKeySerializer(),
-                nameSerializer, new DummySerializer<Object>())
+                        cf.getNameSerializer(), DummySerializer.get())
                 .setColumnFamily(cf.getName())
                 .setColumnNames(columnNames);
-    }
-
-    public VariableValueTypedMultiGetSliceQueryImpl(Keyspace ks, ColumnFamily<K> cf, ColumnRange<K, N, ?> columnRange,
-            N start, N finish, boolean reversed, int count) {
-        QueryFactory.checkColumnRangeBelongsToColumnFamily(cf, columnRange);
-
-        wrappedQuery = HFactory.createMultigetSliceQuery(ks, cf.getKeySerializer(),
-                columnRange.getNameSerializer(), new DummySerializer<Object>())
-                .setColumnFamily(cf.getName())
-                .setRange(start, finish, reversed, count);
     }
 
     @Override

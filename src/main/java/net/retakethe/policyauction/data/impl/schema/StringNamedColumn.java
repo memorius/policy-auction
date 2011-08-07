@@ -1,6 +1,5 @@
 package net.retakethe.policyauction.data.impl.schema;
 
-import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Serializer;
 
 /**
@@ -9,8 +8,8 @@ import me.prettyprint.hector.api.Serializer;
 public class StringNamedColumn<K, V> extends NamedColumn<K, String, V> {
 
     public StringNamedColumn(String name,
-            ColumnFamily<K> columnFamily, Class<V> valueType,
+            ColumnFamily<K, String> columnFamily, Class<V> valueType,
             Serializer<V> valueSerializer) {
-        super(name, columnFamily, String.class, StringSerializer.get(), valueType, valueSerializer);
+        super(name, columnFamily, valueType, valueSerializer);
     }
 }

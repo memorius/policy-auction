@@ -8,7 +8,7 @@ import me.prettyprint.cassandra.serializers.StringSerializer;
  */
 public class StringStringColumn<K> extends StringNamedColumn<K, String> {
 
-    public StringStringColumn(String name, ColumnFamily<K> columnFamily) {
+    public StringStringColumn(String name, ColumnFamily<K, String> columnFamily) {
         super(name, columnFamily, String.class, StringSerializer.get());
     }
 }

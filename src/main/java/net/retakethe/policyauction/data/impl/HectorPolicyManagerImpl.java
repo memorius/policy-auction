@@ -143,7 +143,6 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
         Mutator<UUID> m = Schema.POLICIES.createMutator(_keyspace);
 
-        Schema.POLICIES.addExistsMarker(m, policyID);
         Schema.POLICIES.SHORT_NAME.addInsertion(m, policyID, policy.getShortName());
         Schema.POLICIES.DESCRIPTION.addInsertion(m, policyID, policy.getDescription());
 

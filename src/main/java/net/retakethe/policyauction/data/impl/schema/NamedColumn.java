@@ -19,10 +19,9 @@ public class NamedColumn<K, N, V> extends Column<K, N, V> {
  
     private final N name;
 
-    public NamedColumn(N name, ColumnFamily<K> columnFamily, Class<N> nameType,
-            Serializer<N> nameSerializer, Class<V> valueType,
-            Serializer<V> valueSerializer) {
-        super(columnFamily, nameType, nameSerializer, valueType, valueSerializer);
+    public NamedColumn(N name, ColumnFamily<K, N> columnFamily,
+            Class<V> valueType, Serializer<V> valueSerializer) {
+        super(columnFamily, valueType, valueSerializer);
         this.name = name;
     }
 
@@ -31,7 +30,8 @@ public class NamedColumn<K, N, V> extends Column<K, N, V> {
     }
 
     public void addInsertion(Mutator<K> mutator, K key, V value) {
-        mutator.addInsertion(key, getColumnFamily().getName(),
-                HFactory.createColumn(name, value, getNameSerializer(), getValueSerializer()));
+        ColumnFamily<K, N> cf = getColumnFamily();
+        mutator.addInsertion(key, cf.getName(),
+                HFactory.createColumn(name, value, cf.getNameSerializer(), getValueSerializer()));
     }
 }

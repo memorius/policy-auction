@@ -15,36 +15,23 @@ import me.prettyprint.hector.api.Serializer;
  */
 public abstract class Column<K, N, V> {
 
-    private final Class<N> nameType;
     private final Class<V> valueType;
-    private final Serializer<N> nameSerializer;
     private final Serializer<V> valueSerializer;
-    private final ColumnFamily<K> columnFamily;
+    private final ColumnFamily<K, N> columnFamily;
 
-    protected Column(ColumnFamily<K> columnFamily, Class<N> nameType,
-            Serializer<N> nameSerializer, Class<V> valueType,
-            Serializer<V> valueSerializer) {
+    protected Column(ColumnFamily<K, N> columnFamily,
+            Class<V> valueType, Serializer<V> valueSerializer) {
         this.columnFamily = columnFamily;
-        this.nameType = nameType;
         this.valueType = valueType;
-        this.nameSerializer = nameSerializer;
         this.valueSerializer = valueSerializer;
     }
 
-    public ColumnFamily<K> getColumnFamily() {
+    public ColumnFamily<K, N> getColumnFamily() {
         return columnFamily;
-    }
-
-    public Class<N> getNameType() {
-        return nameType;
     }
 
     public Class<V> getValueType() {
         return valueType;
-    }
-
-    public Serializer<N> getNameSerializer() {
-        return nameSerializer;
     }
 
     public Serializer<V> getValueSerializer() {

@@ -25,89 +25,47 @@ public final class QueryFactory {
      * @param <K> key type
      * @param <N> column name type
      * @param cf the ColumnFamily owning the columns
-     * @param columns columns to retrieve, must not be empty,
+     * @param columns columns to retrieve,
      *      must be columns belonging to the specified ColumnFamily.
      */
     public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
-            Keyspace ks, ColumnFamily<K> cf, List<NamedColumn<K, N, ?>> columns, K key) {
+            Keyspace ks, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns, K key) {
         return new VariableValueTypedSliceQueryImpl<K, N>(ks, cf, columns, key);
     }
 
     /**
-     * Create a query to return a range of columns for one row specified by key.
-     * The columns may contain different value types.
-     *
-     * @param <K> key type
-     * @param <N> column name type
-     * @param cf the ColumnFamily owning the columns
-     */
-    public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
-            Keyspace ks, ColumnFamily<K> cf,
-            ColumnRange<K, N, ?> columnRange, N start, N finish,
-            boolean reversed, int count, K key) {
-        return new VariableValueTypedSliceQueryImpl<K, N>(ks, cf, columnRange, start, finish, reversed, count, key);
-    }
-
-    /**
      * Create a query to return a list of specific columns for one or more rows specified by key.
      * The columns may contain different value types.
      *
      * @param <K> key type
      * @param <N> column name type
      * @param cf the ColumnFamily owning the columns
-     * @param columns columns to retrieve, must not be empty,
+     * @param columns columns to retrieve,
      *      must be columns belonging to the specified ColumnFamily.
      */
     public static <K, N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(
-            Keyspace ks, ColumnFamily<K> cf, List<NamedColumn<K, N, ?>> columns) {
+            Keyspace ks, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
         return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(ks, cf, columns);
     }
 
     /**
-     * Create a query to return a list of specific columns for one or more rows specified by key.
-     * The columns may contain different value types.
-     *
-     * @param <K> key type
-     * @param <N> column name type
-     * @param cf the ColumnFamily owning the columns
-     */
-    public static <K, N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(
-            Keyspace ks, ColumnFamily<K> cf,
-            ColumnRange<K, N, ?> columnRange, N start, N finish, boolean reversed, int count) {
-        return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(ks, cf, columnRange, start, finish, reversed, count);
-    }
-
-    /**
      * Create a query to return a list of specific columns for a range of rows specified by key, or all rows.
      * The columns may contain different value types.
      *
      * @param <K> key type
      * @param <N> column name type
      * @param cf the ColumnFamily owning the columns
-     * @param columns columns to retrieve, must not be empty,
+     * @param columns columns to retrieve,
      *      must be columns belonging to the specified ColumnFamily.
      */
     public static <K, N> VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(
-            Keyspace ks, ColumnFamily<K> cf, List<NamedColumn<K, N, ?>> columns) {
+            Keyspace ks, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
         return new VariableValueTypedRangeSlicesQueryImpl<K, N>(ks, cf, columns);
     }
 
     /**
-     * Create a query to return a range of columns for a range of rows specified by key, or all rows.
-     * The columns may contain different value types.
-     *
-     * @param <K> key type
-     * @param <N> column name type
-     * @param cf the ColumnFamily owning the columns
-     */
-    public static <K, N> VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(
-            Keyspace ks, ColumnFamily<K> cf,
-            ColumnRange<K, N, ?> columnRange, N start, N finish, boolean reversed, int count) {
-        return new VariableValueTypedRangeSlicesQueryImpl<K, N>(ks, cf, columnRange, start, finish, reversed, count);
-    }
-
-    /**
      * Create a query to return a list of specific columns for a range of rows specified by key, or all rows.
+     * All values must have the same type.
      *
      * @param <K> key type
      * @param <N> column name type
@@ -116,20 +74,19 @@ public final class QueryFactory {
      * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, must not be empty,
      *      must be columns belonging to the specified ColumnFamily.
      */
-    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, final ColumnFamily<K> cf,
+    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnFamily<K, N> cf,
             List<NamedColumn<K, N, V>> columns) {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("At least one column is required");
         }
 
         NamedColumn<K, N, V> firstColumn = columns.get(0);
-        Serializer<N> nameSerializer = firstColumn.getNameSerializer();
         Serializer<V> valueSerializer = firstColumn.getValueSerializer();
 
         N[] columnNames = getColumnNamesResolved(cf, columns);
 
         return HFactory.createRangeSlicesQuery(ks, cf.getKeySerializer(),
-                nameSerializer, valueSerializer)
+                cf.getNameSerializer(), valueSerializer)
                 .setColumnFamily(cf.getName())
                 .setColumnNames(columnNames);
     }
@@ -142,13 +99,30 @@ public final class QueryFactory {
      * @param <V> column value type
      * @param cf the ColumnFamily owning the columns
      */
-    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnFamily<K> cf,
+    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnFamily<K, N> cf,
             ColumnRange<K, N, V> columnRange,
             N start, N finish, boolean reversed, int count) {
-        QueryFactory.checkColumnRangeBelongsToColumnFamily(cf, columnRange);
+        checkColumnRangeBelongsToColumnFamily(cf, columnRange);
 
         return HFactory.createRangeSlicesQuery(ks, cf.getKeySerializer(),
-                columnRange.getNameSerializer(), columnRange.getValueSerializer())
+                cf.getNameSerializer(), columnRange.getValueSerializer())
+                .setColumnFamily(cf.getName())
+                .setRange(start, finish, reversed, count);
+    }
+
+    /**
+     * Create a query to return a range of columns for a range of rows specified by key, or all rows.
+     *
+     * @param <K> key type
+     * @param <N> column name type
+     * @param <V> column value type
+     * @param cf the ColumnFamily owning the columns
+     */
+    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnFamily<K, N> cf,
+            Serializer<V> valueSerializer,
+            N start, N finish, boolean reversed, int count) {
+        return HFactory.createRangeSlicesQuery(ks, cf.getKeySerializer(),
+                cf.getNameSerializer(), valueSerializer)
                 .setColumnFamily(cf.getName())
                 .setRange(start, finish, reversed, count);
     }
@@ -161,7 +135,8 @@ public final class QueryFactory {
      *      must be columns belonging to the specified ColumnFamily.
      * @throws IllegalArgumentException if any columns don't belong to this {@link ColumnFamily}.
      */
-    protected static <K, N, V> N[] getColumnNamesResolved(final ColumnFamily<K> cf, List<NamedColumn<K, N, V>> columns) {
+    protected static <K, N, V> N[] getColumnNamesResolved(final ColumnFamily<K, N> cf,
+            List<NamedColumn<K, N, V>> columns) {
         List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, N, V>, N>() {
             @Override
             public N convert(NamedColumn<K, N, V> column) {
@@ -184,7 +159,8 @@ public final class QueryFactory {
      *      must be columns belonging to the specified ColumnFamily.
      * @throws IllegalArgumentException if any columns don't belong to this {@link ColumnFamily}.
      */
-    protected static <K, N> N[] getColumnNamesUnresolved(final ColumnFamily<K> cf, List<NamedColumn<K, N, ?>> columns) {
+    protected static <K, N> N[] getColumnNamesUnresolved(final ColumnFamily<K, N> cf,
+            List<NamedColumn<K, N, ?>> columns) {
         List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, N, ?>, N>() {
                 @Override
                 public N convert(NamedColumn<K, N, ?> column) {
@@ -199,7 +175,7 @@ public final class QueryFactory {
         return toArray(columnNames);
     }
 
-    protected static <N> void checkColumnRangeBelongsToColumnFamily(ColumnFamily<?> cf,
+    protected static <N> void checkColumnRangeBelongsToColumnFamily(ColumnFamily<?, N> cf,
             ColumnRange<?, N, ?> columnRange) {
         if (columnRange.getColumnFamily() != cf) {
             throw new IllegalArgumentException("ColumnRange is from column family '"

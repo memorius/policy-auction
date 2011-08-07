@@ -11,9 +11,9 @@ import me.prettyprint.hector.api.Serializer;
  *
  * @author Nick Clarke
  */
-public class SuperColumnFamily<K> extends BaseColumnFamily<K> {
+public abstract class SuperColumnFamily<K> extends BaseColumnFamily<K> {
 
-    public SuperColumnFamily(String name, Class<K> keyType, Serializer<K> keySerializer) {
+    protected SuperColumnFamily(String name, Class<K> keyType, Serializer<K> keySerializer) {
         super(name, keyType, keySerializer);
     }
 
