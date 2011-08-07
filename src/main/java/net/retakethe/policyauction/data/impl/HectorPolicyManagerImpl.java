@@ -7,16 +7,15 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.OrderedRows;
-import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
-import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.api.PolicyDAO;
 import net.retakethe.policyauction.data.api.PolicyID;
 import net.retakethe.policyauction.data.api.PolicyManager;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumnSlice;
+import net.retakethe.policyauction.data.impl.query.VariableValueTypedOrderedRows;
+import net.retakethe.policyauction.data.impl.query.VariableValueTypedRangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.VariableValueTypedRow;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.Schema;
@@ -88,11 +87,12 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
     @Override
     public List<PolicyDAO> getAllPolicies() {
-        List<NamedColumn<UUID, String, String>> list = CollectionUtils.list(
-                Schema.POLICIES.SHORT_NAME,
-                Schema.POLICIES.DESCRIPTION);
-        RangeSlicesQuery<UUID, String, String> query =
-                Schema.POLICIES.createRangeSlicesQuery(_keyspace,
+        List<NamedColumn<UUID, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<UUID, String, ?>) Schema.POLICIES.SHORT_NAME,
+                (NamedColumn<UUID, String, ?>) Schema.POLICIES.DESCRIPTION,
+                (NamedColumn<UUID, String, ?>) Schema.POLICIES.LAST_EDITED);
+        VariableValueTypedRangeSlicesQuery<UUID, String> query =
+                Schema.POLICIES.createVariableValueTypedRangeSlicesQuery(_keyspace,
                         list);
 
         // TODO: may need paging of data once we have more than a few hundred.
@@ -102,36 +102,41 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
         // TODO: needed?
         // query.setKeys("fake_key_0", "fake_key_4");
 
-        QueryResult<OrderedRows<UUID, String, String>> result = query.execute();
+        QueryResult<VariableValueTypedOrderedRows<UUID, String>> result = query.execute();
 
-        OrderedRows<UUID, String, String> orderedRows = result.get();
+        VariableValueTypedOrderedRows<UUID, String> orderedRows = result.get();
         if (orderedRows == null) {
             return Collections.emptyList();
         }
 
         return Functional.filter(orderedRows.getList(),
-                new Filter<Row<UUID, String, String>, PolicyDAO>() {
+                new Filter<VariableValueTypedRow<UUID, String>, PolicyDAO>() {
                     @Override
-                    public PolicyDAO filter(Row<UUID, String, String> row) throws SkippedElementException {
-                        ColumnSlice<String, String> cs = row.getColumnSlice();
+                    public PolicyDAO filter(VariableValueTypedRow<UUID, String> row) throws SkippedElementException {
+                        VariableValueTypedColumnSlice<String> cs = row.getColumnSlice();
                         if (cs == null) {
                             throw new SkippedElementException();
                         }
 
                         String shortName;
                         try {
-                            shortName = getNonNullStringColumn(cs, Schema.POLICIES.SHORT_NAME.getName());
+                            shortName = getNonNullColumn(cs, Schema.POLICIES.SHORT_NAME);
                         } catch (NoSuchColumnException e) {
                             // Tombstone row
                             throw new SkippedElementException();
                         }
 
-                        String description = getStringColumnOrNull(cs, Schema.POLICIES.DESCRIPTION.getName());
+                        String description;
+                        Date lastEdited;
+                        try {
+                            description = getNonNullColumn(cs, Schema.POLICIES.DESCRIPTION);
+                            lastEdited = getNonNullColumn(cs, Schema.POLICIES.LAST_EDITED);
+                        } catch (NoSuchColumnException e) {
+                            throw new RuntimeException("Invalid policy record for key " + row.getKey(), e);
+                        }
 
-                        // FIXME: can't get date from string result.
-                        //        To fix this, we need variable-value-typed range slices queries.
                         return new PolicyDAOImpl(new HectorPolicyIDImpl(row.getKey()), shortName, description,
-                                new Date());
+                                lastEdited);
                     }
                 });
     }
