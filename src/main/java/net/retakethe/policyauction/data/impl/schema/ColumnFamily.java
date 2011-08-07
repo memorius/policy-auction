@@ -6,7 +6,6 @@ import java.util.UUID;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.Serializer;
-import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
@@ -17,17 +16,13 @@ import net.retakethe.policyauction.data.impl.query.VariableValueTypedRangeSlices
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
 
 /**
- * Enum-like class for Cassandra NamedColumn Families.
- * <p>
- * (Can't use an actual java enum due to use of generic type parameters - enums don't support this.)
+ * Schema definition and query creation for Cassandra Column Families.
  *
  * @param <K> the row key type of the column family, e.g. {@link UUID} or {@link String} or {@link Integer} etc.
  *
  * @author Nick Clarke
- *
- * TODO: define which keyspace CFs are in? - MAIN or LOGGING, get from keyspaceManager.
  */
-public class ColumnFamily<K> {
+public class ColumnFamily<K> extends BaseColumnFamily<K> {
 
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
@@ -42,36 +37,14 @@ public class ColumnFamily<K> {
         }
     }
 
-    private final String name;
-    private final Class<K> keyType;
-    private final Serializer<K> keySerializer;
-
     /**
      * @see #addExistsMarker(Mutator, Object)
      */
     public final ExistsColumn<K> EXISTS;
 
     public ColumnFamily(String name, Class<K> keyType, Serializer<K> keySerializer) {
-        this.keyType = keyType;
-        this.keySerializer = keySerializer;
-        this.name = name;
+        super(name, keyType, keySerializer);
         EXISTS = new ExistsColumn<K>(this);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Class<K> getKeyType() {
-        return keyType;
-    }
-
-    public Serializer<K> getKeySerializer() {
-        return keySerializer;
-    }
-
-    public Mutator<K> createMutator(Keyspace ks) {
-        return HFactory.createMutator(ks, getKeySerializer());
     }
 
     /**
@@ -120,7 +93,6 @@ public class ColumnFamily<K> {
                 start, finish, reversed, count);
     }
     
-    
     /**
      * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, must not be empty,
      *      must be columns belonging to this ColumnFamily.
@@ -147,9 +119,5 @@ public class ColumnFamily<K> {
      */
     public void addExistsMarker(Mutator<K> mutator, K key) {
         EXISTS.addInsertion(mutator, key, EMPTY_BYTE_ARRAY);
-    }
-
-    public void addRowDeletion(Mutator<K> mutator, K key) {
-        mutator.addDeletion(key, name);
     }
 }
