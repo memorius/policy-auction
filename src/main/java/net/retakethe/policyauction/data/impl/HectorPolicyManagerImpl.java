@@ -18,7 +18,7 @@ import net.retakethe.policyauction.data.api.PolicyID;
 import net.retakethe.policyauction.data.api.PolicyManager;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumnSlice;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
-import net.retakethe.policyauction.data.impl.schema.Column;
+import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.util.CollectionUtils;
 import net.retakethe.policyauction.util.Functional;
@@ -50,10 +50,10 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
         HectorPolicyIDImpl idImpl = getPolicyIDImpl(policyID);
         UUID key = idImpl.getUUID();
 
-        List<Column<UUID, String, ?>> list = CollectionUtils.list(
-                (Column<UUID, String, ?>) Schema.POLICIES.SHORT_NAME,
-                (Column<UUID, String, ?>) Schema.POLICIES.DESCRIPTION,
-                (Column<UUID, String, ?>) Schema.POLICIES.LAST_EDITED);
+        List<NamedColumn<UUID, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<UUID, String, ?>) Schema.POLICIES.SHORT_NAME,
+                (NamedColumn<UUID, String, ?>) Schema.POLICIES.DESCRIPTION,
+                (NamedColumn<UUID, String, ?>) Schema.POLICIES.LAST_EDITED);
         VariableValueTypedSliceQuery<UUID, String> query =
                 Schema.POLICIES.createVariableValueTypedSliceQuery(_keyspace, list, key);
 
@@ -88,7 +88,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
     @Override
     public List<PolicyDAO> getAllPolicies() {
-        List<Column<UUID, String, String>> list = CollectionUtils.list(
+        List<NamedColumn<UUID, String, String>> list = CollectionUtils.list(
                 Schema.POLICIES.SHORT_NAME,
                 Schema.POLICIES.DESCRIPTION);
         RangeSlicesQuery<UUID, String, String> query =

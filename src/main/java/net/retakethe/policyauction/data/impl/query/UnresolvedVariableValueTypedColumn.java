@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import me.prettyprint.hector.api.Serializer;
 
 /**
- * Column where the value type is not specified hence value is not accessible.
+ * NamedColumn where the value type is not specified hence value is not accessible.
  *
  * @param <N> column name type
  * @author Nick Clarke
@@ -13,6 +13,8 @@ import me.prettyprint.hector.api.Serializer;
 public interface UnresolvedVariableValueTypedColumn<N> {
 
     N getName();
+
+    <V> V getValue(Serializer<V> valueSerializer);
 
     /**
      * (Advanced) Returns the underlying ByteBuffer for the value via ByteBuffer.duplicate().

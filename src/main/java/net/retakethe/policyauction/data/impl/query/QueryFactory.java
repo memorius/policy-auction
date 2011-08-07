@@ -6,8 +6,9 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
-import net.retakethe.policyauction.data.impl.schema.Column;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.ColumnRange;
+import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 import net.retakethe.policyauction.util.Functional;
 
 /**
@@ -24,19 +25,19 @@ public final class QueryFactory {
      * @param <K> key type
      * @param <N> column name type
      * @param cf the ColumnFamily owning the columns
-     * @param columns columns to retrieve, can be empty,
+     * @param columns columns to retrieve, must not be empty,
      *      must be columns belonging to the specified ColumnFamily.
      */
     public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
-            Keyspace ks, ColumnFamily<K> cf, List<Column<K, N, ?>> columns, K key) {
+            Keyspace ks, ColumnFamily<K> cf, List<NamedColumn<K, N, ?>> columns, K key) {
         return new VariableValueTypedSliceQueryImpl<K, N>(ks, cf, columns, key);
     }
 
     public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
             Keyspace ks, ColumnFamily<K> cf,
-            Serializer<N> nameSerializer, N start, N finish,
+            ColumnRange<K, N, ?> columnRange, N start, N finish,
             boolean reversed, int count, K key) {
-        return new VariableValueTypedSliceQueryImpl<K, N>(ks, cf, nameSerializer, start, finish, reversed, count, key);
+        return new VariableValueTypedSliceQueryImpl<K, N>(ks, cf, columnRange, start, finish, reversed, count, key);
     }
 
     /**
@@ -46,11 +47,11 @@ public final class QueryFactory {
      * @param <K> key type
      * @param <N> column name type
      * @param cf the ColumnFamily owning the columns
-     * @param columns columns to retrieve, can be empty,
+     * @param columns columns to retrieve, must not be empty,
      *      must be columns belonging to the specified ColumnFamily.
      */
     public static <K, N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(
-            Keyspace ks, ColumnFamily<K> cf, List<Column<K, N, ?>> columns) {
+            Keyspace ks, ColumnFamily<K> cf, List<NamedColumn<K, N, ?>> columns) {
         return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(ks, cf, columns);
     }
 
@@ -64,8 +65,8 @@ public final class QueryFactory {
      */
     public static <K, N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(
             Keyspace ks, ColumnFamily<K> cf,
-            Serializer<N> nameSerializer, N start, N finish, boolean reversed, int count) {
-        return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(ks, cf, nameSerializer, start, finish, reversed, count);
+            ColumnRange<K, N, ?> columnRange, N start, N finish, boolean reversed, int count) {
+        return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(ks, cf, columnRange, start, finish, reversed, count);
     }
 
     /**
@@ -75,24 +76,20 @@ public final class QueryFactory {
      * @param <N> column name type
      * @param <V> column value type
      * @param cf the ColumnFamily owning the columns
-     * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, can be empty,
+     * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, must not be empty,
      *      must be columns belonging to the specified ColumnFamily.
      */
     public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, final ColumnFamily<K> cf,
-            List<Column<K, N, V>> columns) {
-        N[] columnNames = getColumnNamesResolved(cf, columns);
-
-        Serializer<N> nameSerializer;
-        Serializer<V> valueSerializer;
+            List<NamedColumn<K, N, V>> columns) {
         if (columns.isEmpty()) {
-            // These are required but won't be used
-            nameSerializer = new DummySerializer<N>();
-            valueSerializer = new DummySerializer<V>();
-        } else {
-            Column<K, N, V> firstColumn = columns.get(0);
-            nameSerializer = firstColumn.getNameSerializer();
-            valueSerializer = firstColumn.getValueSerializer();
+            throw new IllegalArgumentException("At least one column is required");
         }
+
+        NamedColumn<K, N, V> firstColumn = columns.get(0);
+        Serializer<N> nameSerializer = firstColumn.getNameSerializer();
+        Serializer<V> valueSerializer = firstColumn.getValueSerializer();
+
+        N[] columnNames = getColumnNamesResolved(cf, columns);
 
         return HFactory.createRangeSlicesQuery(ks, cf.getKeySerializer(),
                 nameSerializer, valueSerializer)
@@ -109,10 +106,12 @@ public final class QueryFactory {
      * @param cf the ColumnFamily owning the columns
      */
     public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnFamily<K> cf,
-            Serializer<N> nameSerializer, Serializer<V> valueSerializer,
+            ColumnRange<K, N, V> columnRange,
             N start, N finish, boolean reversed, int count) {
+        QueryFactory.checkColumnRangeBelongsToColumnFamily(cf, columnRange);
+
         return HFactory.createRangeSlicesQuery(ks, cf.getKeySerializer(),
-                nameSerializer, valueSerializer)
+                columnRange.getNameSerializer(), columnRange.getValueSerializer())
                 .setColumnFamily(cf.getName())
                 .setRange(start, finish, reversed, count);
     }
@@ -125,12 +124,12 @@ public final class QueryFactory {
      *      must be columns belonging to the specified ColumnFamily.
      * @throws IllegalArgumentException if any columns don't belong to this {@link ColumnFamily}.
      */
-    protected static <K, N, V> N[] getColumnNamesResolved(final ColumnFamily<K> cf, List<Column<K, N, V>> columns) {
-        List<N> columnNames = Functional.map(columns, new Functional.Converter<Column<K, N, V>, N>() {
+    protected static <K, N, V> N[] getColumnNamesResolved(final ColumnFamily<K> cf, List<NamedColumn<K, N, V>> columns) {
+        List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, N, V>, N>() {
             @Override
-            public N convert(Column<K, N, V> column) {
+            public N convert(NamedColumn<K, N, V> column) {
                 if (column.getColumnFamily() != cf) {
-                    throw new IllegalArgumentException("Column '" + column.getName() + "' is from column family '"
+                    throw new IllegalArgumentException("NamedColumn '" + column.getName() + "' is from column family '"
                             + column.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");
                 }
                 return column.getName();
@@ -148,12 +147,12 @@ public final class QueryFactory {
      *      must be columns belonging to the specified ColumnFamily.
      * @throws IllegalArgumentException if any columns don't belong to this {@link ColumnFamily}.
      */
-    protected static <K, N> N[] getColumnNamesUnresolved(final ColumnFamily<K> cf, List<Column<K, N, ?>> columns) {
-        List<N> columnNames = Functional.map(columns, new Functional.Converter<Column<K, N, ?>, N>() {
+    protected static <K, N> N[] getColumnNamesUnresolved(final ColumnFamily<K> cf, List<NamedColumn<K, N, ?>> columns) {
+        List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, N, ?>, N>() {
                 @Override
-                public N convert(Column<K, N, ?> column) {
+                public N convert(NamedColumn<K, N, ?> column) {
                     if (column.getColumnFamily() != cf) {
-                        throw new IllegalArgumentException("Column '" + column.getName() + "' is from column family '"
+                        throw new IllegalArgumentException("NamedColumn '" + column.getName() + "' is from column family '"
                                 + column.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");
                     }
                     return column.getName();
@@ -161,6 +160,14 @@ public final class QueryFactory {
             });
 
         return toArray(columnNames);
+    }
+
+    protected static <N> void checkColumnRangeBelongsToColumnFamily(ColumnFamily<?> cf,
+            ColumnRange<?, N, ?> columnRange) {
+        if (columnRange.getColumnFamily() != cf) {
+            throw new IllegalArgumentException("ColumnRange is from column family '"
+                    + columnRange.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");
+        }
     }
 
     private static <N> N[] toArray(List<N> columnNames) {

@@ -6,7 +6,7 @@ import java.util.List;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
-import net.retakethe.policyauction.data.impl.schema.Column;
+import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 
 /**
  * @author Nick Clarke
@@ -31,7 +31,7 @@ public class VariableValueTypedColumnSliceImpl<N> implements VariableValueTypedC
     }
 
     @Override
-    public <V> VariableValueTypedColumn<N, V> getColumn(Column<?, N, V> column) {
+    public <V> VariableValueTypedColumn<N, V> getColumn(NamedColumn<?, N, V> column) {
         return getColumnByName(column.getName(), column.getValueSerializer());
     }
 

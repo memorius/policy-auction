@@ -6,11 +6,11 @@ import me.prettyprint.hector.api.Serializer;
 /**
  * @author Nick Clarke
  */
-public class StringNamedColumn<K, V> extends Column<K, String, V> {
+public class StringNamedColumn<K, V> extends NamedColumn<K, String, V> {
 
     public StringNamedColumn(String name,
-            Class<K> keyType, ColumnFamily<K> columnFamily,
-            Class<V> valueType, Serializer<V> valueSerializer) {
-        super(name, keyType, columnFamily, String.class, StringSerializer.get(), valueType, valueSerializer);
+            ColumnFamily<K> columnFamily, Class<V> valueType,
+            Serializer<V> valueSerializer) {
+        super(name, columnFamily, String.class, StringSerializer.get(), valueType, valueSerializer);
     }
 }

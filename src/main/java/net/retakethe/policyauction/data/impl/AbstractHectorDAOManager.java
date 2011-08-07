@@ -5,7 +5,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 import net.retakethe.policyauction.data.api.PolicyID;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumn;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumnSlice;
-import net.retakethe.policyauction.data.impl.schema.Column;
+import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 
 /**
  * @author Nick Clarke
@@ -17,7 +17,7 @@ public class AbstractHectorDAOManager {
         private static final long serialVersionUID = 0L;
 
         public NoSuchColumnException(String columnName) {
-            super("Column '" + columnName + "' not found");
+            super("NamedColumn '" + columnName + "' not found");
         }
     }
 
@@ -36,7 +36,7 @@ public class AbstractHectorDAOManager {
         return value;
     }
 
-    protected <N, V> V getColumnOrNull(VariableValueTypedColumnSlice<N> cs, Column<?, N, V> column) {
+    protected <N, V> V getColumnOrNull(VariableValueTypedColumnSlice<N> cs, NamedColumn<?, N, V> column) {
         VariableValueTypedColumn<N, V> col = cs.getColumn(column);
         if (col == null) {
             return null;
@@ -44,7 +44,7 @@ public class AbstractHectorDAOManager {
         return col.getValue();
     }
 
-    protected <N, V> V getNonNullColumn(VariableValueTypedColumnSlice<N> cs, Column<?, N, V> column)
+    protected <N, V> V getNonNullColumn(VariableValueTypedColumnSlice<N> cs, NamedColumn<?, N, V> column)
             throws NoSuchColumnException {
         VariableValueTypedColumn<N, V> col = cs.getColumn(column);
         if (col == null) {

@@ -25,6 +25,11 @@ public class UnresolvedVariableValueTypedColumnImpl<N> implements UnresolvedVari
     public N getName() {
         return wrappedColumn.getName();
     }
+    
+    @Override
+    public <V> V getValue(Serializer<V> valueSerializer) {
+        return valueSerializer.fromByteBuffer(getValueBytes());
+    }
 
     @Override
     public ByteBuffer getValueBytes() {

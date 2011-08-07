@@ -12,7 +12,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.HectorDAOManagerImpl;
-import net.retakethe.policyauction.data.impl.schema.Column;
+import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily.ExistsColumn;
 import net.retakethe.policyauction.data.impl.schema.Schema;
@@ -93,7 +93,7 @@ public abstract class HectorDAOTestBase {
 
             ExistsColumn<K> existsColumn = cf.EXISTS;
             RangeSlicesQuery<K, String, byte[]> query = cf.createRangeSlicesQuery(ks,
-                    list((Column<K, String, byte[]>) existsColumn));
+                    list((NamedColumn<K, String, byte[]>) existsColumn));
 
             query.setRowCount(100000);
             QueryResult<OrderedRows<K, String, byte[]>> result = query.execute();

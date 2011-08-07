@@ -18,7 +18,7 @@ public class VariableValueTypedColumnImpl<N, V> extends UnresolvedVariableValueT
 
     @Override
     public V getValue() {
-        return valueSerializer.fromByteBuffer(getValueBytes());
+        return getValue(valueSerializer);
     }
 
     @Override

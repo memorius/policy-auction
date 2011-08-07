@@ -18,16 +18,16 @@ public final class Schema {
 
     public static final class PoliciesCF extends ColumnFamily<UUID> {
 
-        public final Column<UUID, String, String> SHORT_NAME;
-        public final Column<UUID, String, String> DESCRIPTION;
-        public final Column<UUID, String, Date> LAST_EDITED;
+        public final NamedColumn<UUID, String, String> SHORT_NAME;
+        public final NamedColumn<UUID, String, String> DESCRIPTION;
+        public final NamedColumn<UUID, String, Date> LAST_EDITED;
 
         private PoliciesCF() {
             super("policies", UUID.class, UUIDSerializer.get());
-            SHORT_NAME = new StringStringColumn<UUID>("short_name", getKeyType(), this);
-            DESCRIPTION = new StringStringColumn<UUID>("description", getKeyType(), this);
-            LAST_EDITED = new StringNamedColumn<UUID, Date>("last_edited", getKeyType(), this,
-                    Date.class, DateSerializer.get());
+            SHORT_NAME = new StringStringColumn<UUID>("short_name", this);
+            DESCRIPTION = new StringStringColumn<UUID>("description", this);
+            LAST_EDITED = new StringNamedColumn<UUID, Date>("last_edited", this, Date.class,
+                    DateSerializer.get());
         }
     }
 }

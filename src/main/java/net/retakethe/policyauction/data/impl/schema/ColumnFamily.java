@@ -16,7 +16,7 @@ import net.retakethe.policyauction.data.impl.query.VariableValueTypedMultiGetSli
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
 
 /**
- * Enum-like class for Cassandra Column Families.
+ * Enum-like class for Cassandra NamedColumn Families.
  * <p>
  * (Can't use an actual java enum due to use of generic type parameters - enums don't support this.)
  *
@@ -36,8 +36,8 @@ public class ColumnFamily<K> {
      * We use an empty byte array as the column value because it has the smallest representation in Cassandra.
      */
     public static final class ExistsColumn<K> extends StringNamedColumn<K, byte[]> {
-        public ExistsColumn(Class<K> keyType, ColumnFamily<K> columnFamily) {
-            super("_", keyType, columnFamily, byte[].class, BytesArraySerializer.get());
+        public ExistsColumn(ColumnFamily<K> columnFamily) {
+            super("_", columnFamily, byte[].class, BytesArraySerializer.get());
         }
     }
 
@@ -54,7 +54,7 @@ public class ColumnFamily<K> {
         this.keyType = keyType;
         this.keySerializer = keySerializer;
         this.name = name;
-        EXISTS = new ExistsColumn<K>(keyType, this);
+        EXISTS = new ExistsColumn<K>(this);
     }
 
     public String getName() {
@@ -74,43 +74,48 @@ public class ColumnFamily<K> {
     }
 
     /**
-     * @param columns columns for {@link SliceQuery#setColumnNames(Object...)}, can be empty,
+     * @param columns columns for {@link SliceQuery#setColumnNames(Object...)}, must not be empty,
      *      must be columns belonging to this ColumnFamily.
      */
     public <N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(Keyspace ks,
-            List<Column<K, N, ?>> columns, K key) {
+            List<NamedColumn<K, N, ?>> columns, K key) {
         return QueryFactory.createVariableValueTypedSliceQuery(ks, this, columns, key);
     }
 
     public <N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(Keyspace ks,
-            Serializer<N> nameSerializer, N start, N finish, boolean reversed, int count, K key) {
+            ColumnRange<K, N, ?> columnRange, N start, N finish, boolean reversed, int count, K key) {
         return QueryFactory.createVariableValueTypedSliceQuery(ks, this,
-                nameSerializer, start, finish, reversed, count, key);
+                columnRange, start, finish, reversed, count, key);
     }
 
     /**
-     * @param columns columns for {@link MultigetSliceQuery#setColumnNames(Object...)}, can be empty,
+     * @param columns columns for {@link MultigetSliceQuery#setColumnNames(Object...)}, must not be empty,
      *      must be columns belonging to this ColumnFamily.
      */
     public <N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(Keyspace ks,
-            List<Column<K, N, ?>> columns) {
+            List<NamedColumn<K, N, ?>> columns) {
         return QueryFactory.createVariableValueTypedMultiGetSliceQuery(ks, this, columns);
     }
 
     public <N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(Keyspace ks,
-            Serializer<N> nameSerializer, N start, N finish, boolean reversed, int count) {
+            ColumnRange<K, N, ?> columnRange, N start, N finish, boolean reversed, int count) {
         return QueryFactory.createVariableValueTypedMultiGetSliceQuery(ks, this,
-                nameSerializer, start, finish, reversed, count);
+                columnRange, start, finish, reversed, count);
     }
 
     /**
-     * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, can be empty,
+     * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, must not be empty,
      *      must be columns belonging to this ColumnFamily.
      */
-    public <N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, List<Column<K, N, V>> columns) {
+    public <N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, List<NamedColumn<K, N, V>> columns) {
         return QueryFactory.createRangeSlicesQuery(ks, this, columns);
     }
 
+    public <N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnRange<K, N, V> columnRange,
+            N start, N finish, boolean reversed, int count) {
+        return QueryFactory.createRangeSlicesQuery(ks, this, columnRange, start, finish, reversed, count);
+    }
+    
     /**
      * Add 'row exists' column.
      * <p>
