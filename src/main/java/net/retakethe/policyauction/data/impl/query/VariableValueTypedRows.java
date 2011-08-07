@@ -1,10 +1,8 @@
 package net.retakethe.policyauction.data.impl.query;
 
-
-
 /**
- * @author Nick Clarke
  * @see me.prettyprint.hector.api.beans.Rows
+ * @author Nick Clarke
  */
 public interface VariableValueTypedRows<K, N> extends Iterable<VariableValueTypedRow<K, N>> {
 

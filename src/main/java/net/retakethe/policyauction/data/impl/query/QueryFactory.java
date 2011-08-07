@@ -33,6 +33,14 @@ public final class QueryFactory {
         return new VariableValueTypedSliceQueryImpl<K, N>(ks, cf, columns, key);
     }
 
+    /**
+     * Create a query to return a range of columns for one row specified by key.
+     * The columns may contain different value types.
+     *
+     * @param <K> key type
+     * @param <N> column name type
+     * @param cf the ColumnFamily owning the columns
+     */
     public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
             Keyspace ks, ColumnFamily<K> cf,
             ColumnRange<K, N, ?> columnRange, N start, N finish,
@@ -70,7 +78,36 @@ public final class QueryFactory {
     }
 
     /**
-     * Create a whole-column-family query to return a list of specific columns for each row.
+     * Create a query to return a list of specific columns for a range of rows specified by key, or all rows.
+     * The columns may contain different value types.
+     *
+     * @param <K> key type
+     * @param <N> column name type
+     * @param cf the ColumnFamily owning the columns
+     * @param columns columns to retrieve, must not be empty,
+     *      must be columns belonging to the specified ColumnFamily.
+     */
+    public static <K, N> VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(
+            Keyspace ks, ColumnFamily<K> cf, List<NamedColumn<K, N, ?>> columns) {
+        return new VariableValueTypedRangeSlicesQueryImpl<K, N>(ks, cf, columns);
+    }
+
+    /**
+     * Create a query to return a range of columns for a range of rows specified by key, or all rows.
+     * The columns may contain different value types.
+     *
+     * @param <K> key type
+     * @param <N> column name type
+     * @param cf the ColumnFamily owning the columns
+     */
+    public static <K, N> VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(
+            Keyspace ks, ColumnFamily<K> cf,
+            ColumnRange<K, N, ?> columnRange, N start, N finish, boolean reversed, int count) {
+        return new VariableValueTypedRangeSlicesQueryImpl<K, N>(ks, cf, columnRange, start, finish, reversed, count);
+    }
+
+    /**
+     * Create a query to return a list of specific columns for a range of rows specified by key, or all rows.
      *
      * @param <K> key type
      * @param <N> column name type
@@ -98,7 +135,7 @@ public final class QueryFactory {
     }
 
     /**
-     * Create a whole-column-family query to return a range of columns for each row.
+     * Create a query to return a range of columns for a range of rows specified by key, or all rows.
      *
      * @param <K> key type
      * @param <N> column name type

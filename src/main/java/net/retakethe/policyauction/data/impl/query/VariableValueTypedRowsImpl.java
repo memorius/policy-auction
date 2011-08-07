@@ -54,7 +54,7 @@ public class VariableValueTypedRowsImpl<K, N> implements VariableValueTypedRows<
         return wrappedRows.getCount();
     }
 
-    private VariableValueTypedRow<K, N> wrapRow(Row<K, N, Object> wrappedRow) {
+    protected VariableValueTypedRow<K, N> wrapRow(Row<K, N, Object> wrappedRow) {
         if (wrappedRow == null) {
             return null;
         }

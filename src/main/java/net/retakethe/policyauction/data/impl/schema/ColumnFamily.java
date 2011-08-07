@@ -13,6 +13,7 @@ import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedMultiGetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
 
 /**
@@ -107,10 +108,27 @@ public class ColumnFamily<K> {
      * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, must not be empty,
      *      must be columns belonging to this ColumnFamily.
      */
+    public <N> VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(Keyspace ks,
+            List<NamedColumn<K, N, ?>> columns) {
+        return QueryFactory.createVariableValueTypedRangeSlicesQuery(ks, this, columns);
+    }
+
+    public <N> VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(Keyspace ks,
+            ColumnRange<K, N, ?> columnRange,
+            N start, N finish, boolean reversed, int count) {
+        return QueryFactory.createVariableValueTypedRangeSlicesQuery(ks, this, columnRange,
+                start, finish, reversed, count);
+    }
+    
+    
+    /**
+     * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, must not be empty,
+     *      must be columns belonging to this ColumnFamily.
+     */
     public <N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, List<NamedColumn<K, N, V>> columns) {
         return QueryFactory.createRangeSlicesQuery(ks, this, columns);
     }
-
+    
     public <N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnRange<K, N, V> columnRange,
             N start, N finish, boolean reversed, int count) {
         return QueryFactory.createRangeSlicesQuery(ks, this, columnRange, start, finish, reversed, count);
