@@ -1,8 +1,8 @@
 package net.retakethe.policyauction.data.impl;
 
 import me.prettyprint.cassandra.model.QuorumAllConsistencyLevelPolicy;
-import me.prettyprint.hector.api.Keyspace;
 import net.retakethe.policyauction.data.api.DAOManager;
+import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.services.AppModule;
 
 import org.apache.tapestry5.ioc.annotations.Inject;
@@ -18,13 +18,6 @@ import org.apache.tapestry5.ioc.annotations.Inject;
  * @author Nick Clarke
  */
 public class HectorDAOManagerImpl implements DAOManager {
-
-    public static final String MAIN_KEYSPACE_NAME = "policy_auction";
-
-    /**
-     * I <i>think</i> Keyspace is threadsafe
-     */
-    private final Keyspace _mainKeyspace;
 
     private final HectorPolicyManagerImpl _policyManager;
 
@@ -51,18 +44,18 @@ public class HectorDAOManagerImpl implements DAOManager {
         }
         _keyspaceManager = new HectorKeyspaceManager(address + ':' + String.valueOf(port));
 
-        _mainKeyspace = _keyspaceManager.getKeyspace(MAIN_KEYSPACE_NAME);
-        _mainKeyspace.setConsistencyLevelPolicy(new QuorumAllConsistencyLevelPolicy());
+        // TODO: is there a better place to set up keyspace consistency levels etc?
+        _keyspaceManager.getKeyspace(Schema.SchemaKeyspace.MAIN).setConsistencyLevelPolicy(new QuorumAllConsistencyLevelPolicy());
 
-        _policyManager = new HectorPolicyManagerImpl(_mainKeyspace);
+        _policyManager = new HectorPolicyManagerImpl(_keyspaceManager);
     }
 
+    public KeyspaceManager getKeyspaceManager() {
+        return _keyspaceManager;
+    }
+    
     public void destroy() {
         _keyspaceManager.destroy();
-    }
-
-    public Keyspace getMainKeyspace() {
-        return _mainKeyspace;
     }
 
     @Override

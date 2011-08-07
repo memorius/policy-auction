@@ -3,15 +3,16 @@ package net.retakethe.policyauction.data.impl.schema;
 import java.util.List;
 import java.util.UUID;
 
-import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
+import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedMultiGetSliceQuery;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
+import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
 
 /**
  * Schema definition and query creation for Cassandra Column Families.
@@ -23,66 +24,72 @@ import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
  */
 public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
 
-    private final Class<N> nameType;
-    private final Serializer<N> nameSerializer;
+    private final Class<N> columnNameType;
+    private final Serializer<N> columnNameSerializer;
 
-    protected ColumnFamily(String name, Class<K> keyType, Serializer<K> keySerializer,
-            Class<N> nameType, Serializer<N> nameSerializer) {
-        super(name, keyType, keySerializer);
-        this.nameType = nameType;
-        this.nameSerializer = nameSerializer;
+    protected ColumnFamily(SchemaKeyspace keyspace, String name, Class<K> keyType, Serializer<K> keySerializer,
+            Class<N> columnNameType, Serializer<N> columnNameSerializer) {
+        super(keyspace, name, keyType, keySerializer);
+        this.columnNameType = columnNameType;
+        this.columnNameSerializer = columnNameSerializer;
     }
 
-    public Class<N> getNameType() {
-        return nameType;
+    public Class<N> getColumnNameType() {
+        return columnNameType;
     }
 
-    public Serializer<N> getNameSerializer() {
-        return nameSerializer;
+    public Serializer<N> getColumnNameSerializer() {
+        return columnNameSerializer;
     }
 
     /**
      * @param columns columns for {@link SliceQuery#setColumnNames(Object...)},
      *      must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(Keyspace ks,
+    public VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(KeyspaceManager keyspaceManager,
             List<NamedColumn<K, N, ?>> columns, K key) {
-        return QueryFactory.createVariableValueTypedSliceQuery(ks, this, columns, key);
+        return QueryFactory.createVariableValueTypedSliceQuery(keyspaceManager, this, columns, key);
     }
 
     /**
      * @param columns columns for {@link MultigetSliceQuery#setColumnNames(Object...)},
      *      must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(Keyspace ks,
+    public VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(
+            KeyspaceManager keyspaceManager,
             List<NamedColumn<K, N, ?>> columns) {
-        return QueryFactory.createVariableValueTypedMultiGetSliceQuery(ks, this, columns);
+        return QueryFactory.createVariableValueTypedMultiGetSliceQuery(keyspaceManager, this, columns);
     }
 
     /**
      * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)},
      *      must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(Keyspace ks,
+    public VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(
+            KeyspaceManager keyspaceManager,
             List<NamedColumn<K, N, ?>> columns) {
-        return QueryFactory.createVariableValueTypedRangeSlicesQuery(ks, this, columns);
+        return QueryFactory.createVariableValueTypedRangeSlicesQuery(keyspaceManager, this, columns);
     }
 
     /**
      * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)},
      *      must be columns belonging to this ColumnFamily.
      */
-    public <V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, List<NamedColumn<K, N, V>> columns) {
-        return QueryFactory.createRangeSlicesQuery(ks, this, columns);
+    public <V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
+            List<NamedColumn<K, N, V>> columns) {
+        return QueryFactory.createRangeSlicesQuery(keyspaceManager, this, columns);
     }
 
-    public <V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnRange<K, N, V> columnRange,
+    public <V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
+            ColumnRange<K, N, V> columnRange,
             N start, N finish, boolean reversed, int count) {
-        return QueryFactory.createRangeSlicesQuery(ks, this, columnRange, start, finish, reversed, count);
+        return QueryFactory.createRangeSlicesQuery(keyspaceManager, this, columnRange, start, finish, reversed, count);
     }
 
-    public <V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, Serializer<V> valueSerializer,
+    public <V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
+            Serializer<V> valueSerializer,
             N start, N finish, boolean reversed, int count) {
-        return QueryFactory.createRangeSlicesQuery(ks, this, valueSerializer, start, finish, reversed, count);
+        return QueryFactory.createRangeSlicesQuery(keyspaceManager, this, valueSerializer,
+                start, finish, reversed, count);
     }
 }

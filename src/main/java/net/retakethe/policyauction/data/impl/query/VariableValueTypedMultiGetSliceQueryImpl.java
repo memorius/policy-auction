@@ -24,7 +24,7 @@ public class VariableValueTypedMultiGetSliceQueryImpl<K, N> implements VariableV
         N[] columnNames = QueryFactory.getColumnNamesUnresolved(cf, columns);
 
         wrappedQuery = HFactory.createMultigetSliceQuery(ks, cf.getKeySerializer(),
-                        cf.getNameSerializer(), DummySerializer.get())
+                        cf.getColumnNameSerializer(), DummySerializer.get())
                 .setColumnFamily(cf.getName())
                 .setColumnNames(columnNames);
     }

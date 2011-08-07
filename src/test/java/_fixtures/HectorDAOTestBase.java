@@ -2,14 +2,14 @@ package _fixtures;
 
 import java.util.List;
 
-import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
-import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.HectorDAOManagerImpl;
+import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.DummySerializer;
+import net.retakethe.policyauction.data.impl.query.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 
@@ -74,20 +74,20 @@ public abstract class HectorDAOTestBase {
      */
     protected void cleanCassandraDB() {
         logger.info("HectorDAOTestBase.cleanCassandraDB starting");
-        Keyspace mainKeyspace = daoManager.getMainKeyspace();
+        KeyspaceManager keyspaceManager = daoManager.getKeyspaceManager();
 
-        cleanColumnFamily(mainKeyspace, Schema.POLICIES);
+        cleanColumnFamily(keyspaceManager, Schema.POLICIES);
         logger.info("HectorDAOTestBase.cleanCassandraDB finished");
     }
 
-    private <K, N> void cleanColumnFamily(Keyspace ks, ColumnFamily<K, N> cf) {
+    private <K, N> void cleanColumnFamily(KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf) {
         while (true) {
             logger.info("HectorDAOTestBase.cleanCassandraDB starting cycle for " + cf.getName());
             // Query a batch of keys in this column family.
             // Use of the common-to-all-CFs "EXISTS" column allows us to omit tombstone rows:
             // they will be present in the result but will lack this column.
 
-            RangeSlicesQuery<K, N, Object> query = cf.createRangeSlicesQuery(ks, DummySerializer.get(),
+            RangeSlicesQuery<K, N, Object> query = cf.createRangeSlicesQuery(keyspaceManager, DummySerializer.get(),
                     null, null, false, 1);
 
             query.setRowCount(100000);
@@ -99,7 +99,7 @@ public abstract class HectorDAOTestBase {
             }
 
             // Delete the rows for these keys
-            Mutator<K> m = cf.createMutator(ks);
+            MutatorWrapper<K> m = cf.createMutator(keyspaceManager);
             boolean rowsExist = false;
             for (Row<K, N, Object> row : rows) {
                 logger.info("HectorDAOTestBase.cleanCassandraDB: key: " + row.getKey());

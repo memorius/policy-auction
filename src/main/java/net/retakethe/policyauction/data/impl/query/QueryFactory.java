@@ -2,10 +2,10 @@ package net.retakethe.policyauction.data.impl.query;
 
 import java.util.List;
 
-import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.NamedColumn;
@@ -29,8 +29,9 @@ public final class QueryFactory {
      *      must be columns belonging to the specified ColumnFamily.
      */
     public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
-            Keyspace ks, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns, K key) {
-        return new VariableValueTypedSliceQueryImpl<K, N>(ks, cf, columns, key);
+            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns, K key) {
+        return new VariableValueTypedSliceQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
+                cf, columns, key);
     }
 
     /**
@@ -44,8 +45,9 @@ public final class QueryFactory {
      *      must be columns belonging to the specified ColumnFamily.
      */
     public static <K, N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(
-            Keyspace ks, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
-        return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(ks, cf, columns);
+            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
+        return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
+                cf, columns);
     }
 
     /**
@@ -59,8 +61,9 @@ public final class QueryFactory {
      *      must be columns belonging to the specified ColumnFamily.
      */
     public static <K, N> VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(
-            Keyspace ks, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
-        return new VariableValueTypedRangeSlicesQueryImpl<K, N>(ks, cf, columns);
+            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
+        return new VariableValueTypedRangeSlicesQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
+                cf, columns);
     }
 
     /**
@@ -74,7 +77,8 @@ public final class QueryFactory {
      * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, must not be empty,
      *      must be columns belonging to the specified ColumnFamily.
      */
-    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnFamily<K, N> cf,
+    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
+            ColumnFamily<K, N> cf,
             List<NamedColumn<K, N, V>> columns) {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("At least one column is required");
@@ -85,8 +89,8 @@ public final class QueryFactory {
 
         N[] columnNames = getColumnNamesResolved(cf, columns);
 
-        return HFactory.createRangeSlicesQuery(ks, cf.getKeySerializer(),
-                cf.getNameSerializer(), valueSerializer)
+        return HFactory.createRangeSlicesQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
+                cf.getColumnNameSerializer(), valueSerializer)
                 .setColumnFamily(cf.getName())
                 .setColumnNames(columnNames);
     }
@@ -99,13 +103,14 @@ public final class QueryFactory {
      * @param <V> column value type
      * @param cf the ColumnFamily owning the columns
      */
-    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnFamily<K, N> cf,
+    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
+            ColumnFamily<K, N> cf,
             ColumnRange<K, N, V> columnRange,
             N start, N finish, boolean reversed, int count) {
         checkColumnRangeBelongsToColumnFamily(cf, columnRange);
 
-        return HFactory.createRangeSlicesQuery(ks, cf.getKeySerializer(),
-                cf.getNameSerializer(), columnRange.getValueSerializer())
+        return HFactory.createRangeSlicesQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
+                cf.getColumnNameSerializer(), columnRange.getValueSerializer())
                 .setColumnFamily(cf.getName())
                 .setRange(start, finish, reversed, count);
     }
@@ -118,11 +123,12 @@ public final class QueryFactory {
      * @param <V> column value type
      * @param cf the ColumnFamily owning the columns
      */
-    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(Keyspace ks, ColumnFamily<K, N> cf,
+    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
+            ColumnFamily<K, N> cf,
             Serializer<V> valueSerializer,
             N start, N finish, boolean reversed, int count) {
-        return HFactory.createRangeSlicesQuery(ks, cf.getKeySerializer(),
-                cf.getNameSerializer(), valueSerializer)
+        return HFactory.createRangeSlicesQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
+                cf.getColumnNameSerializer(), valueSerializer)
                 .setColumnFamily(cf.getName())
                 .setRange(start, finish, reversed, count);
     }

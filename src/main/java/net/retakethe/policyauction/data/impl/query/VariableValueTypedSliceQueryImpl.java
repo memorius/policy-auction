@@ -25,7 +25,7 @@ public class VariableValueTypedSliceQueryImpl<K, N> implements VariableValueType
         N[] columnNames = QueryFactory.getColumnNamesUnresolved(cf, columns);
 
         wrappedQuery = HFactory.createSliceQuery(ks, cf.getKeySerializer(),
-                    cf.getNameSerializer(), DummySerializer.get())
+                    cf.getColumnNameSerializer(), DummySerializer.get())
                 .setColumnFamily(cf.getName())
                 .setColumnNames(columnNames)
                 .setKey(key);

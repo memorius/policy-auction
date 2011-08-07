@@ -2,10 +2,11 @@ package net.retakethe.policyauction.data.impl.schema;
 
 import java.util.UUID;
 
-import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.Serializer;
-import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.Mutator;
+import net.retakethe.policyauction.data.impl.KeyspaceManager;
+import net.retakethe.policyauction.data.impl.query.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.MutatorWrapperImpl;
+import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
 
 /**
  * Base class for schema definitions of cassandra Column Families and Super Column Families.
@@ -15,21 +16,25 @@ import me.prettyprint.hector.api.mutation.Mutator;
  * @param <K> the row key type of the column family, e.g. {@link UUID} or {@link String} or {@link Integer} etc.
  *
  * @author Nick Clarke
- *
- * TODO: define which keyspace CFs are in? - MAIN or LOGGING, get from keyspaceManager.
  */
 public abstract class BaseColumnFamily<K> {
 
+    private final SchemaKeyspace keyspace;
     private final String name;
     private final Class<K> keyType;
     private final Serializer<K> keySerializer;
 
-    protected BaseColumnFamily(String name, Class<K> keyType, Serializer<K> keySerializer) {
+    protected BaseColumnFamily(SchemaKeyspace keyspace, String name, Class<K> keyType, Serializer<K> keySerializer) {
+        this.keyspace = keyspace;
+        this.name = name;
         this.keyType = keyType;
         this.keySerializer = keySerializer;
-        this.name = name;
     }
 
+    public SchemaKeyspace getKeyspace() {
+        return keyspace;
+    }
+    
     public String getName() {
         return name;
     }
@@ -42,11 +47,25 @@ public abstract class BaseColumnFamily<K> {
         return keySerializer;
     }
 
-    public Mutator<K> createMutator(Keyspace ks) {
-        return HFactory.createMutator(ks, getKeySerializer());
+    /**
+     * Create a mutator for setting up batch mutations.
+     * This can then accumulate multiple column/supercolumn/subcolumn inserts,
+     * and/or row/column/supercolumn/subcolumn deletes
+     * to be sent to Cassandra as a single unit by calling {@link MutatorWrapper#execute()}.
+     * <p>
+     * Note the mutations are not ordered or atomic across different column families or rows!
+     * <p>
+     * They are atomic within each row of the same column family however,
+     * but intermediate states are not isolated from concurrent read transactions.
+     * <p>
+     * A single mutator may be reused across multiple column families sharing the same keytype <K>
+     * and key serializer, which allows updates to be sent more efficiently.
+     */
+    public MutatorWrapper<K> createMutator(KeyspaceManager keyspaceManager) {
+        return new MutatorWrapperImpl<K>(getKeyspace(), getKeySerializer(), keyspaceManager);
     }
 
-    public void addRowDeletion(Mutator<K> mutator, K key) {
-        mutator.addDeletion(key, getName());
+    public void addRowDeletion(MutatorWrapper<K> mutator, K key) {
+        mutator.addRowDeletion(this, key);
     }
 }

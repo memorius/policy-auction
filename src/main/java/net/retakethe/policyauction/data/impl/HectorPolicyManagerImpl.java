@@ -6,12 +6,11 @@ import java.util.List;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.utils.TimeUUIDUtils;
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.PolicyDAO;
 import net.retakethe.policyauction.data.api.PolicyID;
 import net.retakethe.policyauction.data.api.PolicyManager;
+import net.retakethe.policyauction.data.impl.query.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumnSlice;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedOrderedRows;
 import net.retakethe.policyauction.data.impl.query.VariableValueTypedRangeSlicesQuery;
@@ -29,14 +28,14 @@ import net.retakethe.policyauction.util.Functional.SkippedElementException;
  */
 public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements PolicyManager {
 
-    private final Keyspace _keyspace;
+    private final KeyspaceManager keyspaceManager;
 
-    public HectorPolicyManagerImpl(Keyspace keyspace) {
+    public HectorPolicyManagerImpl(KeyspaceManager keyspaceManager) {
         super();
-        if (keyspace == null) {
+        if (keyspaceManager == null) {
             throw new IllegalArgumentException("keyspace must not be null");
         }
-        _keyspace = keyspace;
+        this.keyspaceManager = keyspaceManager;
     }
 
     @Override
@@ -54,7 +53,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
                 (NamedColumn<UUID, String, ?>) Schema.POLICIES.DESCRIPTION,
                 (NamedColumn<UUID, String, ?>) Schema.POLICIES.LAST_EDITED);
         VariableValueTypedSliceQuery<UUID, String> query =
-                Schema.POLICIES.createVariableValueTypedSliceQuery(_keyspace, list, key);
+                Schema.POLICIES.createVariableValueTypedSliceQuery(keyspaceManager, list, key);
 
         QueryResult<VariableValueTypedColumnSlice<String>> queryResult = query.execute();
 
@@ -92,7 +91,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
                 (NamedColumn<UUID, String, ?>) Schema.POLICIES.DESCRIPTION,
                 (NamedColumn<UUID, String, ?>) Schema.POLICIES.LAST_EDITED);
         VariableValueTypedRangeSlicesQuery<UUID, String> query =
-                Schema.POLICIES.createVariableValueTypedRangeSlicesQuery(_keyspace,
+                Schema.POLICIES.createVariableValueTypedRangeSlicesQuery(keyspaceManager,
                         list);
 
         // TODO: may need paging of data once we have more than a few hundred.
@@ -146,13 +145,13 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
         PolicyDAOImpl impl = getImpl(policy, PolicyDAOImpl.class);
         UUID policyID = impl.getPolicyID().getUUID();
 
-        Mutator<UUID> m = Schema.POLICIES.createMutator(_keyspace);
+        MutatorWrapper<UUID> m = Schema.POLICIES.createMutator(keyspaceManager);
 
-        Schema.POLICIES.SHORT_NAME.addInsertion(m, policyID, policy.getShortName());
-        Schema.POLICIES.DESCRIPTION.addInsertion(m, policyID, policy.getDescription());
+        Schema.POLICIES.SHORT_NAME.addColumnInsertion(m, policyID, policy.getShortName());
+        Schema.POLICIES.DESCRIPTION.addColumnInsertion(m, policyID, policy.getDescription());
 
         // We're saving changes, so update the edit time
-        Schema.POLICIES.LAST_EDITED.addInsertion(m, policyID, new Date());
+        Schema.POLICIES.LAST_EDITED.addColumnInsertion(m, policyID, new Date());
 
         // TODO: error handling? Throws HectorException.
         m.execute();
@@ -163,7 +162,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
         PolicyDAOImpl impl = getImpl(policy, PolicyDAOImpl.class);
         UUID policyID = impl.getPolicyID().getUUID();
 
-        Mutator<UUID> m = Schema.POLICIES.createMutator(_keyspace);
+        MutatorWrapper<UUID> m = Schema.POLICIES.createMutator(keyspaceManager);
 
         Schema.POLICIES.addRowDeletion(m, policyID);
 

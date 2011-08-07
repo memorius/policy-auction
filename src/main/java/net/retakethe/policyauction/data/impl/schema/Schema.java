@@ -14,6 +14,21 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
  */
 public final class Schema {
 
+    public static enum SchemaKeyspace {
+        MAIN("policy_auction");
+
+        private final String keyspaceName;
+
+        private SchemaKeyspace(String keyspaceName) {
+            this.keyspaceName = keyspaceName;
+        }
+
+        public String getKeyspaceName() {
+            return keyspaceName;
+        }
+    }
+
+
     public static final PoliciesCF POLICIES = new PoliciesCF();
 
 
@@ -24,7 +39,7 @@ public final class Schema {
         public final NamedColumn<UUID, String, Date> LAST_EDITED;
 
         private PoliciesCF() {
-            super("policies", UUID.class, UUIDSerializer.get(), String.class, StringSerializer.get());
+            super(SchemaKeyspace.MAIN, "policies", UUID.class, UUIDSerializer.get(), String.class, StringSerializer.get());
             SHORT_NAME = new StringStringColumn<UUID>("short_name", this);
             DESCRIPTION = new StringStringColumn<UUID>("description", this);
             LAST_EDITED = new StringNamedColumn<UUID, Date>("last_edited", this, Date.class,

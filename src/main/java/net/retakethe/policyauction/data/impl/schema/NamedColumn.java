@@ -3,8 +3,7 @@ package net.retakethe.policyauction.data.impl.schema;
 import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
-import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.Mutator;
+import net.retakethe.policyauction.data.impl.query.MutatorWrapper;
 
 /**
  * Cassandra columns with fixed names.
@@ -29,9 +28,7 @@ public class NamedColumn<K, N, V> extends Column<K, N, V> {
         return name;
     }
 
-    public void addInsertion(Mutator<K> mutator, K key, V value) {
-        ColumnFamily<K, N> cf = getColumnFamily();
-        mutator.addInsertion(key, cf.getName(),
-                HFactory.createColumn(name, value, cf.getNameSerializer(), getValueSerializer()));
+    public void addColumnInsertion(MutatorWrapper<K> m, K key, V value) {
+        m.addColumnInsertion(key, this, name, value);
     }
 }
