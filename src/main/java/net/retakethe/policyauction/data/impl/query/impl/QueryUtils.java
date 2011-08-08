@@ -6,6 +6,7 @@ import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.util.Functional;
 
 public final class QueryUtils {
@@ -49,19 +50,24 @@ public final class QueryUtils {
                 new Functional.Converter<NamedSupercolumn<K, SN, N>, SN>() {
             @Override
             public SN convert(NamedSupercolumn<K, SN, N> supercolumn) {
-                if (supercolumn.getSupercolumnFamily() != scf) {
-                    throw new IllegalArgumentException("NamedSupercolumn '" + supercolumn.getName()
-                            + "' is from supercolumn family '"
-                            + supercolumn.getSupercolumnFamily().getName()
-                            + "', expected super column family '" + scf.getName() + "'");
-                }
+                checkSupercolumnBelongsToFamily(scf, supercolumn);
                 return supercolumn.getName();
             }
+
         });
 
         return toArray(supercolumnNames);
     }
-    
+
+    protected static <K, SN, N> void checkSupercolumnBelongsToFamily(final SupercolumnFamily<K, SN, N> scf,
+            Supercolumn<K, SN, N> supercolumn) {
+        if (supercolumn.getSupercolumnFamily() != scf) {
+            throw new IllegalArgumentException("Supercolumn is from supercolumn family '"
+                    + supercolumn.getSupercolumnFamily().getName()
+                    + "', expected supercolumn family '" + scf.getName() + "'");
+        }
+    }
+
     private static <N> N[] toArray(List<N> columnNames) {
         @SuppressWarnings("unchecked") // Generic array creation
         N[] columnNamesArray = columnNames.toArray((N[]) new Object[columnNames.size()]);

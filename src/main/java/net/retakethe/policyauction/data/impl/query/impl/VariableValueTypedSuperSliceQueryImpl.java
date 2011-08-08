@@ -13,13 +13,14 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSl
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 public class VariableValueTypedSuperSliceQueryImpl<K, SN, N> implements VariableValueTypedSuperSliceQuery<K, SN, N> {
 
     private final SuperSliceQuery<K, SN, N, Object> wrappedQuery;
 
     public VariableValueTypedSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, SN, N> scf,
-            List<NamedSupercolumn<K, SN, N>> supercolumns, K key) {
+            K key, List<NamedSupercolumn<K, SN, N>> supercolumns) {
         SN[] supercolumnNames = QueryUtils.getSupercolumnNamesUnresolved(scf, supercolumns);
 
         wrappedQuery = HFactory.createSuperSliceQuery(ks, scf.getKeySerializer(),
@@ -28,6 +29,18 @@ public class VariableValueTypedSuperSliceQueryImpl<K, SN, N> implements Variable
                 .setColumnFamily(scf.getName())
                 .setColumnNames(supercolumnNames)
                 .setKey(key);
+    }
+
+    public VariableValueTypedSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, SN, N> scf, K key,
+            SupercolumnRange<K, SN, N> supercolumnRange, SN start, SN finish, boolean reversed, int count) {
+        QueryUtils.checkSupercolumnBelongsToFamily(scf, supercolumnRange);
+
+        wrappedQuery = HFactory.createSuperSliceQuery(ks, scf.getKeySerializer(),
+                scf.getSupercolumnNameSerializer(), scf.getSubcolumnNameSerializer(),
+                DummySerializer.get())
+            .setColumnFamily(scf.getName())
+            .setRange(start, finish, reversed, count)
+            .setKey(key);
     }
 
     @Override

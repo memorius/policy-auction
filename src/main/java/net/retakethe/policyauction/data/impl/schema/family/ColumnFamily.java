@@ -12,7 +12,6 @@ import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
-import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
@@ -50,8 +49,8 @@ public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
      *      must be columns belonging to this ColumnFamily.
      */
     public VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(KeyspaceManager keyspaceManager,
-            List<NamedColumn<K, N, ?>> columns, K key) {
-        return QueryFactory.createVariableValueTypedSliceQuery(keyspaceManager, this, columns, key);
+            K key, List<NamedColumn<K, N, ?>> columns) {
+        return QueryFactory.createVariableValueTypedSliceQuery(keyspaceManager, this, key, columns);
     }
 
     /**

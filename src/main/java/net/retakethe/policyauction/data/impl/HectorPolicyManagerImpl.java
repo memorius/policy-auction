@@ -53,7 +53,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
                 (NamedColumn<UUID, String, ?>) Schema.POLICIES.DESCRIPTION,
                 (NamedColumn<UUID, String, ?>) Schema.POLICIES.LAST_EDITED);
         VariableValueTypedSliceQuery<UUID, String> query =
-                Schema.POLICIES.createVariableValueTypedSliceQuery(keyspaceManager, list, key);
+                Schema.POLICIES.createVariableValueTypedSliceQuery(keyspaceManager, key, list);
 
         QueryResult<VariableValueTypedColumnSlice<String>> queryResult = query.execute();
 

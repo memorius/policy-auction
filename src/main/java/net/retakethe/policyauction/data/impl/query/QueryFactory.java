@@ -7,10 +7,12 @@ import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSliceQueryImpl;
+import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSuperSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedRangeSlicesQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSuperSliceQueryImpl;
@@ -19,6 +21,7 @@ import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 import net.retakethe.policyauction.util.Functional;
 
 /**
@@ -33,15 +36,15 @@ public final class QueryFactory {
     /**
      * Create a query to return a list of specific columns for one row specified by key.
      * The columns may contain different value types.
-     *
-     * @param <K> key type
-     * @param <N> column name type
      * @param cf the ColumnFamily owning the columns
      * @param columns columns to retrieve,
      *      must be columns belonging to the specified ColumnFamily.
+     *
+     * @param <K> key type
+     * @param <N> column name type
      */
     public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
-            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns, K key) {
+            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, K key, List<NamedColumn<K, N, ?>> columns) {
         return new VariableValueTypedSliceQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
                 cf, columns, key);
     }
@@ -49,19 +52,36 @@ public final class QueryFactory {
     /**
      * Create a query to return all subcolumns for a list of specific supercolumns for one row specified by key.
      * The subcolumns may contain different value types.
+     * @param scf the SupercolumnFamily owning the supercolumns
+     * @param supercolumns supercolumns to retrieve,
+     *      must be supercolumns belonging to the specified SupercolumnFamily.
+     *
+     * @param <K> key type
+     * @param <SN> supercolumn name type
+     * @param <N> subcolumn name type
+     */
+    public static <K, SN, N> VariableValueTypedSuperSliceQuery<K, SN, N> createVariableValueTypedSuperSliceQuery(
+            KeyspaceManager keyspaceManager, SupercolumnFamily<K, SN, N> scf,
+            K key, List<NamedSupercolumn<K, SN, N>> supercolumns) {
+        return new VariableValueTypedSuperSliceQueryImpl<K, SN, N>(keyspaceManager.getKeyspace(scf.getKeyspace()),
+                scf, key, supercolumns);
+    }
+
+    /**
+     * Create a query to return all subcolumns for a range of supercolumns for one row specified by key.
+     * The subcolumns may contain different value types.
      *
      * @param <K> key type
      * @param <SN> supercolumn name type
      * @param <N> subcolumn name type
      * @param scf the SupercolumnFamily owning the supercolumns
-     * @param supercolumns supercolumns to retrieve,
-     *      must be supercolumns belonging to the specified SupercolumnFamily.
      */
     public static <K, SN, N> VariableValueTypedSuperSliceQuery<K, SN, N> createVariableValueTypedSuperSliceQuery(
             KeyspaceManager keyspaceManager, SupercolumnFamily<K, SN, N> scf,
-            List<NamedSupercolumn<K, SN, N>> supercolumns, K key) {
+            K key, SupercolumnRange<K, SN, N> supercolumnRange,
+            SN start, SN finish, boolean reversed, int count) {
         return new VariableValueTypedSuperSliceQueryImpl<K, SN, N>(keyspaceManager.getKeyspace(scf.getKeyspace()),
-                scf, supercolumns, key);
+                scf, key, supercolumnRange, start, finish, reversed, count);
     }
 
     /**
@@ -78,6 +98,42 @@ public final class QueryFactory {
             KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
         return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
                 cf, columns);
+    }
+
+    /**
+     * Create a query to return all subcolumns from a list of specific supercolumns for one or more rows specified by key.
+     * The subcolumns may contain different value types.
+     *
+     * @param <K> key type
+     * @param <SN> supercolumn name type
+     * @param <N> subcolumn name type
+     * @param scf the SupercolumnFamily owning the supercolumns
+     * @param supercolumns supercolumns to retrieve,
+     *      must be supercolumns belonging to the specified SupercolumnFamily.
+     */
+    public static <K, SN, N> VariableValueTypedMultiGetSuperSliceQuery<K, SN, N>
+            createVariableValueTypedMultiGetSuperSliceQuery(KeyspaceManager keyspaceManager,
+                    SupercolumnFamily<K, SN, N> scf, List<NamedSupercolumn<K, SN, N>> supercolumns) {
+        return new VariableValueTypedMultiGetSuperSliceQueryImpl<K, SN, N>(
+                keyspaceManager.getKeyspace(scf.getKeyspace()), scf, supercolumns);
+    }
+
+    /**
+     * Create a query to return all subcolumns from a range of supercolumns for one or more rows specified by key.
+     * The subcolumns may contain different value types.
+     *
+     * @param <K> key type
+     * @param <SN> supercolumn name type
+     * @param <N> subcolumn name type
+     * @param scf the SupercolumnFamily owning the supercolumns
+     */
+    public static <K, SN, N> VariableValueTypedMultiGetSuperSliceQuery<K, SN, N>
+            createVariableValueTypedMultiGetSuperSliceQuery(KeyspaceManager keyspaceManager,
+                    SupercolumnFamily<K, SN, N> scf,
+                    SupercolumnRange<K, SN, N> supercolumnRange,
+                    SN start, SN finish, boolean reversed, int count) {
+        return new VariableValueTypedMultiGetSuperSliceQueryImpl<K, SN, N>(
+                keyspaceManager.getKeyspace(scf.getKeyspace()), scf, supercolumnRange, start, finish, reversed, count);
     }
 
     /**
