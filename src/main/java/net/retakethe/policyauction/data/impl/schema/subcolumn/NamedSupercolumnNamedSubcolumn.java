@@ -1,9 +1,10 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.subcolumn;
 
 import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 
 /**
  * Cassandra subcolumns with fixed names, of supercolumns with fixed names.

@@ -1,5 +1,7 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.column.typed;
 
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import me.prettyprint.hector.api.Serializer;
 
 /**

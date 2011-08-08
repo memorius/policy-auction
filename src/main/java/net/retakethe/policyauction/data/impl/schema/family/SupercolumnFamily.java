@@ -1,8 +1,9 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.family;
 
 import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
+import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
 
 /**

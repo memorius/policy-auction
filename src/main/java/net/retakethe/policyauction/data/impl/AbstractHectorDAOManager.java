@@ -5,7 +5,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 import net.retakethe.policyauction.data.api.PolicyID;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumn;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
-import net.retakethe.policyauction.data.impl.schema.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 
 /**
  * @author Nick Clarke

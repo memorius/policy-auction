@@ -1,11 +1,13 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.subcolumn;
 
 import java.util.UUID;
+
+import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 import me.prettyprint.hector.api.Serializer;
 
 /**
- * Base class for Cassandra named subcolumns and subcolumn ranges.
+ * Base class for Cassandra named subcolumns and subcolumn ranges of supercolumn ranges.
  *
  * @param <K> the key type of the supercolumn family, e.g. {@link UUID} or {@link String}  or {@link Integer} etc.
  * @param <SN> the supercolumn name type, e.g. {@link UUID} or {@link String}  or {@link Integer} etc.
@@ -14,28 +16,18 @@ import me.prettyprint.hector.api.Serializer;
  *
  * @author Nick Clarke
  */
-public abstract class Subcolumn<K, SN, N, V> {
+public abstract class SupercolumnRangeSubcolumn<K, SN, N, V> extends Subcolumn<K, SN, N, V> {
 
-    private final Supercolumn<K, SN, N> supercolumn;
-    private final Class<V> valueType;
-    private final Serializer<V> valueSerializer;
+    private final SupercolumnRange<K, SN, N> supercolumn;
 
-    protected Subcolumn(Supercolumn<K, SN, N> supercolumn,
+    protected SupercolumnRangeSubcolumn(SupercolumnRange<K, SN, N> supercolumn,
             Class<V> valueType, Serializer<V> valueSerializer) {
+        super(supercolumn, valueType, valueSerializer);
         this.supercolumn = supercolumn;
-        this.valueType = valueType;
-        this.valueSerializer = valueSerializer;
     }
 
-    public Supercolumn<K, SN, N> getSupercolumn() {
+    @Override
+    public SupercolumnRange<K, SN, N> getSupercolumn() {
         return supercolumn;
-    }
-
-    public Class<V> getValueType() {
-        return valueType;
-    }
-
-    public Serializer<V> getValueSerializer() {
-        return valueSerializer;
     }
 }

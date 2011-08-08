@@ -1,9 +1,10 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.column;
 
 import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 
 /**
  * Cassandra column ranges where there isn't a single column name.

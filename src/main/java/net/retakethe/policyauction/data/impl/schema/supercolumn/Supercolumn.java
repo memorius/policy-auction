@@ -1,6 +1,8 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.supercolumn;
 
 import java.util.UUID;
+
+import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 
 /**
  * Base class for Cassandra named supercolumns and supercolumn ranges.

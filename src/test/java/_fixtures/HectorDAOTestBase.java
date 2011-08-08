@@ -10,8 +10,8 @@ import net.retakethe.policyauction.data.impl.HectorDAOManagerImpl;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.impl.DummySerializer;
-import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.Schema;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

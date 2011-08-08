@@ -1,12 +1,13 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.subcolumn;
 
 import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 /**
- * Cassandra subcolumns where there isn't a fixed subcolumn name, of supercolumns where there isn't a fixed name.
+ * Cassandra subcolumns with fixed names, of supercolumns where there isn't a fixed name.
  *
  * @param <K> the key type of the supercolumn family, e.g. {@link UUID} or {@link String}  or {@link Integer} etc.
  * @param <SN> the supercolumn name type, e.g. {@link UUID} or {@link String}  or {@link Integer} etc.
@@ -15,15 +16,23 @@ import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
  *
  * @author Nick Clarke
  */
-public class SupercolumnRangeSubcolumnRange<K, SN, N, V> extends SupercolumnRangeSubcolumn<K, SN, N, V> {
+public class SupercolumnRangeNamedSubcolumn<K, SN, N, V> extends SupercolumnRangeSubcolumn<K, SN, N, V> {
+ 
+    private final N name;
 
-    public SupercolumnRangeSubcolumnRange(
+    public SupercolumnRangeNamedSubcolumn(N name,
             SupercolumnRange<K, SN, N> supercolumn,
             Class<V> valueType, Serializer<V> valueSerializer) {
         super(supercolumn, valueType, valueSerializer);
+        this.name = name;
     }
 
-    public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key, SN supercolumnName, N subcolumnName) {
-        mutator.addSubcolumnDeletion(key, this, supercolumnName, subcolumnName);
+    public N getName() {
+        return name;
     }
+
+    public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key, SN supercolumnName) {
+        mutator.addSubcolumnDeletion(key, this, supercolumnName, name);
+    }
+
 }

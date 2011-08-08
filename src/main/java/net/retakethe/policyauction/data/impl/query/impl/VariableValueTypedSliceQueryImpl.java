@@ -11,8 +11,8 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
-import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
-import net.retakethe.policyauction.data.impl.schema.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 
 /**
  * @author Nick Clarke

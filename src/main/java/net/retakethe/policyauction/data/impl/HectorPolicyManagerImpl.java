@@ -16,8 +16,8 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedOrdered
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
-import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.Schema;
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.util.CollectionUtils;
 import net.retakethe.policyauction.util.Functional;
 import net.retakethe.policyauction.util.Functional.Filter;

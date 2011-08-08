@@ -3,7 +3,7 @@ package net.retakethe.policyauction.data.impl.query.api;
 import java.util.List;
 
 import me.prettyprint.hector.api.Serializer;
-import net.retakethe.policyauction.data.impl.schema.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 
 /**
  * @author Nick Clarke

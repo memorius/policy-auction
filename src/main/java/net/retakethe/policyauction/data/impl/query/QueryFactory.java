@@ -12,9 +12,9 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQu
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedRangeSlicesQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSliceQueryImpl;
-import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
-import net.retakethe.policyauction.data.impl.schema.ColumnRange;
-import net.retakethe.policyauction.data.impl.schema.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.util.Functional;
 
 /**

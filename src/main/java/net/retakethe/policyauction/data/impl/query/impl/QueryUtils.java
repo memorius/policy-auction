@@ -2,8 +2,8 @@ package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.List;
 
-import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
-import net.retakethe.policyauction.data.impl.schema.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.util.Functional;
 
 public final class QueryUtils {

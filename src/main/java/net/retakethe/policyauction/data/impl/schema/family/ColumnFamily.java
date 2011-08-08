@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.family;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,7 +12,10 @@ import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
+import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
+import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 
 /**
  * Schema definition and query creation for Cassandra Column Families.

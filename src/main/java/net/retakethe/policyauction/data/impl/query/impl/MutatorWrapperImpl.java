@@ -10,13 +10,13 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
-import net.retakethe.policyauction.data.impl.schema.BaseColumnFamily;
-import net.retakethe.policyauction.data.impl.schema.Column;
-import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
-import net.retakethe.policyauction.data.impl.schema.Subcolumn;
-import net.retakethe.policyauction.data.impl.schema.Supercolumn;
-import net.retakethe.policyauction.data.impl.schema.SupercolumnFamily;
+import net.retakethe.policyauction.data.impl.schema.column.Column;
+import net.retakethe.policyauction.data.impl.schema.family.BaseColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.Subcolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 
 /**
  * @author Nick Clarke

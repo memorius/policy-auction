@@ -1,6 +1,8 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.column;
 
 import java.util.UUID;
+
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 
 import me.prettyprint.hector.api.Serializer;
 

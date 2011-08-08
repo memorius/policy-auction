@@ -1,10 +1,10 @@
 package net.retakethe.policyauction.data.impl.query.api;
 
 import me.prettyprint.hector.api.mutation.MutationResult;
-import net.retakethe.policyauction.data.impl.schema.BaseColumnFamily;
-import net.retakethe.policyauction.data.impl.schema.Column;
-import net.retakethe.policyauction.data.impl.schema.Subcolumn;
-import net.retakethe.policyauction.data.impl.schema.Supercolumn;
+import net.retakethe.policyauction.data.impl.schema.column.Column;
+import net.retakethe.policyauction.data.impl.schema.family.BaseColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.Subcolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 
 /**
  * Column/supercolumn/subcolumn insertions/mutations/deletions using our Schema classes.

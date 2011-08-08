@@ -3,6 +3,11 @@ package net.retakethe.policyauction.data.impl.schema;
 import java.util.Date;
 import java.util.UUID;
 
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColumn;
+import net.retakethe.policyauction.data.impl.schema.column.typed.StringStringColumn;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+
 import me.prettyprint.cassandra.serializers.DateSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
