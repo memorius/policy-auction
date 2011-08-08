@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import net.retakethe.policyauction.data.impl.query.api.UnresolvedVariableValueTypedColumn;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumn;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
+import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 
 /**
@@ -39,15 +39,19 @@ public class VariableValueTypedColumnSliceImpl<N> implements VariableValueTypedC
 
     @Override
     public <V> VariableValueTypedColumn<N, V> getColumn(NamedColumn<?, N, V> column) {
-        return getColumnByName(column.getName(), column.getValueSerializer());
+        HColumn<N, Object> wrappedColumn = wrappedColumnSlice.getColumnByName(column.getName());
+        if (wrappedColumn == null) {
+            return null;
+        }
+        return new VariableValueTypedColumnImpl<N, V>(wrappedColumn, column.getValueSerializer());
     }
 
     @Override
-    public <V> VariableValueTypedColumn<N, V> getColumnByName(N columnName, Serializer<V> valueSerializer) {
+    public <V> VariableValueTypedColumn<N, V> getColumn(ColumnRange<?, N, V> column, N columnName) {
         HColumn<N, Object> wrappedColumn = wrappedColumnSlice.getColumnByName(columnName);
         if (wrappedColumn == null) {
             return null;
         }
-        return new VariableValueTypedColumnImpl<N, V>(wrappedColumn, valueSerializer);
+        return new VariableValueTypedColumnImpl<N, V>(wrappedColumn, column.getValueSerializer());
     }
 }

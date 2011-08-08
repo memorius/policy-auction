@@ -6,13 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import net.retakethe.policyauction.data.impl.query.api.UnresolvedVariableValueTypedColumn;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumn;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 
 public class VariableValueTypedSupercolumnImpl<SN, N> implements VariableValueTypedSupercolumn<SN, N> {
 
@@ -45,16 +45,20 @@ public class VariableValueTypedSupercolumnImpl<SN, N> implements VariableValueTy
     }
 
     @Override
-    public <V> VariableValueTypedColumn<N, V> getSubcolumn(NamedSubcolumn<N, V> subcolumn) {
-        return getSubcolumnByName(subcolumn.getName(), subcolumn.getValueSerializer());
+    public <V> VariableValueTypedColumn<N, V> getSubcolumn(NamedSubcolumn<?, SN, N, V> subcolumn) {
+        HColumn<N, Object> wrappedColumn = columnsByName.get(subcolumn.getName());
+        if (wrappedColumn == null) {
+            return null;
+        }
+        return new VariableValueTypedColumnImpl<N, V>(wrappedColumn, subcolumn.getValueSerializer());
     }
 
     @Override
-    public <V> VariableValueTypedColumn<N, V> getSubcolumnByName(N subcolumnName, Serializer<V> valueSerializer) {
+    public <V> VariableValueTypedColumn<N, V> getSubcolumn(SubcolumnRange<?, SN, N, V> subcolumn, N subcolumnName) {
         HColumn<N, Object> wrappedColumn = columnsByName.get(subcolumnName);
         if (wrappedColumn == null) {
             return null;
         }
-        return new VariableValueTypedColumnImpl<N, V>(wrappedColumn, valueSerializer);
+        return new VariableValueTypedColumnImpl<N, V>(wrappedColumn, subcolumn.getValueSerializer());
     }
 }

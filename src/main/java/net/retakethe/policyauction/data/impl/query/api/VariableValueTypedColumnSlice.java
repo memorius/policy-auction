@@ -2,7 +2,7 @@ package net.retakethe.policyauction.data.impl.query.api;
 
 import java.util.List;
 
-import me.prettyprint.hector.api.Serializer;
+import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 
 /**
@@ -19,5 +19,5 @@ public interface VariableValueTypedColumnSlice<N> {
 
    <V> VariableValueTypedColumn<N, V> getColumn(NamedColumn<?, N, V> column);
 
-   <V> VariableValueTypedColumn<N, V> getColumnByName(N columnName, Serializer<V> valueSerializer);
+   <V> VariableValueTypedColumn<N, V> getColumn(ColumnRange<?, N, V> column, N columnName);
 }

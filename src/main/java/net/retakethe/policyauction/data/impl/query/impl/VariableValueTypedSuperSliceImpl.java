@@ -8,6 +8,7 @@ import me.prettyprint.hector.api.beans.SuperSlice;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSlice;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 public class VariableValueTypedSuperSliceImpl<SN, N> implements VariableValueTypedSuperSlice<SN, N> {
 
@@ -30,11 +31,16 @@ public class VariableValueTypedSuperSliceImpl<SN, N> implements VariableValueTyp
 
     @Override
     public VariableValueTypedSupercolumn<SN, N> getSupercolumn(NamedSupercolumn<?, SN, N> supercolumn) {
-        return getSupercolumnByName(supercolumn.getName());
+        HSuperColumn<SN, N, Object> wrappedSupercolumn = wrappedSlice.getColumnByName(supercolumn.getName());
+        if (wrappedSupercolumn == null) {
+            return null;
+        }
+        return new VariableValueTypedSupercolumnImpl<SN, N>(wrappedSupercolumn);
     }
 
     @Override
-    public VariableValueTypedSupercolumn<SN, N> getSupercolumnByName(SN supercolumnName) {
+    public VariableValueTypedSupercolumn<SN, N> getSupercolumn(SupercolumnRange<?, SN, N> supercolumn,
+            SN supercolumnName) {
         HSuperColumn<SN, N, Object> wrappedSupercolumn = wrappedSlice.getColumnByName(supercolumnName);
         if (wrappedSupercolumn == null) {
             return null;
