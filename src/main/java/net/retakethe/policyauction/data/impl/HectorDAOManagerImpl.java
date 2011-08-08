@@ -1,8 +1,6 @@
 package net.retakethe.policyauction.data.impl;
 
-import me.prettyprint.cassandra.model.QuorumAllConsistencyLevelPolicy;
 import net.retakethe.policyauction.data.api.DAOManager;
-import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.services.AppModule;
 
 import org.apache.tapestry5.ioc.annotations.Inject;
@@ -43,9 +41,6 @@ public class HectorDAOManagerImpl implements DAOManager {
             throw new IllegalArgumentException("address must not be null");
         }
         _keyspaceManager = new HectorKeyspaceManager(address + ':' + String.valueOf(port));
-
-        // TODO: is there a better place to set up keyspace consistency levels etc?
-        _keyspaceManager.getKeyspace(Schema.SchemaKeyspace.MAIN).setConsistencyLevelPolicy(new QuorumAllConsistencyLevelPolicy());
 
         _policyManager = new HectorPolicyManagerImpl(_keyspaceManager);
     }

@@ -33,7 +33,11 @@ public class HectorKeyspaceManager implements KeyspaceManager {
                 new CassandraHostConfigurator(hostAndPort));
         keyspaces = new EnumMap<Schema.SchemaKeyspace, Keyspace>(Schema.SchemaKeyspace.class);
         for (Schema.SchemaKeyspace schemaKS : Schema.SchemaKeyspace.values()) {
-            keyspaces.put(schemaKS, findKeyspace(schemaKS.getKeyspaceName()));
+            Keyspace keyspace = loadKeyspace(schemaKS.getKeyspaceName());
+
+            keyspace.setConsistencyLevelPolicy(schemaKS.getConsistencyLevelPolicy());
+
+            keyspaces.put(schemaKS, keyspace);
         }
     }
 
@@ -52,7 +56,7 @@ public class HectorKeyspaceManager implements KeyspaceManager {
         _cluster = null;
     }
 
-    private Keyspace findKeyspace(String keyspaceName) {
+    private Keyspace loadKeyspace(String keyspaceName) {
         KeyspaceDefinition keyspaceDef;
         try {
             keyspaceDef = _cluster.describeKeyspace(keyspaceName);
