@@ -1,7 +1,5 @@
 package net.retakethe.policyauction.data.impl.query.api;
 
-import java.nio.ByteBuffer;
-
 import me.prettyprint.hector.api.Serializer;
 
 /**
@@ -16,19 +14,7 @@ public interface UnresolvedVariableValueTypedColumn<N> {
 
     <V> V getValue(Serializer<V> valueSerializer);
 
-    /**
-     * (Advanced) Returns the underlying ByteBuffer for the value via ByteBuffer.duplicate().
-     */
-    ByteBuffer getValueBytes();
-
-    /**
-     * (Advanced) Returns the underlying ByteBuffer for the name via ByteBuffer.duplicate().
-     */
-    ByteBuffer getNameBytes();
-
     long getClock();
 
     int getTtl();
-
-    Serializer<N> getNameSerializer();
 }

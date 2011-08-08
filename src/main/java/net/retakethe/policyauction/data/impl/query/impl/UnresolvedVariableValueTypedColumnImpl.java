@@ -1,11 +1,8 @@
 package net.retakethe.policyauction.data.impl.query.impl;
 
-import java.nio.ByteBuffer;
-
-import net.retakethe.policyauction.data.impl.query.api.UnresolvedVariableValueTypedColumn;
-
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.HColumn;
+import net.retakethe.policyauction.data.impl.query.api.UnresolvedVariableValueTypedColumn;
 
 /**
  * @author Nick Clarke
@@ -30,17 +27,7 @@ public class UnresolvedVariableValueTypedColumnImpl<N> implements UnresolvedVari
     
     @Override
     public <V> V getValue(Serializer<V> valueSerializer) {
-        return valueSerializer.fromByteBuffer(getValueBytes());
-    }
-
-    @Override
-    public ByteBuffer getValueBytes() {
-        return wrappedColumn.getValueBytes();
-    }
-
-    @Override
-    public ByteBuffer getNameBytes() {
-        return wrappedColumn.getNameBytes();
+        return valueSerializer.fromByteBuffer(wrappedColumn.getValueBytes());
     }
 
     @Override
@@ -51,10 +38,5 @@ public class UnresolvedVariableValueTypedColumnImpl<N> implements UnresolvedVari
     @Override
     public int getTtl() {
         return wrappedColumn.getTtl();
-    }
-
-    @Override
-    public Serializer<N> getNameSerializer() {
-        return wrappedColumn.getNameSerializer();
     }
 }

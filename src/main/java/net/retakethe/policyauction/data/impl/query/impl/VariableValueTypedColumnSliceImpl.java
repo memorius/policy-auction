@@ -1,6 +1,7 @@
 package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import me.prettyprint.hector.api.Serializer;
@@ -17,20 +18,23 @@ import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 public class VariableValueTypedColumnSliceImpl<N> implements VariableValueTypedColumnSlice<N> {
 
     private final ColumnSlice<N, Object> wrappedColumnSlice;
+    private final List<UnresolvedVariableValueTypedColumn<N>> columns;
 
     public VariableValueTypedColumnSliceImpl(ColumnSlice<N, Object> wrappedColumnSlice) {
         this.wrappedColumnSlice = wrappedColumnSlice;
+
+        List<HColumn<N, Object>> wrappedColumns = wrappedColumnSlice.getColumns();
+        int size = wrappedColumns.size();
+        columns = new ArrayList<UnresolvedVariableValueTypedColumn<N>>(size);
+
+        for (HColumn<N, Object> wrappedColumn : wrappedColumns) {
+            columns.add(new UnresolvedVariableValueTypedColumnImpl<N>(wrappedColumn));
+        }
     }
 
     @Override
     public List<UnresolvedVariableValueTypedColumn<N>> getColumns() {
-        List<HColumn<N, Object>> wrappedColumns = wrappedColumnSlice.getColumns();
-        List<UnresolvedVariableValueTypedColumn<N>> columns =
-                new ArrayList<UnresolvedVariableValueTypedColumn<N>>(wrappedColumns.size());
-        for (HColumn<N, Object> wrappedColumn : wrappedColumns) {
-            columns.add(new UnresolvedVariableValueTypedColumnImpl<N>(wrappedColumn));
-        }
-        return columns;
+        return Collections.unmodifiableList(columns);
     }
 
     @Override

@@ -16,7 +16,8 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn
  *
  * @author Nick Clarke
  */
-public class NamedSupercolumnNamedSubcolumn<K, SN, N, V> extends NamedSupercolumnSubcolumn<K, SN, N, V> {
+public class NamedSupercolumnNamedSubcolumn<K, SN, N, V> extends NamedSupercolumnSubcolumn<K, SN, N, V>
+        implements NamedSubcolumn<N, V> {
  
     private final N name;
 
@@ -27,6 +28,7 @@ public class NamedSupercolumnNamedSubcolumn<K, SN, N, V> extends NamedSupercolum
         this.name = name;
     }
 
+    @Override
     public N getName() {
         return name;
     }
