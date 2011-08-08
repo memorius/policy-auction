@@ -3,15 +3,20 @@ package net.retakethe.policyauction.data.impl.schema;
 import java.util.Date;
 import java.util.UUID;
 
+import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
 import me.prettyprint.cassandra.model.QuorumAllConsistencyLevelPolicy;
 import me.prettyprint.cassandra.serializers.DateSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.ConsistencyLevelPolicy;
+import me.prettyprint.hector.api.HConsistencyLevel;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringStringColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.SupercolumnRangeNamedSubcolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 /**
  * Cassandra schema elements as in cassandra-schema.txt.
@@ -20,8 +25,41 @@ import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
  */
 public final class Schema {
 
+    /**
+     * Quorum for both reads and writes - strongly consistent, moderate speed.
+     * <p>
+     * A successful write followed by a successful read will always see the newly-written data.
+     * Successfully-written data will not be lost unless a majority of nodes fail simultaneously.
+     * <p>
+     * Note that a failed write followed by a successful read may still return stale data:
+     * the write which returned a failure to the client may still have made it to a node which will recover later.
+     * <p>
+     * This is used for all important data in the system.
+     */
+    private static final ConsistencyLevelPolicy WRITE_QUORUM_READ_QUORUM = new QuorumAllConsistencyLevelPolicy();
+
+    /**
+     * Fast but unreliable writes. Readers may not see their written data.
+     * <p>
+     * A successful write followed by a successful read will return stale data most of the time.
+     * In many cases the up-to-date data will be returned by the next read after the stale one,
+     * since it propagates by read repair, but it could take longer.
+     * Successfully-written data may be lost if a single node dies.
+     * <p>
+     * This is for low-importance data that we don't mind losing or getting stale reads for:
+     * e.g. debugging and performance logs.
+     */
+    private static final ConsistencyLevelPolicy WRITE_ANY_READ_ONE;
+    static {
+        ConfigurableConsistencyLevel configurable = new ConfigurableConsistencyLevel();
+        configurable.setDefaultWriteConsistencyLevel(HConsistencyLevel.ANY);
+        configurable.setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
+        WRITE_ANY_READ_ONE = configurable;
+    }
+
     public static enum SchemaKeyspace {
-        MAIN("policy_auction", new QuorumAllConsistencyLevelPolicy());
+        MAIN("policy_auction", WRITE_QUORUM_READ_QUORUM),
+        LOGS("policy_auction_logs", WRITE_ANY_READ_ONE);
 
         private final String keyspaceName;
         private final ConsistencyLevelPolicy consistencyLevelPolicy;
@@ -42,6 +80,7 @@ public final class Schema {
 
 
     public static final PoliciesCF POLICIES = new PoliciesCF();
+    public static final LogSCF LOG = new LogSCF();
 
 
     public static final class PoliciesCF extends ColumnFamily<UUID, String> {
@@ -54,8 +93,38 @@ public final class Schema {
             super(SchemaKeyspace.MAIN, "policies", UUID.class, UUIDSerializer.get(), String.class, StringSerializer.get());
             SHORT_NAME = new StringStringColumn<UUID>("short_name", this);
             DESCRIPTION = new StringStringColumn<UUID>("description", this);
-            LAST_EDITED = new StringNamedColumn<UUID, Date>("last_edited", this, Date.class,
-                    DateSerializer.get());
+            LAST_EDITED = new StringNamedColumn<UUID, Date>("last_edited", this,
+                    Date.class, DateSerializer.get());
         }
+    }
+
+    public static final class LogSCF extends SupercolumnFamily<String, UUID, String> {
+
+        public final class LogMessage extends SupercolumnRange<String, UUID, String> {
+
+            public final SupercolumnRangeNamedSubcolumn<String, UUID, String, String> SERVER_IP;
+            public final SupercolumnRangeNamedSubcolumn<String, UUID, String, String> LEVEL;
+            public final SupercolumnRangeNamedSubcolumn<String, UUID, String, String> MESSAGE;
+
+            private LogMessage() {
+                super(LogSCF.this);
+                SERVER_IP = new SupercolumnRangeNamedSubcolumn<String, UUID, String, String>("server_ip",
+                        this, String.class, StringSerializer.get());
+                LEVEL = new SupercolumnRangeNamedSubcolumn<String, UUID, String, String>("level",
+                        this, String.class, StringSerializer.get());
+                MESSAGE = new SupercolumnRangeNamedSubcolumn<String, UUID, String, String>("message",
+                        this, String.class, StringSerializer.get());
+            }
+        }
+
+        public final LogMessage LOG_MESSAGE;
+
+        private LogSCF() {
+            super(SchemaKeyspace.LOGS, "log", String.class, StringSerializer.get(),
+                UUID.class, UUIDSerializer.get(),
+                String.class, StringSerializer.get());
+            LOG_MESSAGE = new LogMessage();
+        }
+
     }
 }

@@ -15,8 +15,7 @@ create column family policies
     and column_metadata = [{
             column_name: short_name,
             validation_class: UTF8Type
-        },
-        {
+        }, {
             column_name: description,
             validation_class: UTF8Type
         }
@@ -28,8 +27,7 @@ create column family users
     and column_metadata = [{
             column_name: password,
             validation_class: UTF8Type
-        },
-        {
+        }, {
             column_name: name,
             validation_class: UTF8Type
         }
@@ -41,5 +39,32 @@ create column family users_by_name
     and column_metadata = [{
             column_name: user_id,
             validation_class: TimeUUIDType
+        }
+    ];
+
+
+create keyspace policy_auction_logs;
+
+use policy_auction_logs;
+
+create column family log
+    with comment = 'Application log'
+    and column_type = Super
+    and key_validation_class = UTF8Type
+    and comparator = TimeUUIDType
+    and subcomparator = UTF8Type
+    and default_validation_class = UTF8Type
+    and read_repair_chance = 1.0
+    and rows_cached = 0
+    and row_cache_save_period = 0
+    and column_metadata = [{
+            column_name: server_ip,
+            validation_class: UTF8Type
+        }, {
+            column_name: level,
+            validation_class: UTF8Type
+        }, {
+            column_name: message,
+            validation_class: UTF8Type
         }
     ];
