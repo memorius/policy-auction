@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.api;
 
 import me.prettyprint.hector.api.mutation.MutationResult;
 import net.retakethe.policyauction.data.impl.schema.BaseColumnFamily;

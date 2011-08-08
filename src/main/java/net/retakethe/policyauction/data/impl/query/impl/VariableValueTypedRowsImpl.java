@@ -1,6 +1,9 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.Iterator;
+
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRows;
 
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.beans.Rows;

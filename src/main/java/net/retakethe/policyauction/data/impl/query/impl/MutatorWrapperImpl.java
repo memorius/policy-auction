@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -8,6 +8,8 @@ import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
+import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
 import net.retakethe.policyauction.data.impl.schema.BaseColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.Column;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;

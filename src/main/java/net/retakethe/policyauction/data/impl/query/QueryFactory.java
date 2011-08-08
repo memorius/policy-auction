@@ -6,6 +6,12 @@ import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
+import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSliceQueryImpl;
+import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedRangeSlicesQueryImpl;
+import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.NamedColumn;
@@ -17,6 +23,8 @@ import net.retakethe.policyauction.util.Functional;
  * @author Nick Clarke
  */
 public final class QueryFactory {
+
+    private QueryFactory() {}
 
     /**
      * Create a query to return a list of specific columns for one row specified by key.
@@ -141,7 +149,7 @@ public final class QueryFactory {
      *      must be columns belonging to the specified ColumnFamily.
      * @throws IllegalArgumentException if any columns don't belong to this {@link ColumnFamily}.
      */
-    protected static <K, N, V> N[] getColumnNamesResolved(final ColumnFamily<K, N> cf,
+    private static <K, N, V> N[] getColumnNamesResolved(final ColumnFamily<K, N> cf,
             List<NamedColumn<K, N, V>> columns) {
         List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, N, V>, N>() {
             @Override
@@ -157,31 +165,7 @@ public final class QueryFactory {
         return toArray(columnNames);
     }
 
-    /**
-     * Get names for a list of columns and validate that they belong to the same column family.
-     *
-     * @param cf the ColumnFamily owning the columns
-     * @param columns columns to retrieve, can be empty,
-     *      must be columns belonging to the specified ColumnFamily.
-     * @throws IllegalArgumentException if any columns don't belong to this {@link ColumnFamily}.
-     */
-    protected static <K, N> N[] getColumnNamesUnresolved(final ColumnFamily<K, N> cf,
-            List<NamedColumn<K, N, ?>> columns) {
-        List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, N, ?>, N>() {
-                @Override
-                public N convert(NamedColumn<K, N, ?> column) {
-                    if (column.getColumnFamily() != cf) {
-                        throw new IllegalArgumentException("NamedColumn '" + column.getName() + "' is from column family '"
-                                + column.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");
-                    }
-                    return column.getName();
-                }
-            });
-
-        return toArray(columnNames);
-    }
-
-    protected static <N> void checkColumnRangeBelongsToColumnFamily(ColumnFamily<?, N> cf,
+    private static <N> void checkColumnRangeBelongsToColumnFamily(ColumnFamily<?, N> cf,
             ColumnRange<?, N, ?> columnRange) {
         if (columnRange.getColumnFamily() != cf) {
             throw new IllegalArgumentException("ColumnRange is from column family '"

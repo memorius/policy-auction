@@ -9,9 +9,9 @@ import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
-import net.retakethe.policyauction.data.impl.query.VariableValueTypedMultiGetSliceQuery;
-import net.retakethe.policyauction.data.impl.query.VariableValueTypedRangeSlicesQuery;
-import net.retakethe.policyauction.data.impl.query.VariableValueTypedSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
 
 /**

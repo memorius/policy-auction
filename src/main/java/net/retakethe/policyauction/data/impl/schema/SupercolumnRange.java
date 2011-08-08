@@ -2,8 +2,8 @@ package net.retakethe.policyauction.data.impl.schema;
 
 import java.util.UUID;
 
-import net.retakethe.policyauction.data.impl.query.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.SupercolumnInserter;
+import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
 
 /**
  * Cassandra supercolumn ranges where there isn't a single supercolumn name.

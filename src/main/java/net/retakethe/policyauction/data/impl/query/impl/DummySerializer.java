@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.nio.ByteBuffer;
 

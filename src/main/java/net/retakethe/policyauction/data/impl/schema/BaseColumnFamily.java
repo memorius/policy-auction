@@ -4,8 +4,8 @@ import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.MutatorWrapperImpl;
+import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperImpl;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
 
 /**

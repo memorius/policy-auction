@@ -1,5 +1,7 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
 import me.prettyprint.hector.api.beans.Row;
 
 /**

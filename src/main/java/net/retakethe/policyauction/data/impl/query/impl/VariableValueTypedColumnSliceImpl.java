@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +6,9 @@ import java.util.List;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
+import net.retakethe.policyauction.data.impl.query.api.UnresolvedVariableValueTypedColumn;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumn;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
 import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 
 /**

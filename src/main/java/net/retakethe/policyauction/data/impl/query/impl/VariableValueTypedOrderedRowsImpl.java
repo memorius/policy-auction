@@ -1,9 +1,11 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.List;
 
 import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedOrderedRows;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
 import net.retakethe.policyauction.util.Functional;
 
 public class VariableValueTypedOrderedRowsImpl<K, N>

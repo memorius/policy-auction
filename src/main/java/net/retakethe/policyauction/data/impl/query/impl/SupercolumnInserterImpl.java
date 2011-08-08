@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -7,6 +7,7 @@ import java.util.List;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
+import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
 import net.retakethe.policyauction.data.impl.schema.Subcolumn;
 import net.retakethe.policyauction.data.impl.schema.Supercolumn;
 import net.retakethe.policyauction.data.impl.schema.SupercolumnFamily;

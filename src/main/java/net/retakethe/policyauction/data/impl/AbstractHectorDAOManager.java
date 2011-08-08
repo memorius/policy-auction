@@ -3,8 +3,8 @@ package net.retakethe.policyauction.data.impl;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import net.retakethe.policyauction.data.api.PolicyID;
-import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumn;
-import net.retakethe.policyauction.data.impl.query.VariableValueTypedColumnSlice;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumn;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
 import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 
 /**

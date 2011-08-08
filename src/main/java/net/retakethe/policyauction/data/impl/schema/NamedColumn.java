@@ -3,7 +3,7 @@ package net.retakethe.policyauction.data.impl.schema;
 import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
-import net.retakethe.policyauction.data.impl.query.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 
 /**
  * Cassandra columns with fixed names.

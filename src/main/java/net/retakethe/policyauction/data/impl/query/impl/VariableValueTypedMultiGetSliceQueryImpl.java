@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.List;
 
@@ -9,6 +9,8 @@ import me.prettyprint.hector.api.beans.Rows;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRows;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 
@@ -21,7 +23,7 @@ public class VariableValueTypedMultiGetSliceQueryImpl<K, N> implements VariableV
 
     public VariableValueTypedMultiGetSliceQueryImpl(Keyspace ks, ColumnFamily<K, N> cf,
             List<NamedColumn<K, N, ?>> columns) {
-        N[] columnNames = QueryFactory.getColumnNamesUnresolved(cf, columns);
+        N[] columnNames = QueryUtils.getColumnNamesUnresolved(cf, columns);
 
         wrappedQuery = HFactory.createMultigetSliceQuery(ks, cf.getKeySerializer(),
                         cf.getColumnNameSerializer(), DummySerializer.get())

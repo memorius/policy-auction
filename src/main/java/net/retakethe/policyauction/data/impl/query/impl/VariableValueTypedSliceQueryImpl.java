@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.List;
 
@@ -9,6 +9,8 @@ import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.NamedColumn;
 
@@ -22,7 +24,7 @@ public class VariableValueTypedSliceQueryImpl<K, N> implements VariableValueType
 
     public VariableValueTypedSliceQueryImpl(Keyspace ks, ColumnFamily<K, N> cf,
             List<NamedColumn<K, N, ?>> columns, K key) {
-        N[] columnNames = QueryFactory.getColumnNamesUnresolved(cf, columns);
+        N[] columnNames = QueryUtils.getColumnNamesUnresolved(cf, columns);
 
         wrappedQuery = HFactory.createSliceQuery(ks, cf.getKeySerializer(),
                     cf.getColumnNameSerializer(), DummySerializer.get())

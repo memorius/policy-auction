@@ -1,6 +1,8 @@
-package net.retakethe.policyauction.data.impl.query;
+package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.nio.ByteBuffer;
+
+import net.retakethe.policyauction.data.impl.query.api.UnresolvedVariableValueTypedColumn;
 
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.HColumn;
