@@ -6,8 +6,8 @@ import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperImpl;
-import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
+import net.retakethe.policyauction.data.impl.schema.Type;
 
 /**
  * Base class for schema definitions of cassandra Column Families and Super Column Families.
@@ -22,30 +22,28 @@ public abstract class BaseColumnFamily<K> {
 
     private final SchemaKeyspace keyspace;
     private final String name;
-    private final Class<K> keyType;
-    private final Serializer<K> keySerializer;
+    private final Type<K> keyType;
 
-    protected BaseColumnFamily(SchemaKeyspace keyspace, String name, Class<K> keyType, Serializer<K> keySerializer) {
+    protected BaseColumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType) {
         this.keyspace = keyspace;
         this.name = name;
         this.keyType = keyType;
-        this.keySerializer = keySerializer;
     }
 
     public SchemaKeyspace getKeyspace() {
         return keyspace;
     }
-    
+
     public String getName() {
         return name;
     }
 
-    public Class<K> getKeyType() {
+    public Type<K> getKeyType() {
         return keyType;
     }
 
     public Serializer<K> getKeySerializer() {
-        return keySerializer;
+        return keyType.getSerializer();
     }
 
     /**

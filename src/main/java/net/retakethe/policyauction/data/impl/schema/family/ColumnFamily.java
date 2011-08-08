@@ -13,6 +13,7 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGe
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
+import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 
@@ -26,22 +27,19 @@ import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
  */
 public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
 
-    private final Class<N> columnNameType;
-    private final Serializer<N> columnNameSerializer;
+    private final Type<N> columnNameType;
 
-    protected ColumnFamily(SchemaKeyspace keyspace, String name, Class<K> keyType, Serializer<K> keySerializer,
-            Class<N> columnNameType, Serializer<N> columnNameSerializer) {
-        super(keyspace, name, keyType, keySerializer);
+    protected ColumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType, Type<N> columnNameType) {
+        super(keyspace, name, keyType);
         this.columnNameType = columnNameType;
-        this.columnNameSerializer = columnNameSerializer;
     }
 
-    public Class<N> getColumnNameType() {
+    public Type<N> getColumnNameType() {
         return columnNameType;
     }
 
     public Serializer<N> getColumnNameSerializer() {
-        return columnNameSerializer;
+        return columnNameType.getSerializer();
     }
 
     /**

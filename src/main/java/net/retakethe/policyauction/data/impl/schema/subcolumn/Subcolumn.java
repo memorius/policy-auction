@@ -2,9 +2,9 @@ package net.retakethe.policyauction.data.impl.schema.subcolumn;
 
 import java.util.UUID;
 
-import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
-
 import me.prettyprint.hector.api.Serializer;
+import net.retakethe.policyauction.data.impl.schema.Type;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 
 /**
  * Base class for Cassandra named subcolumns and subcolumn ranges.
@@ -19,25 +19,22 @@ import me.prettyprint.hector.api.Serializer;
 public abstract class Subcolumn<K, SN, N, V> {
 
     private final Supercolumn<K, SN, N> supercolumn;
-    private final Class<V> valueType;
-    private final Serializer<V> valueSerializer;
+    private final Type<V> valueType;
 
-    protected Subcolumn(Supercolumn<K, SN, N> supercolumn,
-            Class<V> valueType, Serializer<V> valueSerializer) {
+    protected Subcolumn(Supercolumn<K, SN, N> supercolumn, Type<V> valueType) {
         this.supercolumn = supercolumn;
         this.valueType = valueType;
-        this.valueSerializer = valueSerializer;
     }
 
     public Supercolumn<K, SN, N> getSupercolumn() {
         return supercolumn;
     }
 
-    public Class<V> getValueType() {
+    public Type<V> getValueType() {
         return valueType;
     }
 
     public Serializer<V> getValueSerializer() {
-        return valueSerializer;
+        return valueType.getSerializer();
     }
 }

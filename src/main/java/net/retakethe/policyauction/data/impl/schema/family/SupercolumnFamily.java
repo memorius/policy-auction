@@ -10,6 +10,7 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGe
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
+import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
@@ -24,35 +25,30 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
  */
 public abstract class SupercolumnFamily<K, SN, N> extends BaseColumnFamily<K> {
 
-    private final Class<SN> supercolumnNameType;
-    private final Serializer<SN> supercolumnNameSerializer;
-    private final Class<N> subcolumnNameType;
-    private final Serializer<N> subcolumnNameSerializer;
+    private final Type<SN> supercolumnNameType;
+    private final Type<N> subcolumnNameType;
 
-    protected SupercolumnFamily(SchemaKeyspace keyspace, String name, Class<K> keyType, Serializer<K> keySerializer,
-            Class<SN> supercolumnNameType, Serializer<SN> supercolumnNameSerializer,
-            Class<N> subcolumnNameType, Serializer<N> subcolumnNameSerializer) {
-        super(keyspace, name, keyType, keySerializer);
+    protected SupercolumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType,
+            Type<SN> supercolumnNameType, Type<N> subcolumnNameType) {
+        super(keyspace, name, keyType);
         this.supercolumnNameType = supercolumnNameType;
-        this.supercolumnNameSerializer = supercolumnNameSerializer;
         this.subcolumnNameType = subcolumnNameType;
-        this.subcolumnNameSerializer = subcolumnNameSerializer;
     }
 
-    public Class<SN> getSupercolumnNameType() {
+    public Type<SN> getSupercolumnNameType() {
         return this.supercolumnNameType;
     }
 
     public Serializer<SN> getSupercolumnNameSerializer() {
-        return this.supercolumnNameSerializer;
+        return this.supercolumnNameType.getSerializer();
     }
 
-    public Class<N> getSubcolumnNameType() {
+    public Type<N> getSubcolumnNameType() {
         return this.subcolumnNameType;
     }
 
     public Serializer<N> getSubcolumnNameSerializer() {
-        return this.subcolumnNameSerializer;
+        return this.subcolumnNameType.getSerializer();
     }
 
     public VariableValueTypedSuperSliceQuery<K, SN, N> createVariableValueTypedSuperSliceQuery(

@@ -5,9 +5,6 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
 import me.prettyprint.cassandra.model.QuorumAllConsistencyLevelPolicy;
-import me.prettyprint.cassandra.serializers.DateSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.ConsistencyLevelPolicy;
 import me.prettyprint.hector.api.HConsistencyLevel;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
@@ -90,11 +87,10 @@ public final class Schema {
         public final NamedColumn<UUID, String, Date> LAST_EDITED;
 
         private PoliciesCF() {
-            super(SchemaKeyspace.MAIN, "policies", UUID.class, UUIDSerializer.get(), String.class, StringSerializer.get());
+            super(SchemaKeyspace.MAIN, "policies", Type.TIME_UUID, Type.UTF8);
             SHORT_NAME = new StringStringColumn<UUID>("short_name", this);
             DESCRIPTION = new StringStringColumn<UUID>("description", this);
-            LAST_EDITED = new StringNamedColumn<UUID, Date>("last_edited", this,
-                    Date.class, DateSerializer.get());
+            LAST_EDITED = new StringNamedColumn<UUID, Date>("last_edited", this, Type.DATE);
         }
     }
 
@@ -109,20 +105,19 @@ public final class Schema {
             private LogMessage() {
                 super(LogSCF.this);
                 SERVER_IP = new SupercolumnRangeNamedSubcolumn<String, UUID, String, String>("server_ip",
-                        this, String.class, StringSerializer.get());
+                        this, Type.UTF8);
                 LEVEL = new SupercolumnRangeNamedSubcolumn<String, UUID, String, String>("level",
-                        this, String.class, StringSerializer.get());
+                        this, Type.UTF8);
                 MESSAGE = new SupercolumnRangeNamedSubcolumn<String, UUID, String, String>("message",
-                        this, String.class, StringSerializer.get());
+                        this, Type.UTF8);
             }
         }
 
         public final LogMessage LOG_MESSAGE;
 
         private LogSCF() {
-            super(SchemaKeyspace.LOGS, "log", String.class, StringSerializer.get(),
-                UUID.class, UUIDSerializer.get(),
-                String.class, StringSerializer.get());
+            // TODO: implement Type.HOUR for key type. Serialize as UTF8 but set/get values as Hour.
+            super(SchemaKeyspace.LOGS, "log", Type.UTF8, Type.TIME_UUID, Type.UTF8);
             LOG_MESSAGE = new LogMessage();
         }
 

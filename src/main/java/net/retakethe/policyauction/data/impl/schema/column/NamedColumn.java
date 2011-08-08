@@ -2,8 +2,8 @@ package net.retakethe.policyauction.data.impl.schema.column;
 
 import java.util.UUID;
 
-import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 
 /**
@@ -19,9 +19,8 @@ public class NamedColumn<K, N, V> extends Column<K, N, V> {
  
     private final N name;
 
-    public NamedColumn(N name, ColumnFamily<K, N> columnFamily,
-            Class<V> valueType, Serializer<V> valueSerializer) {
-        super(columnFamily, valueType, valueSerializer);
+    public NamedColumn(N name, ColumnFamily<K, N> columnFamily, Type<V> valueType) {
+        super(columnFamily, valueType);
         this.name = name;
     }
 

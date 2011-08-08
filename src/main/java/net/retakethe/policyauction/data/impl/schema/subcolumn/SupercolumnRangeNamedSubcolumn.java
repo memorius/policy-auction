@@ -2,8 +2,8 @@ package net.retakethe.policyauction.data.impl.schema.subcolumn;
 
 import java.util.UUID;
 
-import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 /**
@@ -21,10 +21,8 @@ public class SupercolumnRangeNamedSubcolumn<K, SN, N, V> extends SupercolumnRang
  
     private final N name;
 
-    public SupercolumnRangeNamedSubcolumn(N name,
-            SupercolumnRange<K, SN, N> supercolumn,
-            Class<V> valueType, Serializer<V> valueSerializer) {
-        super(supercolumn, valueType, valueSerializer);
+    public SupercolumnRangeNamedSubcolumn(N name, SupercolumnRange<K, SN, N> supercolumn, Type<V> valueType) {
+        super(supercolumn, valueType);
         this.name = name;
     }
 

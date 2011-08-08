@@ -2,8 +2,8 @@ package net.retakethe.policyauction.data.impl.schema.subcolumn;
 
 import java.util.UUID;
 
-import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 /**
@@ -19,10 +19,8 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
 public class SupercolumnRangeSubcolumnRange<K, SN, N, V> extends SupercolumnRangeSubcolumn<K, SN, N, V>
         implements SubcolumnRange<K, SN, N, V> {
 
-    public SupercolumnRangeSubcolumnRange(
-            SupercolumnRange<K, SN, N> supercolumn,
-            Class<V> valueType, Serializer<V> valueSerializer) {
-        super(supercolumn, valueType, valueSerializer);
+    public SupercolumnRangeSubcolumnRange(SupercolumnRange<K, SN, N> supercolumn, Type<V> valueType) {
+        super(supercolumn, valueType);
     }
 
     public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key, SN supercolumnName, N subcolumnName) {

@@ -2,9 +2,8 @@ package net.retakethe.policyauction.data.impl.schema.subcolumn;
 
 import java.util.UUID;
 
+import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
-
-import me.prettyprint.hector.api.Serializer;
 
 /**
  * Base class for Cassandra named subcolumns and subcolumn ranges of named supercolumns.
@@ -20,9 +19,8 @@ public abstract class NamedSupercolumnSubcolumn<K, SN, N, V> extends Subcolumn<K
 
     private final NamedSupercolumn<K, SN, N> supercolumn;
 
-    protected NamedSupercolumnSubcolumn(NamedSupercolumn<K, SN, N> supercolumn,
-            Class<V> valueType, Serializer<V> valueSerializer) {
-        super(supercolumn, valueType, valueSerializer);
+    protected NamedSupercolumnSubcolumn(NamedSupercolumn<K, SN, N> supercolumn, Type<V> valueType) {
+        super(supercolumn, valueType);
         this.supercolumn = supercolumn;
     }
 

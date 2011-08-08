@@ -2,9 +2,9 @@ package net.retakethe.policyauction.data.impl.schema.column;
 
 import java.util.UUID;
 
-import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
-
 import me.prettyprint.hector.api.Serializer;
+import net.retakethe.policyauction.data.impl.schema.Type;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 
 /**
  * Base class for Cassandra named columns and column ranges.
@@ -17,26 +17,24 @@ import me.prettyprint.hector.api.Serializer;
  */
 public abstract class Column<K, N, V> {
 
-    private final Class<V> valueType;
-    private final Serializer<V> valueSerializer;
+    private final Type<V> valueType;
     private final ColumnFamily<K, N> columnFamily;
 
     protected Column(ColumnFamily<K, N> columnFamily,
-            Class<V> valueType, Serializer<V> valueSerializer) {
+            Type<V> valueType) {
         this.columnFamily = columnFamily;
         this.valueType = valueType;
-        this.valueSerializer = valueSerializer;
     }
 
     public ColumnFamily<K, N> getColumnFamily() {
         return columnFamily;
     }
 
-    public Class<V> getValueType() {
+    public Type<V> getValueType() {
         return valueType;
     }
 
     public Serializer<V> getValueSerializer() {
-        return valueSerializer;
+        return valueType.getSerializer();
     }
 }
