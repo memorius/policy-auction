@@ -9,11 +9,13 @@ import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSuperSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedRangeSlicesQueryImpl;
+import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedRangeSuperSlicesQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSuperSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
@@ -183,6 +185,7 @@ public final class QueryFactory {
 
     /**
      * Create a query to return a range of columns for a range of rows specified by key, or all rows.
+     * All values must have the same type.
      *
      * @param <K> key type
      * @param <N> column name type
@@ -203,6 +206,7 @@ public final class QueryFactory {
 
     /**
      * Create a query to return a range of columns for a range of rows specified by key, or all rows.
+     * All values must have the same type.
      *
      * @param <K> key type
      * @param <N> column name type
@@ -219,6 +223,45 @@ public final class QueryFactory {
                 .setRange(start, finish, reversed, count);
     }
 
+    /**
+     * Create a query to return all subcolumns for a list of specific supercolumns for a range of rows specified by key, 
+     * or all rows.
+     * The subcolumns may contain different value types.
+     *
+     * @param <K> key type
+     * @param <SN> supercolumn name type
+     * @param <N> subcolumn name type
+     * @param scf the SupercolumnFamily owning the supercolumns
+     * @param supercolumns supercolumns to retrieve,
+     *      must be supercolumns belonging to the specified SupercolumnFamily.
+     */
+    public static <K, SN, N> VariableValueTypedRangeSuperSlicesQuery<K, SN, N>
+            createVariableValueTypedRangeSuperSlicesQuery(KeyspaceManager keyspaceManager,
+                    SupercolumnFamily<K, SN, N> scf, List<NamedSupercolumn<K, SN, N>> supercolumns) {
+        return new VariableValueTypedRangeSuperSlicesQueryImpl<K, SN, N>(
+                keyspaceManager.getKeyspace(scf.getKeyspace()),
+                scf, supercolumns);
+    }
+
+    /**
+     * Create a query to return all subcolumns for a range of supercolumns for a range of rows specified by key, 
+     * or all rows.
+     * The subcolumns may contain different value types.
+     *
+     * @param <K> key type
+     * @param <SN> supercolumn name type
+     * @param <N> subcolumn name type
+     * @param scf the SupercolumnFamily owning the supercolumns
+     */
+    public static <K, SN, N> VariableValueTypedRangeSuperSlicesQuery<K, SN, N>
+            createVariableValueTypedRangeSuperSlicesQuery(KeyspaceManager keyspaceManager,
+                    SupercolumnFamily<K, SN, N> scf, SupercolumnRange<K, SN, N> supercolumnRange,
+                    SN start, SN finish, boolean reversed, int count) {
+        return new VariableValueTypedRangeSuperSlicesQueryImpl<K, SN, N>(
+                keyspaceManager.getKeyspace(scf.getKeyspace()),
+                scf, supercolumnRange, start, finish, reversed, count);
+    }
+    
     /**
      * Get names for a list of columns and validate that they belong to the same column family.
      *

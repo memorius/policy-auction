@@ -7,6 +7,7 @@ import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSuperSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
@@ -79,6 +80,20 @@ public abstract class SupercolumnFamily<K, SN, N> extends BaseColumnFamily<K> {
             SupercolumnRange<K, SN, N> supercolumnRange,
             SN start, SN finish, boolean reversed, int count) {
         return QueryFactory.createVariableValueTypedMultiGetSuperSliceQuery(keyspaceManager, this,
+                supercolumnRange, start, finish, reversed, count);
+    }
+
+    public VariableValueTypedRangeSuperSlicesQuery<K, SN, N>
+            createVariableValueTypedRangeSuperSlicesQuery(KeyspaceManager keyspaceManager,
+                    List<NamedSupercolumn<K, SN, N>> supercolumns) {
+        return QueryFactory.createVariableValueTypedRangeSuperSlicesQuery(keyspaceManager, this, supercolumns);
+    }
+
+    public VariableValueTypedRangeSuperSlicesQuery<K, SN, N>
+            createVariableValueTypedRangeSuperSlicesQuery(KeyspaceManager keyspaceManager,
+                    SupercolumnRange<K, SN, N> supercolumnRange,
+                    SN start, SN finish, boolean reversed, int count) {
+        return QueryFactory.createVariableValueTypedRangeSuperSlicesQuery(keyspaceManager, this,
                 supercolumnRange, start, finish, reversed, count);
     }
 }
