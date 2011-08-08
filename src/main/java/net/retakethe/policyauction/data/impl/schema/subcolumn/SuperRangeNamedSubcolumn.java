@@ -4,10 +4,10 @@ import java.util.UUID;
 
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.schema.Type;
-import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 /**
- * Cassandra subcolumns where there isn't a fixed subcolumn name, of supercolumns with fixed names.
+ * Cassandra subcolumns with fixed names, of supercolumns where there isn't a fixed name.
  *
  * @param <K> the key type of the supercolumn family, e.g. {@link UUID} or {@link String}  or {@link Integer} etc.
  * @param <SN> the supercolumn name type, e.g. {@link UUID} or {@link String}  or {@link Integer} etc.
@@ -16,14 +16,23 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn
  *
  * @author Nick Clarke
  */
-public class NamedSupercolumnSubcolumnRange<K, SN, N, V> extends NamedSupercolumnSubcolumn<K, SN, N, V>
-        implements SubcolumnRange<K, SN, N, V> {
+public class SuperRangeNamedSubcolumn<K, SN, N, V> extends SuperRangeSubcolumn<K, SN, N, V>
+        implements NamedSubcolumn<K, SN, N, V> {
+ 
+    private final N name;
 
-    public NamedSupercolumnSubcolumnRange(NamedSupercolumn<K, SN, N> supercolumn, Type<V> valueType) {
+    public SuperRangeNamedSubcolumn(N name, SupercolumnRange<K, SN, N> supercolumn, Type<V> valueType) {
         super(supercolumn, valueType);
+        this.name = name;
     }
 
-    public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key, N subcolumnName) {
-        mutator.addSubcolumnDeletion(key, this, getSupercolumn().getName(), subcolumnName);
+    @Override
+    public N getName() {
+        return name;
     }
+
+    public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key, SN supercolumnName) {
+        mutator.addSubcolumnDeletion(key, this, supercolumnName, name);
+    }
+
 }

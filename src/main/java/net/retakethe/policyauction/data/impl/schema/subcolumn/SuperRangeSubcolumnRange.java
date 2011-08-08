@@ -2,11 +2,12 @@ package net.retakethe.policyauction.data.impl.schema.subcolumn;
 
 import java.util.UUID;
 
+import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 /**
- * Base class for Cassandra named subcolumns and subcolumn ranges of supercolumn ranges.
+ * Cassandra subcolumns where there isn't a fixed subcolumn name, of supercolumns where there isn't a fixed name.
  *
  * @param <K> the key type of the supercolumn family, e.g. {@link UUID} or {@link String}  or {@link Integer} etc.
  * @param <SN> the supercolumn name type, e.g. {@link UUID} or {@link String}  or {@link Integer} etc.
@@ -15,17 +16,14 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
  *
  * @author Nick Clarke
  */
-public abstract class SupercolumnRangeSubcolumn<K, SN, N, V> extends Subcolumn<K, SN, N, V> {
+public class SuperRangeSubcolumnRange<K, SN, N, V> extends SuperRangeSubcolumn<K, SN, N, V>
+        implements SubcolumnRange<K, SN, N, V> {
 
-    private final SupercolumnRange<K, SN, N> supercolumn;
-
-    protected SupercolumnRangeSubcolumn(SupercolumnRange<K, SN, N> supercolumn, Type<V> valueType) {
+    public SuperRangeSubcolumnRange(SupercolumnRange<K, SN, N> supercolumn, Type<V> valueType) {
         super(supercolumn, valueType);
-        this.supercolumn = supercolumn;
     }
 
-    @Override
-    public SupercolumnRange<K, SN, N> getSupercolumn() {
-        return supercolumn;
+    public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key, SN supercolumnName, N subcolumnName) {
+        mutator.addSubcolumnDeletion(key, this, supercolumnName, subcolumnName);
     }
 }

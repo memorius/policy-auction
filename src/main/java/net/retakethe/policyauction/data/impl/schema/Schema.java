@@ -12,7 +12,7 @@ import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColu
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringStringColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.SupercolumnRangeNamedSubcolumn;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeNamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 /**
@@ -98,17 +98,17 @@ public final class Schema {
 
         public final class LogMessage extends SupercolumnRange<String, UUID, String> {
 
-            public final SupercolumnRangeNamedSubcolumn<String, UUID, String, String> SERVER_IP;
-            public final SupercolumnRangeNamedSubcolumn<String, UUID, String, String> LEVEL;
-            public final SupercolumnRangeNamedSubcolumn<String, UUID, String, String> MESSAGE;
+            public final SuperRangeNamedSubcolumn<String, UUID, String, String> SERVER_IP;
+            public final SuperRangeNamedSubcolumn<String, UUID, String, String> LEVEL;
+            public final SuperRangeNamedSubcolumn<String, UUID, String, String> MESSAGE;
 
             private LogMessage() {
                 super(LogSCF.this);
-                SERVER_IP = new SupercolumnRangeNamedSubcolumn<String, UUID, String, String>("server_ip",
+                SERVER_IP = new SuperRangeNamedSubcolumn<String, UUID, String, String>("server_ip",
                         this, Type.UTF8);
-                LEVEL = new SupercolumnRangeNamedSubcolumn<String, UUID, String, String>("level",
+                LEVEL = new SuperRangeNamedSubcolumn<String, UUID, String, String>("level",
                         this, Type.UTF8);
-                MESSAGE = new SupercolumnRangeNamedSubcolumn<String, UUID, String, String>("message",
+                MESSAGE = new SuperRangeNamedSubcolumn<String, UUID, String, String>("message",
                         this, Type.UTF8);
             }
         }
