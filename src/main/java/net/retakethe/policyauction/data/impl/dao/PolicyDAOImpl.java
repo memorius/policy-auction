@@ -3,7 +3,7 @@ package net.retakethe.policyauction.data.impl.dao;
 import java.util.Date;
 
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
-import net.retakethe.policyauction.data.impl.types.HectorPolicyIDImpl;
+import net.retakethe.policyauction.data.api.types.PolicyID;
 
 /**
  * @author Nick Clarke
@@ -11,19 +11,19 @@ import net.retakethe.policyauction.data.impl.types.HectorPolicyIDImpl;
 public class PolicyDAOImpl implements PolicyDAO {
     private static final long serialVersionUID = 0L;
 
-    private final HectorPolicyIDImpl policyID;
+    private final PolicyID policyID;
     private String description;
     private String shortName;
     private Date lastEdited;
 
-    public PolicyDAOImpl(HectorPolicyIDImpl policyID) {
+    public PolicyDAOImpl(PolicyID policyID) {
         if (policyID == null) {
             throw new IllegalArgumentException("policyID must not be null");
         }
         this.policyID = policyID;
     }
 
-    public PolicyDAOImpl(HectorPolicyIDImpl policyID, String shortName, String description, Date lastEdited) {
+    public PolicyDAOImpl(PolicyID policyID, String shortName, String description, Date lastEdited) {
         this.policyID = policyID;
         this.shortName = shortName;
         this.description = description;
@@ -31,7 +31,7 @@ public class PolicyDAOImpl implements PolicyDAO {
     }
 
     @Override
-    public HectorPolicyIDImpl getPolicyID() {
+    public PolicyID getPolicyID() {
         return policyID;
     }
 

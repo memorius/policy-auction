@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.query.impl.serializers;
+package net.retakethe.policyauction.data.impl.serializers;
 
 import java.nio.ByteBuffer;
 

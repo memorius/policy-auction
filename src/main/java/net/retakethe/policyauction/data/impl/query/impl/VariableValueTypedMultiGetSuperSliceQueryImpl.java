@@ -12,10 +12,10 @@ import me.prettyprint.hector.api.query.MultigetSuperSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperRows;
-import net.retakethe.policyauction.data.impl.query.impl.serializers.DummySerializer;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
 public class VariableValueTypedMultiGetSuperSliceQueryImpl<K, SN, N> implements
         VariableValueTypedMultiGetSuperSliceQuery<K, SN, N> {

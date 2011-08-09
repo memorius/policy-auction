@@ -3,9 +3,7 @@ package net.retakethe.policyauction.data.impl;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
-import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.PolicyManager;
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
@@ -47,15 +45,12 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
     @Override
     public PolicyDAO getPolicy(PolicyID policyID) throws NoSuchPolicyException {
-        HectorPolicyIDImpl idImpl = getPolicyIDImpl(policyID);
-        UUID key = idImpl.getUUID();
-
-        List<NamedColumn<UUID, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<UUID, String, ?>) Schema.POLICIES.SHORT_NAME,
-                (NamedColumn<UUID, String, ?>) Schema.POLICIES.DESCRIPTION,
-                (NamedColumn<UUID, String, ?>) Schema.POLICIES.LAST_EDITED);
-        VariableValueTypedSliceQuery<UUID, String> query =
-                Schema.POLICIES.createVariableValueTypedSliceQuery(keyspaceManager, key, list);
+        List<NamedColumn<PolicyID, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.SHORT_NAME,
+                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.DESCRIPTION,
+                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.LAST_EDITED);
+        VariableValueTypedSliceQuery<PolicyID, String> query =
+                Schema.POLICIES.createVariableValueTypedSliceQuery(keyspaceManager, policyID, list);
 
         QueryResult<VariableValueTypedColumnSlice<String>> queryResult = query.execute();
 
@@ -73,26 +68,24 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
             description = getNonNullColumn(cs, Schema.POLICIES.DESCRIPTION);
             lastEdited = getNonNullColumn(cs, Schema.POLICIES.LAST_EDITED);
         } catch (NoSuchColumnException e) {
-            throw new RuntimeException("Invalid policy record for key " + key, e);
+            throw new RuntimeException("Invalid policy record for key " + policyID, e);
         }
 
-        return new PolicyDAOImpl(idImpl, shortName, description, lastEdited);
+        return new PolicyDAOImpl(policyID, shortName, description, lastEdited);
     }
 
     @Override
     public PolicyDAO createPolicy() {
-        UUID uuid = TimeUUIDUtils.getUniqueTimeUUIDinMillis();
-        HectorPolicyIDImpl policyID = new HectorPolicyIDImpl(uuid);
-        return new PolicyDAOImpl(policyID);
+        return new PolicyDAOImpl(new HectorPolicyIDImpl());
     }
 
     @Override
     public List<PolicyDAO> getAllPolicies() {
-        List<NamedColumn<UUID, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<UUID, String, ?>) Schema.POLICIES.SHORT_NAME,
-                (NamedColumn<UUID, String, ?>) Schema.POLICIES.DESCRIPTION,
-                (NamedColumn<UUID, String, ?>) Schema.POLICIES.LAST_EDITED);
-        VariableValueTypedRangeSlicesQuery<UUID, String> query =
+        List<NamedColumn<PolicyID, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.SHORT_NAME,
+                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.DESCRIPTION,
+                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.LAST_EDITED);
+        VariableValueTypedRangeSlicesQuery<PolicyID, String> query =
                 Schema.POLICIES.createVariableValueTypedRangeSlicesQuery(keyspaceManager,
                         list);
 
@@ -103,17 +96,17 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
         // TODO: needed?
         // query.setKeys("fake_key_0", "fake_key_4");
 
-        QueryResult<VariableValueTypedOrderedRows<UUID, String>> result = query.execute();
+        QueryResult<VariableValueTypedOrderedRows<PolicyID, String>> result = query.execute();
 
-        VariableValueTypedOrderedRows<UUID, String> orderedRows = result.get();
+        VariableValueTypedOrderedRows<PolicyID, String> orderedRows = result.get();
         if (orderedRows == null) {
             return Collections.emptyList();
         }
 
         return Functional.filter(orderedRows.getList(),
-                new Filter<VariableValueTypedRow<UUID, String>, PolicyDAO>() {
+                new Filter<VariableValueTypedRow<PolicyID, String>, PolicyDAO>() {
                     @Override
-                    public PolicyDAO filter(VariableValueTypedRow<UUID, String> row) throws SkippedElementException {
+                    public PolicyDAO filter(VariableValueTypedRow<PolicyID, String> row) throws SkippedElementException {
                         VariableValueTypedColumnSlice<String> cs = row.getColumnSlice();
                         if (cs == null) {
                             throw new SkippedElementException();
@@ -136,7 +129,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
                             throw new RuntimeException("Invalid policy record for key " + row.getKey(), e);
                         }
 
-                        return new PolicyDAOImpl(new HectorPolicyIDImpl(row.getKey()), shortName, description,
+                        return new PolicyDAOImpl(row.getKey(), shortName, description,
                                 lastEdited);
                     }
                 });
@@ -144,10 +137,9 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
     @Override
     public void persist(PolicyDAO policy) {
-        PolicyDAOImpl impl = getImpl(policy, PolicyDAOImpl.class);
-        UUID policyID = impl.getPolicyID().getUUID();
+        PolicyID policyID = policy.getPolicyID();
 
-        MutatorWrapper<UUID> m = Schema.POLICIES.createMutator(keyspaceManager);
+        MutatorWrapper<PolicyID> m = Schema.POLICIES.createMutator(keyspaceManager);
 
         Schema.POLICIES.SHORT_NAME.addColumnInsertion(m, policyID, policy.getShortName());
         Schema.POLICIES.DESCRIPTION.addColumnInsertion(m, policyID, policy.getDescription());
@@ -161,10 +153,9 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
     @Override
     public void deletePolicy(PolicyDAO policy) {
-        PolicyDAOImpl impl = getImpl(policy, PolicyDAOImpl.class);
-        UUID policyID = impl.getPolicyID().getUUID();
+        PolicyID policyID = policy.getPolicyID();
 
-        MutatorWrapper<UUID> m = Schema.POLICIES.createMutator(keyspaceManager);
+        MutatorWrapper<PolicyID> m = Schema.POLICIES.createMutator(keyspaceManager);
 
         Schema.POLICIES.addRowDeletion(m, policyID);
 

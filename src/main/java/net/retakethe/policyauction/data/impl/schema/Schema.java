@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import net.retakethe.policyauction.data.api.types.DateAndHour;
+import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringStringColumn;
@@ -23,17 +24,17 @@ public final class Schema {
     public static final LogSCF LOG = new LogSCF();
 
 
-    public static final class PoliciesCF extends ColumnFamily<UUID, String> {
+    public static final class PoliciesCF extends ColumnFamily<PolicyID, String> {
 
-        public final NamedColumn<UUID, String, String> SHORT_NAME;
-        public final NamedColumn<UUID, String, String> DESCRIPTION;
-        public final NamedColumn<UUID, String, Date> LAST_EDITED;
+        public final NamedColumn<PolicyID, String, String> SHORT_NAME;
+        public final NamedColumn<PolicyID, String, String> DESCRIPTION;
+        public final NamedColumn<PolicyID, String, Date> LAST_EDITED;
 
         private PoliciesCF() {
-            super(SchemaKeyspace.MAIN, "policies", Type.TIME_UUID, Type.UTF8);
-            SHORT_NAME = new StringStringColumn<UUID>("short_name", this);
-            DESCRIPTION = new StringStringColumn<UUID>("description", this);
-            LAST_EDITED = new StringNamedColumn<UUID, Date>("last_edited", this, Type.DATE);
+            super(SchemaKeyspace.MAIN, "policies", Type.POLICY_ID, Type.UTF8);
+            SHORT_NAME = new StringStringColumn<PolicyID>("short_name", this);
+            DESCRIPTION = new StringStringColumn<PolicyID>("description", this);
+            LAST_EDITED = new StringNamedColumn<PolicyID, Date>("last_edited", this, Type.DATE);
         }
     }
 

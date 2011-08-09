@@ -3,14 +3,15 @@ package net.retakethe.policyauction.data.impl.schema;
 import java.util.Date;
 import java.util.UUID;
 
-import net.retakethe.policyauction.data.api.types.DateAndHour;
-import net.retakethe.policyauction.data.impl.query.impl.serializers.DateAndHourSerializer;
-
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
 import me.prettyprint.cassandra.serializers.DateSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Serializer;
+import net.retakethe.policyauction.data.api.types.DateAndHour;
+import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
+import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
 
 /**
  * Enum-like class representing datatypes for Cassandra keys,
@@ -49,6 +50,11 @@ public final class Type<T> {
      * Boolean, stored in cassandra as a 1 or 0 byte (BytesType).
      */
     public static final Type<Boolean> BOOLEAN   = new Type<Boolean>(Boolean.class, BooleanSerializer.get());
+
+    /**
+     * PolicyID: TimeUUIDType.
+     */
+    public static final Type<PolicyID> POLICY_ID = new Type<PolicyID>(PolicyID.class, PolicyIDSerializer.get());
 
 
     private final Class<T> type;
