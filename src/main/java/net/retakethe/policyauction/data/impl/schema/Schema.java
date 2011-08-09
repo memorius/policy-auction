@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.PolicyID;
-import net.retakethe.policyauction.data.impl.schema.Schema.LogSCF.LogMessageRange;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColumn;
@@ -50,7 +49,7 @@ public final class Schema {
         }
     }
 
-    public static final class LogSCF extends RangeSupercolumnFamily<DateAndHour, UUID, String, LogMessageRange> {
+    public static final class LogSCF extends RangeSupercolumnFamily<DateAndHour, UUID, String, LogSCF.LogMessageRange> {
 
         public final class LogMessageRange extends SupercolumnRange<DateAndHour, UUID, String> {
             public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> LOCAL_TIME;
