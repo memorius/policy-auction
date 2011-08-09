@@ -9,7 +9,7 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
-import net.retakethe.policyauction.data.impl.schema.Schema;
+import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 
 /**
  * Holder for keyspace access, used in production and for unit tests of individual manager impls
@@ -26,13 +26,13 @@ public class HectorKeyspaceManager implements KeyspaceManager {
     /**
      * No synchronization needed - only modified in constructor.
      */
-    private Map<Schema.SchemaKeyspace, Keyspace> keyspaces;
+    private Map<SchemaKeyspace, Keyspace> keyspaces;
 
     public HectorKeyspaceManager(String hostAndPort) {
         _cluster = HFactory.getOrCreateCluster("policy_auction_cluster",
                 new CassandraHostConfigurator(hostAndPort));
-        keyspaces = new EnumMap<Schema.SchemaKeyspace, Keyspace>(Schema.SchemaKeyspace.class);
-        for (Schema.SchemaKeyspace schemaKS : Schema.SchemaKeyspace.values()) {
+        keyspaces = new EnumMap<SchemaKeyspace, Keyspace>(SchemaKeyspace.class);
+        for (SchemaKeyspace schemaKS : SchemaKeyspace.values()) {
             Keyspace keyspace = loadKeyspace(schemaKS.getKeyspaceName());
 
             keyspace.setConsistencyLevelPolicy(schemaKS.getConsistencyLevelPolicy());
@@ -42,7 +42,7 @@ public class HectorKeyspaceManager implements KeyspaceManager {
     }
 
     @Override
-    public Keyspace getKeyspace(Schema.SchemaKeyspace schemaKS) {
+    public Keyspace getKeyspace(SchemaKeyspace schemaKS) {
         Keyspace ks = keyspaces.get(schemaKS);
         if (ks == null) {
             throw new IllegalArgumentException("Unknown schema: " + schemaKS);
@@ -51,7 +51,7 @@ public class HectorKeyspaceManager implements KeyspaceManager {
     }
 
     protected void destroy() {
-        keyspaces = new EnumMap<Schema.SchemaKeyspace, Keyspace>(Schema.SchemaKeyspace.class);
+        keyspaces = new EnumMap<SchemaKeyspace, Keyspace>(SchemaKeyspace.class);
         HFactory.shutdownCluster(_cluster);
         _cluster = null;
     }
