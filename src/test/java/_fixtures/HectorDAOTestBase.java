@@ -9,7 +9,7 @@ import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.HectorDAOManagerImpl;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.impl.DummySerializer;
+import net.retakethe.policyauction.data.impl.query.impl.serializers.DummySerializer;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 

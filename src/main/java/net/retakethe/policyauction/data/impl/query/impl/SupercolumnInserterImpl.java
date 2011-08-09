@@ -8,6 +8,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
+import net.retakethe.policyauction.data.impl.query.impl.serializers.DummySerializer;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.Subcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;

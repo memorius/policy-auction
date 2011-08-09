@@ -7,8 +7,8 @@ import static org.testng.Assert.fail;
 import java.util.Date;
 import java.util.List;
 
-import net.retakethe.policyauction.data.api.PolicyDAO;
 import net.retakethe.policyauction.data.api.PolicyManager.NoSuchPolicyException;
+import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;

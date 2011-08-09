@@ -2,7 +2,7 @@ package net.retakethe.policyauction.entities;
 
 import java.util.List;
 
-import net.retakethe.policyauction.data.api.PolicyDAO;
+import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 import net.retakethe.policyauction.util.Functional;
 import net.retakethe.policyauction.util.Functional.Converter;
 

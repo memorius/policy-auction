@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.impl.schema;
 import java.util.Date;
 import java.util.UUID;
 
+import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringStringColumn;
@@ -10,8 +11,6 @@ import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeNamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
-import net.retakethe.policyauction.data.impl.schema.types.DateAndHour;
-import net.retakethe.policyauction.data.impl.schema.types.Type;
 
 /**
  * Cassandra schema elements as in cassandra-schema.txt.

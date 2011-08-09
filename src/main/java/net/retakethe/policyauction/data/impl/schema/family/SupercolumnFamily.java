@@ -10,9 +10,9 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGe
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
+import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
-import net.retakethe.policyauction.data.impl.schema.types.Type;
 
 /**
  * Schema definition and query creation for Cassandra Column Families.

@@ -1,8 +1,8 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.types;
 
 import java.util.UUID;
 
-import net.retakethe.policyauction.data.api.PolicyID;
+import net.retakethe.policyauction.data.api.types.PolicyID;
 
 public final class HectorPolicyIDImpl implements PolicyID {
 

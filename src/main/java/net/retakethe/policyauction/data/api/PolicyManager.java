@@ -2,6 +2,9 @@ package net.retakethe.policyauction.data.api;
 
 import java.util.List;
 
+import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.api.types.PolicyID;
+
 
 /**
  * @author Nick Clarke

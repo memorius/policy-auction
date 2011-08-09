@@ -1,14 +1,16 @@
-package net.retakethe.policyauction.data.impl.schema.types;
+package net.retakethe.policyauction.data.impl.schema;
 
 import java.util.Date;
 import java.util.UUID;
+
+import net.retakethe.policyauction.data.api.types.DateAndHour;
+import net.retakethe.policyauction.data.impl.query.impl.serializers.DateAndHourSerializer;
 
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
 import me.prettyprint.cassandra.serializers.DateSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Serializer;
-import net.retakethe.policyauction.data.impl.schema.types.DateAndHour.DateAndHourSerializer;
 
 /**
  * Enum-like class representing datatypes for Cassandra keys,

@@ -1,7 +1,9 @@
-package net.retakethe.policyauction.data.api;
+package net.retakethe.policyauction.data.api.dao;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import net.retakethe.policyauction.data.api.types.PolicyID;
 
 public interface PolicyDAO extends Serializable {
 

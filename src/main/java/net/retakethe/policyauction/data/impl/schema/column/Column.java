@@ -3,8 +3,8 @@ package net.retakethe.policyauction.data.impl.schema.column;
 import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
+import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
-import net.retakethe.policyauction.data.impl.schema.types.Type;
 
 /**
  * Base class for Cassandra named columns and column ranges.

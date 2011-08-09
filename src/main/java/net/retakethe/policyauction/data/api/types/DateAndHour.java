@@ -1,6 +1,5 @@
-package net.retakethe.policyauction.data.impl.schema.types;
+package net.retakethe.policyauction.data.api.types;
 
-import java.nio.ByteBuffer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -8,55 +7,14 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
-import me.prettyprint.cassandra.serializers.AbstractSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.hector.api.Serializer;
-import me.prettyprint.hector.api.ddl.ComparatorType;
-
 import org.apache.commons.lang.time.DateFormatUtils;
 
 /**
  * Cassandra type for values grouped into date+hour intervals.
- * The time is stored as a UTF8 String.
  *
  * @author Nick Clarke
  */
 public class DateAndHour {
-
-    /**
-     * @see me.prettyprint.cassandra.serializers.StringSerializer
-     */
-    public static class DateAndHourSerializer extends AbstractSerializer<DateAndHour>
-            implements Serializer<DateAndHour> {
-
-        private static final DateAndHourSerializer INSTANCE = new DateAndHourSerializer();
-
-        public static DateAndHourSerializer get() {
-            return INSTANCE;
-        }
-
-        @Override
-        public ByteBuffer toByteBuffer(DateAndHour obj) {
-            if (obj == null) {
-                return null;
-            }
-            return StringSerializer.get().toByteBuffer(obj.getGMTDateAndHourString());
-        }
-
-        @Override
-        public DateAndHour fromByteBuffer(ByteBuffer byteBuffer) {
-            String s = StringSerializer.get().fromByteBuffer(byteBuffer);
-            if (s == null) {
-                return null;
-            }
-            return DateAndHour.fromGMTString(s);
-        }
-
-        @Override
-        public ComparatorType getComparatorType() {
-            return StringSerializer.get().getComparatorType();
-        }
-    }
 
     private static final String DATE_AND_HOUR_FORMAT = "yyyyMMdd-HH00";
     private static final String DATE_AND_HOUR_PARSE_FORMAT = "yyyyMMdd-HH00-z";

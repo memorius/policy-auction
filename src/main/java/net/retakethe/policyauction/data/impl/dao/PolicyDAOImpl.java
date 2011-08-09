@@ -1,8 +1,9 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.dao;
 
 import java.util.Date;
 
-import net.retakethe.policyauction.data.api.PolicyDAO;
+import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.impl.types.HectorPolicyIDImpl;
 
 /**
  * @author Nick Clarke

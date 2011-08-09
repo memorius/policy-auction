@@ -1,11 +1,11 @@
-package net.retakethe.policyauction.data.impl.query.impl;
+package net.retakethe.policyauction.data.impl.query.impl.serializers;
 
 import java.nio.ByteBuffer;
 
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
 
 /**
- * A serializer implementation for use where Hector requires us to provide one but it will never be used,
+ * Hector serializer implementation for use where Hector requires us to provide one but it will never be used,
  * or we don't know the correct type to use.
  *
  * @param <T> the type to (not) be serialized
@@ -26,11 +26,17 @@ public class DummySerializer<T> extends AbstractSerializer<T> {
      */
     private DummySerializer() {}
 
+    /**
+     * @throws UnsupportedOperationException
+     */
     @Override
     public ByteBuffer toByteBuffer(T obj) {
         throw new UnsupportedOperationException("DummySerializer.toByteBuffer");
     }
 
+    /**
+     * @throws UnsupportedOperationException
+     */
     @Override
     public T fromByteBuffer(ByteBuffer byteBuffer) {
         throw new UnsupportedOperationException("DummySerializer.fromByteBuffer");

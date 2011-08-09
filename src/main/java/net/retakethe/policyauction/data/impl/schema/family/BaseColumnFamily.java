@@ -7,7 +7,7 @@ import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperImpl;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
-import net.retakethe.policyauction.data.impl.schema.types.Type;
+import net.retakethe.policyauction.data.impl.schema.Type;
 
 /**
  * Base class for schema definitions of cassandra Column Families and Super Column Families.

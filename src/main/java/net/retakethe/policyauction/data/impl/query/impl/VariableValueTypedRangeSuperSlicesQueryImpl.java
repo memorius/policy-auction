@@ -11,6 +11,7 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedOrderedSuperRows;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.impl.serializers.DummySerializer;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;

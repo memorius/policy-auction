@@ -3,7 +3,7 @@ package net.retakethe.policyauction.entities;
 import java.io.Serializable;
 import java.util.Date;
 
-import net.retakethe.policyauction.data.api.PolicyDAO;
+import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 
 import org.apache.tapestry5.beaneditor.NonVisual;
 import org.apache.tapestry5.beaneditor.Validate;
