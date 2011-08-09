@@ -58,6 +58,9 @@ create column family log
     and rows_cached = 0
     and row_cache_save_period = 0
     and column_metadata = [{
+            column_name: local_time,
+            validation_class: UTF8Type
+        }, {
             column_name: server_ip,
             validation_class: UTF8Type
         }, {

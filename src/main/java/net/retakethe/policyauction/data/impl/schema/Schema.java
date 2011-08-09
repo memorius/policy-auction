@@ -14,6 +14,8 @@ import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeNamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.types.DateAndHour;
+import net.retakethe.policyauction.data.impl.schema.types.Type;
 
 /**
  * Cassandra schema elements as in cassandra-schema.txt.
@@ -94,21 +96,24 @@ public final class Schema {
         }
     }
 
-    public static final class LogSCF extends SupercolumnFamily<String, UUID, String> {
+    public static final class LogSCF extends SupercolumnFamily<DateAndHour, UUID, String> {
 
-        public final class LogMessage extends SupercolumnRange<String, UUID, String> {
+        public final class LogMessage extends SupercolumnRange<DateAndHour, UUID, String> {
 
-            public final SuperRangeNamedSubcolumn<String, UUID, String, String> SERVER_IP;
-            public final SuperRangeNamedSubcolumn<String, UUID, String, String> LEVEL;
-            public final SuperRangeNamedSubcolumn<String, UUID, String, String> MESSAGE;
+            public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> LOCAL_TIME;
+            public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> SERVER_IP;
+            public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> LEVEL;
+            public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> MESSAGE;
 
             private LogMessage() {
                 super(LogSCF.this);
-                SERVER_IP = new SuperRangeNamedSubcolumn<String, UUID, String, String>("server_ip",
+                LOCAL_TIME = new SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String>("local_time",
                         this, Type.UTF8);
-                LEVEL = new SuperRangeNamedSubcolumn<String, UUID, String, String>("level",
+                SERVER_IP = new SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String>("server_ip",
                         this, Type.UTF8);
-                MESSAGE = new SuperRangeNamedSubcolumn<String, UUID, String, String>("message",
+                LEVEL = new SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String>("level",
+                        this, Type.UTF8);
+                MESSAGE = new SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String>("message",
                         this, Type.UTF8);
             }
         }
@@ -116,8 +121,7 @@ public final class Schema {
         public final LogMessage LOG_MESSAGE;
 
         private LogSCF() {
-            // TODO: implement Type.HOUR for key type. Serialize as UTF8 but set/get values as Hour.
-            super(SchemaKeyspace.LOGS, "log", Type.UTF8, Type.TIME_UUID, Type.UTF8);
+            super(SchemaKeyspace.LOGS, "log", Type.DATE_AND_HOUR, Type.TIME_UUID, Type.UTF8);
             LOG_MESSAGE = new LogMessage();
         }
 

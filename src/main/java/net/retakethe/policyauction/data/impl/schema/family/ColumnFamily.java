@@ -13,9 +13,9 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGe
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema.SchemaKeyspace;
-import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.types.Type;
 
 /**
  * Schema definition and query creation for Cassandra Column Families.

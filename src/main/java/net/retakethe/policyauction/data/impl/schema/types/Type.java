@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl.schema;
+package net.retakethe.policyauction.data.impl.schema.types;
 
 import java.util.Date;
 import java.util.UUID;
@@ -8,6 +8,7 @@ import me.prettyprint.cassandra.serializers.DateSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Serializer;
+import net.retakethe.policyauction.data.impl.schema.types.DateAndHour.DateAndHourSerializer;
 
 /**
  * Enum-like class representing datatypes for Cassandra keys,
@@ -35,6 +36,12 @@ public final class Type<T> {
      * java.util.Date, stored in cassandra as LongType.
      */
     public static final Type<Date>    DATE      = new Type<Date>(Date.class, DateSerializer.get());
+
+    /**
+     * Date+hour, stored in cassandra as UTF8Type.
+     */
+    public static final Type<DateAndHour> DATE_AND_HOUR = new Type<DateAndHour>(DateAndHour.class,
+            DateAndHourSerializer.get());
 
     /**
      * Boolean, stored in cassandra as a 1 or 0 byte (BytesType).
