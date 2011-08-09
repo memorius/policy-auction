@@ -1,10 +1,13 @@
 package net.retakethe.policyauction.data.impl.query.api;
 
 import me.prettyprint.hector.api.mutation.MutationResult;
-import net.retakethe.policyauction.data.impl.schema.column.Column;
+import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
+import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.BaseColumnFamily;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.Subcolumn;
-import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 /**
  * Column/supercolumn/subcolumn insertions/mutations/deletions using our Schema classes.
@@ -14,14 +17,26 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
  */
 public interface MutatorWrapper<K> {
 
-    <N, V> void addColumnInsertion(K key, Column<K, N, V> column, N name, V value);
+    <N, V> void addColumnDeletion(K key, NamedColumn<K, N, V> column);
 
-    <SN, N> SupercolumnInserter<K, SN, N> createSupercolumnInserter(K key, Supercolumn<K, SN, N> supercolumn,
+    <N, V> void addColumnDeletion(K key, ColumnRange<K, N, V> columnRange, N name);
+
+    <N, V> void addColumnInsertion(K key, NamedColumn<K, N, V> column, V value);
+
+    <N, V> void addColumnInsertion(K key, ColumnRange<K, N, V> column, N name, V value);
+
+    <SN, N> SupercolumnInserter<K, SN, N> createSupercolumnInserter(K key, SupercolumnRange<K, SN, N> supercolumn,
             SN supercolumnName);
 
-    <SN> void addSupercolumnDeletion(K key, Supercolumn<K, SN, ?> supercolumn, SN supercolumnName);
+    <SN, N> SupercolumnInserter<K, SN, N> createSupercolumnInserter(K key, NamedSupercolumn<K, SN, N> supercolumn);
 
-    <SN, N> void addSubcolumnDeletion(K key, Subcolumn<K, SN, N, ?> subcolumn, SN supercolumnName, N subcolumnName); 
+    <SN> void addSupercolumnDeletion(K key, SupercolumnRange<K, SN, ?> supercolumn, SN supercolumnName);
+
+    <SN> void addSupercolumnDeletion(K key, NamedSupercolumn<K, SN, ?> supercolumn);
+
+    <SN, N> void addSubcolumnDeletion(K key, SN supercolumnName, NamedSubcolumn<K, SN, N, ?> subcolumn);
+
+    <SN, N> void addSubcolumnDeletion(K key, SN supercolumnName, SubcolumnRange<K, SN, N, ?> subcolumn, N subcolumnName); 
 
     void addRowDeletion(BaseColumnFamily<K> cf, K key);
 

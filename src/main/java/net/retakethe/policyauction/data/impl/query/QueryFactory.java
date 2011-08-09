@@ -5,23 +5,25 @@ import java.util.List;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.ColumnQuery;
+import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSuperSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumnQuery;
-import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSliceQueryImpl;
-import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSuperSliceQueryImpl;
+import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultigetSliceQueryImpl;
+import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultigetSuperSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedRangeSlicesQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedRangeSuperSlicesQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSuperColumnQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSuperSliceQueryImpl;
+import net.retakethe.policyauction.data.impl.schema.column.Column;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
@@ -43,7 +45,7 @@ public final class QueryFactory {
     public static <K, N, V> SliceQuery<K, N, V> createSliceQuery(
             KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, K key,
             ColumnRange<K, N, V> columnRange, N start, N finish, boolean reversed, int count) {
-        checkColumnRangeBelongsToColumnFamily(cf, columnRange);
+        checkColumnBelongsToColumnFamily(cf, columnRange);
 
         return HFactory.createSliceQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
                 cf.getColumnNameSerializer(), columnRange.getValueSerializer())
@@ -54,11 +56,11 @@ public final class QueryFactory {
 
     public static <K, N, V> ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager,
             ColumnFamily<K, N> cf, K key,
-            ColumnRange<K, N, V> columnRange, N columnName) {
-        checkColumnRangeBelongsToColumnFamily(cf, columnRange);
+            Column<K, N, V> column, N columnName) {
+        checkColumnBelongsToColumnFamily(cf, column);
 
         return HFactory.createColumnQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
-                cf.getColumnNameSerializer(), columnRange.getValueSerializer())
+                cf.getColumnNameSerializer(), column.getValueSerializer())
                 .setColumnFamily(cf.getName())
                 .setName(columnName)
                 .setKey(key);
@@ -124,6 +126,26 @@ public final class QueryFactory {
     }
 
     /**
+     * Create a query to return a range of specific columns for one or more rows specified by key.
+     * The columns must all contain the same value type.
+     *
+     * @param <K> key type
+     * @param <N> column name type
+     * @param <V> column value type
+     * @param cf the ColumnFamily owning the columns
+     */
+    public static <K, N, V> MultigetSliceQuery<K, N, V> createMultigetSliceQuery(
+            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, ColumnRange<K, N, V> columnRange,
+            N start, N finish, boolean reversed, int count) {
+        checkColumnBelongsToColumnFamily(cf, columnRange);
+
+        return HFactory.createMultigetSliceQuery(keyspaceManager.getKeyspace(cf.getKeyspace()),
+                cf.getKeySerializer(), cf.getColumnNameSerializer(), columnRange.getValueSerializer())
+                .setColumnFamily(cf.getName())
+                .setRange(start, finish, reversed, count);
+    }
+
+    /**
      * Create a query to return a list of specific columns for one or more rows specified by key.
      * The columns may contain different value types.
      *
@@ -133,9 +155,9 @@ public final class QueryFactory {
      * @param columns columns to retrieve,
      *      must be columns belonging to the specified ColumnFamily.
      */
-    public static <K, N> VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(
+    public static <K, N> VariableValueTypedMultigetSliceQuery<K, N> createVariableValueTypedMultigetSliceQuery(
             KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
-        return new VariableValueTypedMultiGetSliceQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
+        return new VariableValueTypedMultigetSliceQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
                 cf, columns);
     }
 
@@ -150,10 +172,10 @@ public final class QueryFactory {
      * @param supercolumns supercolumns to retrieve,
      *      must be supercolumns belonging to the specified SupercolumnFamily.
      */
-    public static <K, SN, N> VariableValueTypedMultiGetSuperSliceQuery<K, SN, N>
-            createVariableValueTypedMultiGetSuperSliceQuery(KeyspaceManager keyspaceManager,
+    public static <K, SN, N> VariableValueTypedMultigetSuperSliceQuery<K, SN, N>
+            createVariableValueTypedMultigetSuperSliceQuery(KeyspaceManager keyspaceManager,
                     SupercolumnFamily<K, SN, N> scf, List<NamedSupercolumn<K, SN, N>> supercolumns) {
-        return new VariableValueTypedMultiGetSuperSliceQueryImpl<K, SN, N>(
+        return new VariableValueTypedMultigetSuperSliceQueryImpl<K, SN, N>(
                 keyspaceManager.getKeyspace(scf.getKeyspace()), scf, supercolumns);
     }
 
@@ -166,12 +188,12 @@ public final class QueryFactory {
      * @param <N> subcolumn name type
      * @param scf the SupercolumnFamily owning the supercolumns
      */
-    public static <K, SN, N> VariableValueTypedMultiGetSuperSliceQuery<K, SN, N>
-            createVariableValueTypedMultiGetSuperSliceQuery(KeyspaceManager keyspaceManager,
+    public static <K, SN, N> VariableValueTypedMultigetSuperSliceQuery<K, SN, N>
+            createVariableValueTypedMultigetSuperSliceQuery(KeyspaceManager keyspaceManager,
                     SupercolumnFamily<K, SN, N> scf,
                     SupercolumnRange<K, SN, N> supercolumnRange,
                     SN start, SN finish, boolean reversed, int count) {
-        return new VariableValueTypedMultiGetSuperSliceQueryImpl<K, SN, N>(
+        return new VariableValueTypedMultigetSuperSliceQueryImpl<K, SN, N>(
                 keyspaceManager.getKeyspace(scf.getKeyspace()), scf, supercolumnRange, start, finish, reversed, count);
     }
 
@@ -233,7 +255,7 @@ public final class QueryFactory {
             ColumnFamily<K, N> cf,
             ColumnRange<K, N, V> columnRange,
             N start, N finish, boolean reversed, int count) {
-        checkColumnRangeBelongsToColumnFamily(cf, columnRange);
+        checkColumnBelongsToColumnFamily(cf, columnRange);
 
         return HFactory.createRangeSlicesQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
                 cf.getColumnNameSerializer(), columnRange.getValueSerializer())
@@ -323,11 +345,11 @@ public final class QueryFactory {
         return toArray(columnNames);
     }
 
-    private static <N> void checkColumnRangeBelongsToColumnFamily(ColumnFamily<?, N> cf,
-            ColumnRange<?, N, ?> columnRange) {
-        if (columnRange.getColumnFamily() != cf) {
-            throw new IllegalArgumentException("ColumnRange is from column family '"
-                    + columnRange.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");
+    private static <N> void checkColumnBelongsToColumnFamily(ColumnFamily<?, N> cf,
+            Column<?, N, ?> column) {
+        if (column.getColumnFamily() != cf) {
+            throw new IllegalArgumentException("Column is from column family '"
+                    + column.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");
         }
     }
 

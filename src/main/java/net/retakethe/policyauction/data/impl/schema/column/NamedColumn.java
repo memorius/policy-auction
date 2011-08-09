@@ -29,6 +29,6 @@ public class NamedColumn<K, N, V> extends Column<K, N, V> {
     }
 
     public void addColumnInsertion(MutatorWrapper<K> m, K key, V value) {
-        m.addColumnInsertion(key, this, name, value);
+        m.addColumnInsertion(key, this, value);
     }
 }

@@ -4,16 +4,18 @@ import java.util.List;
 import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
+import me.prettyprint.hector.api.query.ColumnQuery;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
+import net.retakethe.policyauction.data.impl.schema.column.Column;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 
@@ -42,6 +44,16 @@ public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
         return columnNameType.getSerializer();
     }
 
+    public <V> ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, Column<K, N, V> column,
+            N columnName) {
+        return QueryFactory.createColumnQuery(keyspaceManager, this, key, column, columnName);
+    }
+
+    public <V> SliceQuery<K, N, V> createSliceQuery(KeyspaceManager keyspaceManager, K key,
+            ColumnRange<K, N, V> columnRange, N start, N finish, boolean reversed, int count) {
+        return QueryFactory.createSliceQuery(keyspaceManager, this, key, columnRange, start, finish, reversed, count);
+    }
+
     /**
      * @param columns columns for {@link SliceQuery#setColumnNames(Object...)},
      *      must be columns belonging to this ColumnFamily.
@@ -51,14 +63,18 @@ public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
         return QueryFactory.createVariableValueTypedSliceQuery(keyspaceManager, this, key, columns);
     }
 
+    public <V> MultigetSliceQuery<K, N, V> createMultigetSliceQuery(KeyspaceManager keyspaceManager,
+            ColumnRange<K, N, V> columnRange, N start, N finish, boolean reversed, int count) {
+        return QueryFactory.createMultigetSliceQuery(keyspaceManager, this, columnRange, start, finish, reversed, count);
+    }
+
     /**
      * @param columns columns for {@link MultigetSliceQuery#setColumnNames(Object...)},
      *      must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedMultiGetSliceQuery<K, N> createVariableValueTypedMultiGetSliceQuery(
-            KeyspaceManager keyspaceManager,
-            List<NamedColumn<K, N, ?>> columns) {
-        return QueryFactory.createVariableValueTypedMultiGetSliceQuery(keyspaceManager, this, columns);
+    public VariableValueTypedMultigetSliceQuery<K, N> createVariableValueTypedMultigetSliceQuery(
+            KeyspaceManager keyspaceManager, List<NamedColumn<K, N, ?>> columns) {
+        return QueryFactory.createVariableValueTypedMultigetSliceQuery(keyspaceManager, this, columns);
     }
 
     /**

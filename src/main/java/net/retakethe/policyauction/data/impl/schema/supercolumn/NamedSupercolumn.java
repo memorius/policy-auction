@@ -29,10 +29,10 @@ public abstract class NamedSupercolumn<K, SN, N> extends Supercolumn<K, SN, N> {
     }
 
     public SupercolumnInserter<K, SN, N> createSupercolumnInserter(MutatorWrapper<K> mutator, K key) {
-        return mutator.createSupercolumnInserter(key, this, name);
+        return mutator.createSupercolumnInserter(key, this);
     }
 
     public void addSupercolumnDeletion(MutatorWrapper<K> mutator, K key) {
-        mutator.addSupercolumnDeletion(key, this, name);
+        mutator.addSupercolumnDeletion(key, this);
     }
 }

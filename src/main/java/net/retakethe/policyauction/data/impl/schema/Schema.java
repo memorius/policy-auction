@@ -5,13 +5,14 @@ import java.util.UUID;
 
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.impl.schema.Schema.LogSCF.LogMessageRange;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringStringColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
-import net.retakethe.policyauction.data.impl.schema.family.SingleRangeColumnFamilyRow;
-import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.RangeSupercolumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.SingleRowRangeColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeNamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
@@ -42,22 +43,22 @@ public final class Schema {
         }
     }
 
-    public static final class LogHoursRow extends SingleRangeColumnFamilyRow<String, DateAndHour, Object> {
+    public static final class LogHoursRow extends SingleRowRangeColumnFamily<String, DateAndHour, Object> {
         private LogHoursRow() {
-            super(SchemaKeyspace.MAIN, "misc", "log-hours", Type.UTF8, Type.DATE_AND_HOUR);
+            super(SchemaKeyspace.MAIN, "misc_string", "log hours", Type.UTF8, Type.DATE_AND_HOUR);
             setColumnRange(new ColumnRange<String, DateAndHour, Object>(this, Type.DUMMY));
         }
     }
 
-    public static final class LogSCF extends SupercolumnFamily<DateAndHour, UUID, String> {
+    public static final class LogSCF extends RangeSupercolumnFamily<DateAndHour, UUID, String, LogMessageRange> {
 
-        public final class LogMessage extends SupercolumnRange<DateAndHour, UUID, String> {
+        public final class LogMessageRange extends SupercolumnRange<DateAndHour, UUID, String> {
             public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> LOCAL_TIME;
             public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> SERVER_IP;
             public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> LEVEL;
             public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> MESSAGE;
 
-            private LogMessage() {
+            private LogMessageRange() {
                 super(LogSCF.this);
                 LOCAL_TIME = new SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String>("local_time",
                         this, Type.UTF8);
@@ -70,12 +71,9 @@ public final class Schema {
             }
         }
 
-        public final LogMessage LOG_MESSAGE;
-
         private LogSCF() {
             super(SchemaKeyspace.LOGS, "log", Type.DATE_AND_HOUR, Type.TIME_UUID, Type.UTF8);
-            LOG_MESSAGE = new LogMessage();
+            setSupercolumnRange(new LogMessageRange());
         }
-
     }
 }

@@ -8,10 +8,10 @@ import me.prettyprint.hector.api.query.Query;
  * @author Nick Clarke
  * @see me.prettyprint.hector.api.query.MultigetSuperSliceQuery
  */
-public interface VariableValueTypedMultiGetSuperSliceQuery<K, SN, N>
+public interface VariableValueTypedMultigetSuperSliceQuery<K, SN, N>
         extends Query<VariableValueTypedSuperRows<K, SN, N>> {
 
-    VariableValueTypedMultiGetSuperSliceQuery<K, SN, N> setKeys(K... keys);
+    VariableValueTypedMultigetSuperSliceQuery<K, SN, N> setKeys(K... keys);
 
-    VariableValueTypedMultiGetSuperSliceQuery<K, SN, N> setKeys(Collection<K> keys);
+    VariableValueTypedMultigetSuperSliceQuery<K, SN, N> setKeys(Collection<K> keys);
 }

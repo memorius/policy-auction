@@ -9,7 +9,8 @@ import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.Subcolumn;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
@@ -28,9 +29,18 @@ public class SupercolumnInserterImpl<K, SN, N> implements SupercolumnInserter<K,
     }
 
     @Override
-    public <V> void addSubcolumnInsertion(Subcolumn<K, SN, N, V> subcolumn, N subcolumnName, V value) {
+    public <V> void addSubcolumnInsertion(SubcolumnRange<K, SN, N, V> subcolumn, N subcolumnName, V value) {
         validateSubcolumn(subcolumn);
         HColumn<N, ?> hColumn = HFactory.createColumn(subcolumnName, value,
+                subcolumn.getSupercolumn().getSupercolumnFamily().getSubcolumnNameSerializer(),
+                subcolumn.getValueSerializer());
+        subcolumns.add(hColumn);
+    }
+
+    @Override
+    public <V> void addSubcolumnInsertion(NamedSubcolumn<K, SN, N, V> subcolumn, V value) {
+        validateSubcolumn(subcolumn);
+        HColumn<N, ?> hColumn = HFactory.createColumn(subcolumn.getName(), value,
                 subcolumn.getSupercolumn().getSupercolumnFamily().getSubcolumnNameSerializer(),
                 subcolumn.getValueSerializer());
         subcolumns.add(hColumn);
@@ -60,7 +70,13 @@ public class SupercolumnInserterImpl<K, SN, N> implements SupercolumnInserter<K,
                         scf.getSubcolumnNameSerializer(), DummySerializer.get()));
     }
 
-    private void validateSubcolumn(Subcolumn<K, SN, N, ?> subcolumn) {
+    private void validateSubcolumn(SubcolumnRange<K, SN, N, ?> subcolumn) {
+        if (subcolumn.getSupercolumn() != supercolumn) {
+            throw new IllegalArgumentException("The supplied subcolumn does not belong to this mutator's supercolumn");
+        }
+    }
+
+    private void validateSubcolumn(NamedSubcolumn<K, SN, N, ?> subcolumn) {
         if (subcolumn.getSupercolumn() != supercolumn) {
             throw new IllegalArgumentException("The supplied subcolumn does not belong to this mutator's supercolumn");
         }

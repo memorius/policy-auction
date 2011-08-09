@@ -32,7 +32,6 @@ public class SuperRangeNamedSubcolumn<K, SN, N, V> extends SuperRangeSubcolumn<K
     }
 
     public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key, SN supercolumnName) {
-        mutator.addSubcolumnDeletion(key, this, supercolumnName, name);
+        mutator.addSubcolumnDeletion(key, supercolumnName, this);
     }
-
 }

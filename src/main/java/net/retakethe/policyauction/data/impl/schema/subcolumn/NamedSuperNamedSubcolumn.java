@@ -32,6 +32,6 @@ public class NamedSuperNamedSubcolumn<K, SN, N, V> extends NamedSuperSubcolumn<K
     }
 
     public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key) {
-        mutator.addSubcolumnDeletion(key, this, getSupercolumn().getName(), name);
+        mutator.addSubcolumnDeletion(key, getSupercolumn().getName(), this);
     }
 }

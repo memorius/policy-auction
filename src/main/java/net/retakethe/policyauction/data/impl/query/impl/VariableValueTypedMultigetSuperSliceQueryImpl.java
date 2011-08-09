@@ -10,19 +10,19 @@ import me.prettyprint.hector.api.beans.SuperRows;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.query.MultigetSuperSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSuperSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperRows;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
-public class VariableValueTypedMultiGetSuperSliceQueryImpl<K, SN, N> implements
-        VariableValueTypedMultiGetSuperSliceQuery<K, SN, N> {
+public class VariableValueTypedMultigetSuperSliceQueryImpl<K, SN, N> implements
+        VariableValueTypedMultigetSuperSliceQuery<K, SN, N> {
 
     private final MultigetSuperSliceQuery<K, SN, N, Object> wrappedQuery;
 
-    public VariableValueTypedMultiGetSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, SN, N> scf,
+    public VariableValueTypedMultigetSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, SN, N> scf,
             List<NamedSupercolumn<K, SN, N>> supercolumns) {
         SN[] supercolumnNames = QueryUtils.getSupercolumnNamesUnresolved(scf, supercolumns);
 
@@ -33,7 +33,7 @@ public class VariableValueTypedMultiGetSuperSliceQueryImpl<K, SN, N> implements
                 .setColumnNames(supercolumnNames);
     }
 
-    public VariableValueTypedMultiGetSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, SN, N> scf,
+    public VariableValueTypedMultigetSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, SN, N> scf,
             SupercolumnRange<K, SN, N> supercolumnRange, SN start, SN finish, boolean reversed, int count) {
         QueryUtils.checkSupercolumnBelongsToFamily(scf, supercolumnRange);
 
@@ -45,13 +45,13 @@ public class VariableValueTypedMultiGetSuperSliceQueryImpl<K, SN, N> implements
     }
 
     @Override
-    public VariableValueTypedMultiGetSuperSliceQuery<K, SN, N> setKeys(K... keys) {
+    public VariableValueTypedMultigetSuperSliceQuery<K, SN, N> setKeys(K... keys) {
         wrappedQuery.setKeys(keys);
         return this;
     }
 
     @Override
-    public VariableValueTypedMultiGetSuperSliceQuery<K, SN, N> setKeys(Collection<K> keys) {
+    public VariableValueTypedMultigetSuperSliceQuery<K, SN, N> setKeys(Collection<K> keys) {
         wrappedQuery.setKeys(keys);
         return this;
     }

@@ -42,6 +42,37 @@ create column family users_by_name
         }
     ];
 
+create column family memcache_string
+    with comment = 'Single-row lookup tables for in-memory small datasets, with string-named columns'
+    and key_validation_class = UTF8Type
+    and comparator = UTF8Type
+    and default_validation_class = BytesType
+    and keys_cached = 1.0
+    and rows_cached = 1.0
+    and key_cache_save_period = 0
+    and row_cache_save_period = 0;
+
+create column family memcache_timeuuid
+    with comment = 'Single-row lookup tables for in-memory small datasets, with TimeUUID-named columns'
+    and key_validation_class = UTF8Type
+    and comparator = TimeUUIDType
+    and default_validation_class = BytesType
+    and keys_cached = 1.0
+    and rows_cached = 1.0
+    and key_cache_save_period = 0
+    and row_cache_save_period = 0;
+
+create column family misc_string
+    with comment = 'Single-row lookup tables for non-in-memory datasets, with string-named columns'
+    and key_validation_class = UTF8Type
+    and comparator = UTF8Type
+    and default_validation_class = BytesType
+    and keys_cached = 1.0
+    and rows_cached = 0
+    and row_cache_save_period = 0
+    and key_cache_save_period = 0
+    and row_cache_save_period = 0;
+
 
 create keyspace policy_auction_logs;
 
@@ -55,7 +86,9 @@ create column family log
     and subcomparator = UTF8Type
     and default_validation_class = UTF8Type
     and read_repair_chance = 1.0
+    and keys_cached = 100
     and rows_cached = 0
+    and key_cache_save_period = 0
     and row_cache_save_period = 0
     and column_metadata = [{
             column_name: local_time,
