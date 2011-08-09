@@ -15,7 +15,7 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
 /**
- * Schema definition and query creation for Cassandra Column Families.
+ * Schema definition and query creation for Cassandra Supercolumn Families.
  *
  * @param <K> the row key type of the column family, e.g. {@link UUID} or {@link String} or {@link Integer} etc.
  * @param <SN> the supercolumn name type, e.g. {@link UUID} or {@link String} or {@link Integer} etc.

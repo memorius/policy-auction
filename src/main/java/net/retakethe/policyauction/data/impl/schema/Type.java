@@ -11,6 +11,7 @@ import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
+import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
 
 /**
@@ -56,6 +57,7 @@ public final class Type<T> {
      */
     public static final Type<PolicyID> POLICY_ID = new Type<PolicyID>(PolicyID.class, PolicyIDSerializer.get());
 
+    public static final Type<Object> DUMMY = new Type<Object>(Object.class, DummySerializer.get());
 
     private final Class<T> type;
     private final Serializer<T> serializer;

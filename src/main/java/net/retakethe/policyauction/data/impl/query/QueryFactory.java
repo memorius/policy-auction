@@ -4,7 +4,9 @@ import java.util.List;
 
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.query.ColumnQuery;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
+import me.prettyprint.hector.api.query.SliceQuery;
 import net.retakethe.policyauction.data.impl.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultiGetSuperSliceQuery;
@@ -12,17 +14,20 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSl
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumnQuery;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedMultiGetSuperSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedRangeSlicesQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedRangeSuperSlicesQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSliceQueryImpl;
+import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSuperColumnQueryImpl;
 import net.retakethe.policyauction.data.impl.query.impl.VariableValueTypedSuperSliceQueryImpl;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 import net.retakethe.policyauction.util.Functional;
 
@@ -34,6 +39,38 @@ import net.retakethe.policyauction.util.Functional;
 public final class QueryFactory {
 
     private QueryFactory() {}
+
+    public static <K, N, V> SliceQuery<K, N, V> createSliceQuery(
+            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, K key,
+            ColumnRange<K, N, V> columnRange, N start, N finish, boolean reversed, int count) {
+        checkColumnRangeBelongsToColumnFamily(cf, columnRange);
+
+        return HFactory.createSliceQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
+                cf.getColumnNameSerializer(), columnRange.getValueSerializer())
+                .setColumnFamily(cf.getName())
+                .setRange(start, finish, reversed, count)
+                .setKey(key);
+    }
+
+    public static <K, N, V> ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager,
+            ColumnFamily<K, N> cf, K key,
+            ColumnRange<K, N, V> columnRange, N columnName) {
+        checkColumnRangeBelongsToColumnFamily(cf, columnRange);
+
+        return HFactory.createColumnQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
+                cf.getColumnNameSerializer(), columnRange.getValueSerializer())
+                .setColumnFamily(cf.getName())
+                .setName(columnName)
+                .setKey(key);
+    }
+
+    public static <K, SN, N> VariableValueTypedSupercolumnQuery<SN, N> createSupercolumnQuery(
+            KeyspaceManager keyspaceManager,
+            SupercolumnFamily<K, SN, N> scf, K key,
+            Supercolumn<K, SN, N> supercolumn, SN supercolumnName) {
+        return new VariableValueTypedSuperColumnQueryImpl<K, SN, N>(keyspaceManager.getKeyspace(scf.getKeyspace()),
+                scf, supercolumn, supercolumnName, key);
+    }
 
     /**
      * Create a query to return a list of specific columns for one row specified by key.

@@ -5,10 +5,12 @@ import java.util.UUID;
 
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringStringColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.SingleRangeColumnFamilyRow;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeNamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
@@ -21,11 +23,13 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
 public final class Schema {
 
     public static final PoliciesCF POLICIES = new PoliciesCF();
+
+    public static final LogHoursRow LOG_HOURS = new LogHoursRow();
+
     public static final LogSCF LOG = new LogSCF();
 
 
     public static final class PoliciesCF extends ColumnFamily<PolicyID, String> {
-
         public final NamedColumn<PolicyID, String, String> SHORT_NAME;
         public final NamedColumn<PolicyID, String, String> DESCRIPTION;
         public final NamedColumn<PolicyID, String, Date> LAST_EDITED;
@@ -38,10 +42,16 @@ public final class Schema {
         }
     }
 
+    public static final class LogHoursRow extends SingleRangeColumnFamilyRow<String, DateAndHour, Object> {
+        private LogHoursRow() {
+            super(SchemaKeyspace.MAIN, "misc", "log-hours", Type.UTF8, Type.DATE_AND_HOUR);
+            setColumnRange(new ColumnRange<String, DateAndHour, Object>(this, Type.DUMMY));
+        }
+    }
+
     public static final class LogSCF extends SupercolumnFamily<DateAndHour, UUID, String> {
 
         public final class LogMessage extends SupercolumnRange<DateAndHour, UUID, String> {
-
             public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> LOCAL_TIME;
             public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> SERVER_IP;
             public final SuperRangeNamedSubcolumn<DateAndHour, UUID, String, String> LEVEL;
