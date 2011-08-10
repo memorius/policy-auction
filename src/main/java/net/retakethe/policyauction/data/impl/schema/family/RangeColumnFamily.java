@@ -7,6 +7,7 @@ import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import me.prettyprint.hector.api.query.SliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
@@ -42,11 +43,11 @@ public class RangeColumnFamily<K, N, V> extends ColumnFamily<K, N> {
     }
 
     public void addColumnInsertion(MutatorWrapper<K> m, K key, N name, V value) {
-        m.addColumnInsertion(key, columnRange, name, value);
+        ((MutatorWrapperInternal<K>) m).addColumnInsertion(key, columnRange, name, value);
     }
 
     public void addColumnDeletion(MutatorWrapper<K> m, K key, N name) {
-        m.addColumnDeletion(key, columnRange, name);
+        ((MutatorWrapperInternal<K>) m).addColumnDeletion(key, columnRange, name);
     }
     
     public ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, N columnName) {

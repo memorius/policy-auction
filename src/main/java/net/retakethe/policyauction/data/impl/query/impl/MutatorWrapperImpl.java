@@ -8,7 +8,6 @@ import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
@@ -24,7 +23,7 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
 /**
  * @author Nick Clarke
  */
-public class MutatorWrapperImpl<K> implements MutatorWrapper<K> {
+public class MutatorWrapperImpl<K> implements MutatorWrapperInternal<K> {
 
     private final SchemaKeyspace keyspace;
     private final Serializer<K> keySerializer;

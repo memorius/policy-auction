@@ -7,14 +7,13 @@ import java.util.List;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
-import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
-public class SupercolumnInserterImpl<K, SN, N> implements SupercolumnInserter<K, SN, N> {
+public class SupercolumnInserterImpl<K, SN, N> implements SupercolumnInserterInternal<K, SN, N> {
 
     private final K key;
     private final Supercolumn<K, SN, N> supercolumn;

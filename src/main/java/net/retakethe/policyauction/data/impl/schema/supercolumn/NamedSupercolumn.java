@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 
 /**
@@ -28,11 +29,11 @@ public abstract class NamedSupercolumn<K, SN, N> extends Supercolumn<K, SN, N> {
         return name;
     }
 
-    public SupercolumnInserter<K, SN, N> createSupercolumnInserter(MutatorWrapper<K> mutator, K key) {
-        return mutator.createSupercolumnInserter(key, this);
+    public SupercolumnInserter<K, SN, N> createSupercolumnInserter(MutatorWrapper<K> m, K key) {
+        return ((MutatorWrapperInternal<K>) m).createSupercolumnInserter(key, this);
     }
 
-    public void addSupercolumnDeletion(MutatorWrapper<K> mutator, K key) {
-        mutator.addSupercolumnDeletion(key, this);
+    public void addSupercolumnDeletion(MutatorWrapper<K> m, K key) {
+        ((MutatorWrapperInternal<K>) m).addSupercolumnDeletion(key, this);
     }
 }

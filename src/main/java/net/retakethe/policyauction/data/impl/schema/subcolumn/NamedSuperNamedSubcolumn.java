@@ -3,6 +3,9 @@ package net.retakethe.policyauction.data.impl.schema.subcolumn;
 import java.util.UUID;
 
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
+import net.retakethe.policyauction.data.impl.query.impl.SupercolumnInserterInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 
@@ -31,7 +34,11 @@ public class NamedSuperNamedSubcolumn<K, SN, N, V> extends NamedSuperSubcolumn<K
         return name;
     }
 
-    public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key) {
-        mutator.addSubcolumnDeletion(key, getSupercolumn().getName(), this);
+    public void addSubcolumnInsertion(SupercolumnInserter<K, SN, N> inserter, V value) {
+        ((SupercolumnInserterInternal<K, SN, N>) inserter).addSubcolumnInsertion(this, value);
+    }
+
+    public void addSubcolumnDeletion(MutatorWrapper<K> m, K key) {
+        ((MutatorWrapperInternal<K>) m).addSubcolumnDeletion(key, getSupercolumn().getName(), this);
     }
 }

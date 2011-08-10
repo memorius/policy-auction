@@ -9,6 +9,7 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultige
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumnQuery;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
@@ -50,13 +51,13 @@ public class RangeSupercolumnFamily<K, SN, N, R extends SupercolumnRange<K, SN, 
         return supercolumnRange;
     }
 
-    public SupercolumnInserter<K, SN, N> createSupercolumnInserter(MutatorWrapper<K> mutator, K key,
+    public SupercolumnInserter<K, SN, N> createSupercolumnInserter(MutatorWrapper<K> m, K key,
             SN supercolumnName) {
-        return mutator.createSupercolumnInserter(key, supercolumnRange, supercolumnName);
+        return ((MutatorWrapperInternal<K>) m).createSupercolumnInserter(key, supercolumnRange, supercolumnName);
     }
 
-    public void addSupercolumnDeletion(MutatorWrapper<K> mutator, K key, SN supercolumnName) {
-        mutator.addSupercolumnDeletion(key, supercolumnRange, supercolumnName);
+    public void addSupercolumnDeletion(MutatorWrapper<K> m, K key, SN supercolumnName) {
+        ((MutatorWrapperInternal<K>) m).addSupercolumnDeletion(key, supercolumnRange, supercolumnName);
     }
 
     public VariableValueTypedSupercolumnQuery<SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager, K key,

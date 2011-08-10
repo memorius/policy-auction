@@ -3,6 +3,9 @@ package net.retakethe.policyauction.data.impl.schema.subcolumn;
 import java.util.UUID;
 
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
+import net.retakethe.policyauction.data.impl.query.impl.SupercolumnInserterInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
@@ -31,7 +34,11 @@ public class SuperRangeNamedSubcolumn<K, SN, N, V> extends SuperRangeSubcolumn<K
         return name;
     }
 
-    public void addSubcolumnDeletion(MutatorWrapper<K> mutator, K key, SN supercolumnName) {
-        mutator.addSubcolumnDeletion(key, supercolumnName, this);
+    public void addSubcolumnInsertion(SupercolumnInserter<K, SN, N> inserter, V value) {
+        ((SupercolumnInserterInternal<K, SN, N>) inserter).addSubcolumnInsertion(this, value);
+    }
+
+    public void addSubcolumnDeletion(MutatorWrapper<K> m, K key, SN supercolumnName) {
+        ((MutatorWrapperInternal<K>) m).addSubcolumnDeletion(key, supercolumnName, this);
     }
 }

@@ -6,6 +6,7 @@ import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperImpl;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 
@@ -64,7 +65,7 @@ public abstract class BaseColumnFamily<K> {
         return new MutatorWrapperImpl<K>(getKeyspace(), getKeySerializer(), keyspaceManager);
     }
 
-    public void addRowDeletion(MutatorWrapper<K> mutator, K key) {
-        mutator.addRowDeletion(this, key);
+    public void addRowDeletion(MutatorWrapper<K> m, K key) {
+        ((MutatorWrapperInternal<K>) m).addRowDeletion(this, key);
     }
 }

@@ -69,12 +69,11 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
         SupercolumnInserter<DateAndHour, LogMessageID, String> i = Schema.LOG.createSupercolumnInserter(m, key, id);
         LogMessageRange cols = Schema.LOG.getSupercolumnRange();
 
-        i.addSubcolumnInsertion(cols.LOCAL_TIME,
-                DateFormatUtils.format(timestamp, LOCAL_TIME_DATE_PATTERN));
-        i.addSubcolumnInsertion(cols.SERVER, HOSTNAME);
-        i.addSubcolumnInsertion(cols.LEVEL, (severityLevel == null) ? "" : severityLevel);
-        i.addSubcolumnInsertion(cols.LOGGER, (loggerName == null) ? "" : loggerName);
-        i.addSubcolumnInsertion(cols.MESSAGE, fullMessage);
+        cols.LOCAL_TIME.addSubcolumnInsertion(i, DateFormatUtils.format(timestamp, LOCAL_TIME_DATE_PATTERN));
+        cols.SERVER.addSubcolumnInsertion(i, HOSTNAME);
+        cols.LEVEL.addSubcolumnInsertion(i, (severityLevel == null) ? "" : severityLevel);
+        cols.LOGGER.addSubcolumnInsertion(i, (loggerName == null) ? "" : loggerName);
+        cols.MESSAGE.addSubcolumnInsertion(i, fullMessage);
 
         m.execute();
     }

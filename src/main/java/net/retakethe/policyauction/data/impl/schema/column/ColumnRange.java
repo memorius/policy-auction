@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.impl.schema.column;
 import java.util.UUID;
 
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 
@@ -22,6 +23,10 @@ public class ColumnRange<K, N, V> extends Column<K, N, V> {
     }
 
     public void addColumnInsertion(MutatorWrapper<K> m, K key, N name, V value) {
-        m.addColumnInsertion(key, this, name, value);
+        ((MutatorWrapperInternal<K>) m).addColumnInsertion(key, this, name, value);
+    }
+
+    public void addColumnDeletion(MutatorWrapper<K> m, K key, N name) {
+        ((MutatorWrapperInternal<K>) m).addColumnDeletion(key, this, name);
     }
 }
