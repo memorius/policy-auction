@@ -1,11 +1,8 @@
 
-create keyspace policy_auction;
-
-/* TODO: placement strategy, replication factor
-create keyspace Keyspace1
-    with strategy_options=[{replication_factor:1}]
-    and placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy'
-*/
+/* TODO: set replication_factor to 3 once we have an actual cluster */
+create keyspace policy_auction
+    with placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy'
+    and strategy_options=[{replication_factor:1}];
 
 use policy_auction;
 
@@ -74,7 +71,10 @@ create column family misc_string
     and row_cache_save_period = 0;
 
 
-create keyspace policy_auction_logs;
+/* TODO: set replication_factor to 2 once we have an actual cluster */
+create keyspace policy_auction_logs
+    with placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy'
+    and strategy_options=[{replication_factor:1}];
 
 use policy_auction_logs;
 
@@ -89,21 +89,4 @@ create column family log
     and keys_cached = 100
     and rows_cached = 0
     and key_cache_save_period = 0
-    and row_cache_save_period = 0
-    and column_metadata = [{
-            column_name: local_time,
-            validation_class: UTF8Type
-        }, {
-            column_name: server,
-            validation_class: UTF8Type
-        }, {
-            column_name: level,
-            validation_class: UTF8Type
-        }, {
-            column_name: logger,
-            validation_class: UTF8Type
-        }, {
-            column_name: message,
-            validation_class: UTF8Type
-        }
-    ];
+    and row_cache_save_period = 0;
