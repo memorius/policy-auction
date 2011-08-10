@@ -97,7 +97,7 @@ public class DateAndHour {
     public String getLocalDateAndHourString() {
         return DateFormatUtils.format(time.getTimeInMillis(), DATE_AND_HOUR_FORMAT);
     }
-    
+
     private static Date parseDateAndHourString(String gmtDateAndHourString, TimeZone timezone) {
         try {
             return new SimpleDateFormat(DATE_AND_HOUR_PARSE_FORMAT).parse(gmtDateAndHourString + "-" + timezone.getID());

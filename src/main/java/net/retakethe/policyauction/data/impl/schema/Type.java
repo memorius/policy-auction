@@ -9,9 +9,12 @@ import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
+import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
+import net.retakethe.policyauction.data.impl.serializers.LogMessageIDSerializer;
+import net.retakethe.policyauction.data.impl.serializers.NullSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
 
 /**
@@ -57,7 +60,19 @@ public final class Type<T> {
      */
     public static final Type<PolicyID> POLICY_ID = new Type<PolicyID>(PolicyID.class, PolicyIDSerializer.get());
 
+    /**
+     * LogMessageD: TimeUUIDType.
+     */
+    public static final Type<LogMessageID> LOG_MESSAGE_ID = new Type<LogMessageID>(LogMessageID.class,
+            LogMessageIDSerializer.get());
+
     public static final Type<Object> DUMMY = new Type<Object>(Object.class, DummySerializer.get());
+
+    /**
+     * Used for null values, e.g. columns where only the name is meaningful.
+     * Values are ignored when storing, an empty byte array is stored instead. Queries always return null values.
+     */
+    public static final Type<Object> NULL = new Type<Object>(Object.class, NullSerializer.get());
 
     private final Class<T> type;
     private final Serializer<T> serializer;

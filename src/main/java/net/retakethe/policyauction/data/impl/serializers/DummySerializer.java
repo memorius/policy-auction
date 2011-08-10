@@ -18,7 +18,7 @@ public class DummySerializer<T> extends AbstractSerializer<T> {
 
     @SuppressWarnings("unchecked")
     public static <T> DummySerializer<T> get() {
-      return instance;
+        return instance;
     }
 
     /**

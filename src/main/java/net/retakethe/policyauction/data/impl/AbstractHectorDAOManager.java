@@ -14,6 +14,8 @@ import net.retakethe.policyauction.data.impl.types.HectorPolicyIDImpl;
  */
 public class AbstractHectorDAOManager {
 
+    protected static final Object DUMMY_VALUE = new Object();
+
     public static final class NoSuchColumnException extends Exception {
         private static final long serialVersionUID = 0L;
 

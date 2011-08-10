@@ -1,8 +1,13 @@
 package net.retakethe.policyauction.data.impl;
 
+import java.util.Enumeration;
+
 import net.retakethe.policyauction.data.api.DAOManager;
+import net.retakethe.policyauction.logging.CassandraLog4jAppender;
 import net.retakethe.policyauction.services.AppModule;
 
+import org.apache.log4j.Appender;
+import org.apache.log4j.LogManager;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
 /**
@@ -17,9 +22,10 @@ import org.apache.tapestry5.ioc.annotations.Inject;
  */
 public class HectorDAOManagerImpl implements DAOManager {
 
-    private final HectorPolicyManagerImpl _policyManager;
+    private final HectorKeyspaceManager keyspaceManager;
 
-    private final HectorKeyspaceManager _keyspaceManager;
+    private final HectorCassandraLogManagerImpl logManager;
+    private final HectorPolicyManagerImpl policyManager;
 
     /**
      * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
@@ -40,22 +46,40 @@ public class HectorDAOManagerImpl implements DAOManager {
         if (address == null) {
             throw new IllegalArgumentException("address must not be null");
         }
-        _keyspaceManager = new HectorKeyspaceManager(address + ':' + String.valueOf(port));
+        keyspaceManager = new HectorKeyspaceManager(address + ':' + String.valueOf(port));
 
-        _policyManager = new HectorPolicyManagerImpl(_keyspaceManager);
+        logManager = new HectorCassandraLogManagerImpl(keyspaceManager);
+        initializeCassandraLogAppender();
+
+        policyManager = new HectorPolicyManagerImpl(keyspaceManager);
+    }
+
+    private void initializeCassandraLogAppender() {
+        @SuppressWarnings("unchecked")
+        Enumeration<Appender> appenders = LogManager.getRootLogger().getAllAppenders();
+
+        while (appenders.hasMoreElements()) {
+            Appender appender = appenders.nextElement();
+
+            // This appender is configured in log4j.properties
+            // If we don't find one, that's OK - we're probably running in a unit test.
+            if (appender instanceof CassandraLog4jAppender) {
+                ((CassandraLog4jAppender) appender).setLogWriter(this.logManager);
+            }
+        }
     }
 
     public KeyspaceManager getKeyspaceManager() {
-        return _keyspaceManager;
+        return keyspaceManager;
     }
     
     public void destroy() {
-        _keyspaceManager.destroy();
+        keyspaceManager.destroy();
     }
 
     @Override
     public HectorPolicyManagerImpl getPolicyManager() {
-        return _policyManager;
+        return policyManager;
     }
 
 }

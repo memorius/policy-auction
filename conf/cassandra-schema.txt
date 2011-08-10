@@ -94,10 +94,13 @@ create column family log
             column_name: local_time,
             validation_class: UTF8Type
         }, {
-            column_name: server_ip,
+            column_name: server,
             validation_class: UTF8Type
         }, {
             column_name: level,
+            validation_class: UTF8Type
+        }, {
+            column_name: logger,
             validation_class: UTF8Type
         }, {
             column_name: message,
