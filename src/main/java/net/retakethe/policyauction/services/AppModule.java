@@ -85,6 +85,7 @@ public class AppModule
     {
         return new RequestFilter()
         {
+            @Override
             public boolean service(Request request, Response response, RequestHandler handler)
                     throws IOException
             {
