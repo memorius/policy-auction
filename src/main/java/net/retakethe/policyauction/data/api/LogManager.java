@@ -7,7 +7,7 @@ import net.retakethe.policyauction.data.api.types.LogMessageID;
  *
  * @author Nick Clarke
  */
-public interface CassandraLogManager {
+public interface LogManager {
 
     LogMessageID makeLogMessageID(String asString);
 

@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -6,13 +6,12 @@ import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumn;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
-import net.retakethe.policyauction.data.impl.types.HectorPolicyIDImpl;
+import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
 
 /**
  * @author Nick Clarke
- *
  */
-public class AbstractHectorDAOManager {
+public class AbstractDAOManagerImpl {
 
     protected static final Object DUMMY_VALUE = new Object();
 
@@ -78,7 +77,7 @@ public class AbstractHectorDAOManager {
         }
     }
 
-    protected HectorPolicyIDImpl getPolicyIDImpl(PolicyID policyID) {
-        return getImpl(policyID, HectorPolicyIDImpl.class);
+    protected PolicyIDImpl getPolicyIDImpl(PolicyID policyID) {
+        return getImpl(policyID, PolicyIDImpl.class);
     }
 }

@@ -1,9 +1,10 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import java.util.Enumeration;
 
 import net.retakethe.policyauction.data.api.DAOManager;
-import net.retakethe.policyauction.logging.CassandraLog4jAppender;
+import net.retakethe.policyauction.data.impl.logging.CassandraLog4jAppender;
+import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.services.AppModule;
 
 import org.apache.log4j.Appender;
@@ -20,12 +21,12 @@ import org.apache.tapestry5.ioc.annotations.Inject;
  *
  * @author Nick Clarke
  */
-public class HectorDAOManagerImpl implements DAOManager {
+public class DAOManagerImpl implements DAOManager {
 
-    private final HectorKeyspaceManager keyspaceManager;
+    private final KeyspaceManagerImpl keyspaceManager;
 
-    private final HectorCassandraLogManagerImpl logManager;
-    private final HectorPolicyManagerImpl policyManager;
+    private final LogManagerImpl logManager;
+    private final PolicyManagerImpl policyManager;
 
     /**
      * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
@@ -33,7 +34,7 @@ public class HectorDAOManagerImpl implements DAOManager {
      * @throws InitializationException
      */
     @Inject // This in the one to call from AppModule to register this as a service
-    public HectorDAOManagerImpl() {
+    public DAOManagerImpl() {
         this("localhost", 9160);
     }
 
@@ -42,16 +43,16 @@ public class HectorDAOManagerImpl implements DAOManager {
      *
      * @throws InitializationException
      */
-    public HectorDAOManagerImpl(String address, int port) {
+    public DAOManagerImpl(String address, int port) {
         if (address == null) {
             throw new IllegalArgumentException("address must not be null");
         }
-        keyspaceManager = new HectorKeyspaceManager(address + ':' + String.valueOf(port));
+        keyspaceManager = new KeyspaceManagerImpl(address + ':' + String.valueOf(port));
 
-        logManager = new HectorCassandraLogManagerImpl(keyspaceManager);
+        logManager = new LogManagerImpl(keyspaceManager);
         initializeCassandraLogAppender();
 
-        policyManager = new HectorPolicyManagerImpl(keyspaceManager);
+        policyManager = new PolicyManagerImpl(keyspaceManager);
     }
 
     private void initializeCassandraLogAppender() {
@@ -78,7 +79,7 @@ public class HectorDAOManagerImpl implements DAOManager {
     }
 
     @Override
-    public HectorPolicyManagerImpl getPolicyManager() {
+    public PolicyManagerImpl getPolicyManager() {
         return policyManager;
     }
 

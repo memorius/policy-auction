@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.logging;
+package net.retakethe.policyauction.data.impl.logging;
 
 /**
  * @author Nick Clarke

@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import java.util.Collections;
 import java.util.Date;
@@ -9,6 +9,7 @@ import net.retakethe.policyauction.data.api.PolicyManager;
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.dao.PolicyDAOImpl;
+import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedOrderedRows;
@@ -17,7 +18,7 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
-import net.retakethe.policyauction.data.impl.types.HectorPolicyIDImpl;
+import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
 import net.retakethe.policyauction.util.CollectionUtils;
 import net.retakethe.policyauction.util.Functional;
 import net.retakethe.policyauction.util.Functional.Filter;
@@ -26,11 +27,11 @@ import net.retakethe.policyauction.util.Functional.SkippedElementException;
 /**
  * @author Nick Clarke
  */
-public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements PolicyManager {
+public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyManager {
 
     private final KeyspaceManager keyspaceManager;
 
-    public HectorPolicyManagerImpl(KeyspaceManager keyspaceManager) {
+    public PolicyManagerImpl(KeyspaceManager keyspaceManager) {
         super();
         if (keyspaceManager == null) {
             throw new IllegalArgumentException("keyspace must not be null");
@@ -40,7 +41,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
     @Override
     public PolicyID makePolicyID(String idString) {
-        return new HectorPolicyIDImpl(idString);
+        return new PolicyIDImpl(idString);
     }
 
     @Override
@@ -76,7 +77,7 @@ public class HectorPolicyManagerImpl extends AbstractHectorDAOManager implements
 
     @Override
     public PolicyDAO createPolicy() {
-        return new PolicyDAOImpl(new HectorPolicyIDImpl());
+        return new PolicyDAOImpl(new PolicyIDImpl());
     }
 
     @Override

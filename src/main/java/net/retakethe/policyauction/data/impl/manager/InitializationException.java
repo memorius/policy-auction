@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 public class InitializationException extends RuntimeException {
     private static final long serialVersionUID = 0L;

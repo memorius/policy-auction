@@ -3,33 +3,33 @@ package net.retakethe.policyauction.data.impl.types;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.utils.TimeUUIDUtils;
-import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.LogMessageID;
 
-public final class HectorPolicyIDImpl implements PolicyID {
+public final class LogMessageIDImpl implements LogMessageID {
 
     private final UUID _uuid;
 
     /**
      * Create with new TimeUUID - current time.
      */
-    public HectorPolicyIDImpl() {
+    public LogMessageIDImpl() {
         _uuid = TimeUUIDUtils.getUniqueTimeUUIDinMillis();
     }
 
-    public HectorPolicyIDImpl(String idString) {
+    public LogMessageIDImpl(String idString) {
         if (idString == null) {
             throw new IllegalArgumentException("idString must not be null");
         }
         _uuid = UUID.fromString(idString);
     }
 
-    public HectorPolicyIDImpl(UUID uuid) {
+    public LogMessageIDImpl(UUID uuid) {
         if (uuid == null) {
             throw new IllegalArgumentException("uuid must not be null");
         }
         _uuid = uuid;
     }
-    
+
     @Override
     public String asString() {
         return _uuid.toString();

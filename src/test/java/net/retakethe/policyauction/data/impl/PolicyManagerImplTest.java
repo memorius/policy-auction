@@ -9,16 +9,17 @@ import java.util.List;
 
 import net.retakethe.policyauction.data.api.PolicyManager.NoSuchPolicyException;
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.impl.manager.PolicyManagerImpl;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import _fixtures.CleanDbEveryMethodHectorDAOTestBase;
+import _fixtures.CleanDbEveryMethodDAOManagerTestBase;
 
-public class HectorPolicyManagerImplTest extends CleanDbEveryMethodHectorDAOTestBase {
+public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase {
 
-    private HectorPolicyManagerImpl manager;
+    private PolicyManagerImpl manager;
 
     @BeforeMethod(groups = {"dao"})
     public void setupManager() {

@@ -3,7 +3,7 @@ package net.retakethe.policyauction.data.impl.serializers;
 import java.util.UUID;
 
 import net.retakethe.policyauction.data.api.types.LogMessageID;
-import net.retakethe.policyauction.data.impl.types.HectorLogMessageIDImpl;
+import net.retakethe.policyauction.data.impl.types.LogMessageIDImpl;
 
 /**
  * @author Nick Clarke
@@ -18,11 +18,11 @@ public class LogMessageIDSerializer extends AbstractUUIDSerializer<LogMessageID>
 
     @Override
     protected UUID toUUID(LogMessageID obj) {
-        return ((HectorLogMessageIDImpl) obj).getUUID();
+        return ((LogMessageIDImpl) obj).getUUID();
     }
 
     @Override
     protected LogMessageID fromUUID(UUID uuid) {
-        return new HectorLogMessageIDImpl(uuid);
+        return new LogMessageIDImpl(uuid);
     }
 }

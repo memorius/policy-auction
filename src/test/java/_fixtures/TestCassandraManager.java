@@ -23,7 +23,7 @@ public final class TestCassandraManager {
      * When running a full suite (e.g. with "mvn test"), the annotation means this is automatically called by TestNG
      * to set up the test Cassandra server before any of the actual tests run.
      * <p>
-     * When running single tests from Eclipse, {@link HectorDAOTestBase} calls this explicitly.
+     * When running single tests from Eclipse, {@link DAOManagerTestBase} calls this explicitly.
      */
     @BeforeSuite(groups = {"dao"})
     public static void setupCassandra() {
@@ -37,7 +37,7 @@ public final class TestCassandraManager {
      * When running a full suite (e.g. with "mvn test"), the annotation means this is automatically called by TestNG
      * to tear down the test Cassandra server after all of the actual tests have run.
      * <p>
-     * When running single tests from Eclipse, {@link HectorDAOTestBase} calls this explicitly.
+     * When running single tests from Eclipse, {@link DAOManagerTestBase} calls this explicitly.
      */
     @AfterSuite(groups = {"dao"})
     public static void teardownCassandra() {

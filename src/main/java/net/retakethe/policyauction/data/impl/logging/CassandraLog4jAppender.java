@@ -1,8 +1,9 @@
-package net.retakethe.policyauction.logging;
+package net.retakethe.policyauction.data.impl.logging;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;

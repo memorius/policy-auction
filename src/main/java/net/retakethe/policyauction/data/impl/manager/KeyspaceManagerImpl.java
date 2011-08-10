@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -9,14 +9,10 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
+import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 
-/**
- * Holder for keyspace access, used in production and for unit tests of individual manager impls
- *
- * @author Nick Clarke
- */
-public class HectorKeyspaceManager implements KeyspaceManager {
+public class KeyspaceManagerImpl implements KeyspaceManager {
 
     /**
      * Threadsafe
@@ -28,7 +24,7 @@ public class HectorKeyspaceManager implements KeyspaceManager {
      */
     private Map<SchemaKeyspace, Keyspace> keyspaces;
 
-    public HectorKeyspaceManager(String hostAndPort) {
+    public KeyspaceManagerImpl(String hostAndPort) {
         _cluster = HFactory.getOrCreateCluster("policy_auction_cluster",
                 new CassandraHostConfigurator(hostAndPort));
         keyspaces = new EnumMap<SchemaKeyspace, Keyspace>(SchemaKeyspace.class);
