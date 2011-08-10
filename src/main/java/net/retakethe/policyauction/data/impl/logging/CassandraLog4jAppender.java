@@ -4,6 +4,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import net.retakethe.policyauction.data.api.types.LogMessageID;
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
@@ -20,9 +21,11 @@ public class CassandraLog4jAppender extends AppenderSkeleton {
 
     private final class LogWriteTask implements Runnable {
 
+        private final LogMessageID id;
         private final LoggingEvent event;
 
-        public LogWriteTask(LoggingEvent event) {
+        public LogWriteTask(LogMessageID id, LoggingEvent event) {
+            this.id = id;
             this.event = event;
         }
 
@@ -32,7 +35,8 @@ public class CassandraLog4jAppender extends AppenderSkeleton {
                 Level level = event.getLevel();
                 Object message = event.getMessage();
                 ThrowableInformation ti = event.getThrowableInformation();
-                logWriter.writeLogMessage(event.timeStamp,
+                logWriter.writeLogMessage(id,
+                        event.timeStamp,
                         (level == null) ? null : level.toString(),
                         event.getLoggerName(),
                         (message == null) ? null : message.toString(),
@@ -91,7 +95,10 @@ public class CassandraLog4jAppender extends AppenderSkeleton {
         }
 
         try {
-            writeThreadPool.execute(new LogWriteTask(event));
+            // Create the log message ID now so its timestamp is in the same order as the original message timestamp,
+            // even though eventual writes will be reordered by being run in background threads
+            LogMessageID id = logWriter.createCurrentTimeLogMessageID();
+            writeThreadPool.execute(new LogWriteTask(id, event));
         } catch (RuntimeException e) {
             // TODO: ignore logging errors in production
             e.printStackTrace();

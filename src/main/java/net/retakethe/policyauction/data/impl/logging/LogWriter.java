@@ -1,9 +1,14 @@
 package net.retakethe.policyauction.data.impl.logging;
 
+import net.retakethe.policyauction.data.api.types.LogMessageID;
+
 /**
  * @author Nick Clarke
  */
 public interface LogWriter {
 
-    void writeLogMessage(long timestamp, String severityLevel, String loggerName, String message, Throwable throwable);
+    LogMessageID createCurrentTimeLogMessageID();
+
+    void writeLogMessage(LogMessageID id, long originalTimestamp, String severityLevel, String loggerName,
+            String message, Throwable throwable);
 }

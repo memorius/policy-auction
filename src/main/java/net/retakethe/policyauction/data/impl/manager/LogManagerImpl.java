@@ -7,7 +7,6 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 import net.retakethe.policyauction.data.api.LogManager;
@@ -46,15 +45,18 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
     }
 
     @Override
-    public void writeLogMessage(long timestamp, String severityLevel, String loggerName, String message,
+    public LogMessageID createCurrentTimeLogMessageID() {
+        return new LogMessageIDImpl(TimeUUIDUtils.getUniqueTimeUUIDinMillis());
+    }
+
+    @Override
+    public void writeLogMessage(LogMessageID id, long originalTimestamp, String severityLevel, String loggerName, String message,
             Throwable throwable) {
         // Note we intentionally do not use the message timestamp in the log message UUID, since this is likely to give
         // duplicates which overwrite each other - it's from log4j and has only millisecond precision.
         // Hour buckets must be based on message ID since we have to find it from the ID when retrieving.
 
-        UUID uuid = TimeUUIDUtils.getUniqueTimeUUIDinMillis();
-        LogMessageID id = new LogMessageIDImpl(uuid);
-        DateAndHour key = new DateAndHour(TimeUUIDUtils.getTimeFromUUID(uuid));
+        DateAndHour key = new DateAndHour(TimeUUIDUtils.getTimeFromUUID(((LogMessageIDImpl) id).getUUID()));
 
         ensureHourBucket(key);
 
@@ -69,7 +71,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
         SubcolumnMutator<DateAndHour, LogMessageID, String> i = Schema.LOG.createSubcolumnMutator(m, key, id);
         LogMessageRange cols = Schema.LOG.getSupercolumnRange();
 
-        cols.LOCAL_TIME.addSubcolumnInsertion(i, DateFormatUtils.format(timestamp, LOCAL_TIME_DATE_PATTERN));
+        cols.LOCAL_TIME.addSubcolumnInsertion(i, DateFormatUtils.format(originalTimestamp, LOCAL_TIME_DATE_PATTERN));
         cols.SERVER.addSubcolumnInsertion(i, HOSTNAME);
         cols.LEVEL.addSubcolumnInsertion(i, (severityLevel == null) ? "" : severityLevel);
         cols.LOGGER.addSubcolumnInsertion(i, (loggerName == null) ? "" : loggerName);
