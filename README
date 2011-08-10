@@ -83,6 +83,17 @@ To run or debug TestNG unit tests within Eclipse:
     First, run ./initialize-cassandra-for-tests.sh in the top directory.
     Then right-click the test class (e.g. HectorPolicyManagerImplTest) and choose "Run as... / TestNG Test". Or "Debug as...".
 
+Logging:
+    The project uses SLF4J, backed by Log4J.
+    Some log messages are written to tables in Cassandra when running the webapp.
+    Logging and log filtering levels are configured via the file src/main/resources/log4j.properties.
+    Logging can be done from any java code in the webapp like this:
+
+        private static final Logger logger = LoggerFactory.getLogger(MyEnclosingClass.class);
+        ...
+        logger.info("some message");
+        logger.error("Disaster", someException);
+
 Intro to java project structure:
     src/main/java:
         Tapestry-related stuff:
@@ -112,6 +123,7 @@ Intro to java project structure:
 
             net/retakethe/policyauction/data/impl
                 The implementation of the data layer which talks to Cassandra via the Hector library.
+                Nothing in Tapestry should need to reference this directly.
 
     src/main/resources:
         net/retakethe/policyauction/pages
