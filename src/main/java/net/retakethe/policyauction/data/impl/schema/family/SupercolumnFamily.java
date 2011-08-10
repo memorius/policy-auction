@@ -6,16 +6,12 @@ import java.util.UUID;
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumnQuery;
-import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
@@ -55,16 +51,6 @@ public abstract class SupercolumnFamily<K, SN, N> extends BaseColumnFamily<K> {
 
     public Serializer<N> getSubcolumnNameSerializer() {
         return this.subcolumnNameType.getSerializer();
-    }
-
-    public void addSubcolumnDeletion(MutatorWrapper<K> m, K key, SN supercolumnName,
-            NamedSubcolumn<K, SN, N, ?> subcolumn) {
-        ((MutatorWrapperInternal<K>) m).addSubcolumnDeletion(key, supercolumnName, subcolumn);
-    }
-
-    public void addSubcolumnDeletion(MutatorWrapper<K> m, K key, SN supercolumnName,
-            SubcolumnRange<K, SN, N, ?> subcolumn, N subcolumnName) {
-        ((MutatorWrapperInternal<K>) m).addSubcolumnDeletion(key, supercolumnName, subcolumn, subcolumnName);
     }
 
     public VariableValueTypedSupercolumnQuery<SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager, K key,

@@ -2,10 +2,8 @@ package net.retakethe.policyauction.data.impl.schema.subcolumn;
 
 import java.util.UUID;
 
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
-import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
-import net.retakethe.policyauction.data.impl.query.impl.SupercolumnInserterInternal;
+import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
+import net.retakethe.policyauction.data.impl.query.impl.SubcolumnMutatorInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
@@ -34,11 +32,13 @@ public class SuperRangeNamedSubcolumn<K, SN, N, V> extends SuperRangeSubcolumn<K
         return name;
     }
 
-    public void addSubcolumnInsertion(SupercolumnInserter<K, SN, N> inserter, V value) {
-        ((SupercolumnInserterInternal<K, SN, N>) inserter).addSubcolumnInsertion(this, value);
+    @Override
+    public void addSubcolumnInsertion(SubcolumnMutator<K, SN, N> m, V value) {
+        ((SubcolumnMutatorInternal<K, SN, N>) m).addSubcolumnInsertion(this, value);
     }
 
-    public void addSubcolumnDeletion(MutatorWrapper<K> m, K key, SN supercolumnName) {
-        ((MutatorWrapperInternal<K>) m).addSubcolumnDeletion(key, supercolumnName, this);
+    @Override
+    public void addSubcolumnDeletion(SubcolumnMutator<K, SN, N> m) {
+        ((SubcolumnMutatorInternal<K, SN, N>) m).addSubcolumnDeletion(this);
     }
 }

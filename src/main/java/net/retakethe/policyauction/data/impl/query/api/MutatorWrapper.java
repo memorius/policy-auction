@@ -8,10 +8,8 @@ import net.retakethe.policyauction.data.impl.schema.family.RangeColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.RangeSupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SingleRowRangeColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SingleRowRangeSupercolumnFamily;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSuperNamedSubcolumn;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSuperSubcolumnRange;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeNamedSubcolumn;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeSubcolumnRange;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 
@@ -43,23 +41,19 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
  * {@link RangeSupercolumnFamily#addSupercolumnDeletion(MutatorWrapper, Object, Object)}.
  * {@link SingleRowRangeSupercolumnFamily#addSupercolumnDeletion(MutatorWrapper, Object)}.
  * <p>
- * Subcolumn deletion:
- * {@link NamedSuperSubcolumnRange#addSubcolumnDeletion(MutatorWrapper, Object, Object)}
- * {@link NamedSuperNamedSubcolumn#addSubcolumnDeletion(MutatorWrapper, Object)}
- * {@link SuperRangeSubcolumnRange#addSubcolumnDeletion(MutatorWrapper, Object, Object, Object)}
- * {@link SuperRangeNamedSubcolumn#addSubcolumnDeletion(MutatorWrapper, Object, Object)}
+ * To create a subcolumn mutator:
+ * {@link SupercolumnRange#createSubcolumnMutator(MutatorWrapper, Object, Object)}
+ * {@link NamedSupercolumn#createSubcolumnMutator(MutatorWrapper, Object)}
+ * {@link RangeSupercolumnFamily#createSubcolumnMutator(MutatorWrapper, Object, Object)}
+ * {@link SingleRowRangeSupercolumnFamily#createSubcolumnMutator(MutatorWrapper, Object)}
  * <p>
- * To create a supercolumn inserter:
- * {@link SupercolumnRange#createSupercolumnInserter(MutatorWrapper, Object, Object)}
- * {@link NamedSupercolumn#createSupercolumnInserter(MutatorWrapper, Object)}
- * {@link RangeSupercolumnFamily#createSupercolumnInserter(MutatorWrapper, Object, Object)}
- * {@link SingleRowRangeSupercolumnFamily#createSupercolumnInserter(MutatorWrapper, Object)}
+ * Subcolumn insertion: using the subcolumn mutator created above:
+ * {@link NamedSubcolumn#addSubcolumnInsertion(SubcolumnMutator, Object)}
+ * {@link SubcolumnRange#addSubcolumnInsertion(SubcolumnMutator, Object, Object)}
  * <p>
- * Subcolumn insertion: using the inserter created above:
- * {@link NamedSuperNamedSubcolumn#addSubcolumnInsertion(SupercolumnInserter, Object)}
- * {@link NamedSuperSubcolumnRange#addSubcolumnInsertion(SupercolumnInserter, Object, Object)}
- * {@link SuperRangeNamedSubcolumn#addSubcolumnInsertion(SupercolumnInserter, Object)}
- * {@link SuperRangeSubcolumnRange#addSubcolumnInsertion(SupercolumnInserter, Object, Object)}
+ * Subcolumn deletion: using the subcolumn mutator created above:
+ * {@link NamedSubcolumn#addSubcolumnDeletion(SubcolumnMutator)}
+ * {@link SubcolumnRange#addSubcolumnDeletion(SubcolumnMutator, Object)}
  *
  * @see me.prettyprint.hector.api.mutation.Mutator
  * @author Nick Clarke

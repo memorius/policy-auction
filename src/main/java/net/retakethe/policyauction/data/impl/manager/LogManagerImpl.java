@@ -16,7 +16,7 @@ import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.impl.logging.LogWriter;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
+import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.LogSCF.LogMessageRange;
 import net.retakethe.policyauction.data.impl.types.LogMessageIDImpl;
@@ -66,7 +66,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
         }
 
         MutatorWrapper<DateAndHour> m = Schema.LOG.createMutator(keyspaceManager);
-        SupercolumnInserter<DateAndHour, LogMessageID, String> i = Schema.LOG.createSupercolumnInserter(m, key, id);
+        SubcolumnMutator<DateAndHour, LogMessageID, String> i = Schema.LOG.createSubcolumnMutator(m, key, id);
         LogMessageRange cols = Schema.LOG.getSupercolumnRange();
 
         cols.LOCAL_TIME.addSubcolumnInsertion(i, DateFormatUtils.format(timestamp, LOCAL_TIME_DATE_PATTERN));

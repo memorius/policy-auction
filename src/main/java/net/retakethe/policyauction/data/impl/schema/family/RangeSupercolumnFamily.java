@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.api.SupercolumnInserter;
+import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSuperSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
@@ -51,9 +51,9 @@ public class RangeSupercolumnFamily<K, SN, N, R extends SupercolumnRange<K, SN, 
         return supercolumnRange;
     }
 
-    public SupercolumnInserter<K, SN, N> createSupercolumnInserter(MutatorWrapper<K> m, K key,
+    public SubcolumnMutator<K, SN, N> createSubcolumnMutator(MutatorWrapper<K> m, K key,
             SN supercolumnName) {
-        return ((MutatorWrapperInternal<K>) m).createSupercolumnInserter(key, supercolumnRange, supercolumnName);
+        return ((MutatorWrapperInternal<K>) m).createSubcolumnMutator(key, supercolumnRange, supercolumnName);
     }
 
     public void addSupercolumnDeletion(MutatorWrapper<K> m, K key, SN supercolumnName) {
