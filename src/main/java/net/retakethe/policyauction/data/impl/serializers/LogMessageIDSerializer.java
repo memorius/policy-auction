@@ -16,6 +16,11 @@ public class LogMessageIDSerializer extends AbstractUUIDSerializer<LogMessageID>
         return INSTANCE;
     }
 
+    /**
+     * @see #get()
+     */
+    private LogMessageIDSerializer() {}
+
     @Override
     protected UUID toUUID(LogMessageID obj) {
         return ((LogMessageIDImpl) obj).getUUID();

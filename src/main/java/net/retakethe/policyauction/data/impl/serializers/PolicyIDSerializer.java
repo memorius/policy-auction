@@ -16,6 +16,11 @@ public class PolicyIDSerializer extends AbstractUUIDSerializer<PolicyID> {
         return INSTANCE;
     }
 
+    /**
+     * @see #get()
+     */
+    private PolicyIDSerializer() {}
+
     @Override
     protected UUID toUUID(PolicyID obj) {
         return ((PolicyIDImpl) obj).getUUID();

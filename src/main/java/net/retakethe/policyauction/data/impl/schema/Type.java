@@ -13,9 +13,12 @@ import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
+import net.retakethe.policyauction.data.impl.serializers.JSONSerializer;
 import net.retakethe.policyauction.data.impl.serializers.LogMessageIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.NullSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
+
+import org.apache.tapestry5.json.JSONObject;
 
 /**
  * Enum-like class representing datatypes for Cassandra keys,
@@ -55,6 +58,11 @@ public final class Type<T> {
      */
     public static final Type<Boolean> BOOLEAN   = new Type<Boolean>(Boolean.class, BooleanSerializer.get());
 
+    /**
+     * JSON, stored in cassandra as UTF8Type.
+     */
+    public static final Type<JSONObject> JSON = new Type<JSONObject>(JSONObject.class, JSONSerializer.get());
+    
     /**
      * PolicyID: TimeUUIDType.
      */

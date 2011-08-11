@@ -216,7 +216,6 @@ policies: (key = <policyID> : timeUUID) {
     who_affected: text
     how_affected: text
     is_party_official: boolean
-    link ...: // TODO: separate table just for this? Maybe encode the list of links somehow.
     category: <categoryID>
     party: <partyID>
     owner: <userID>
@@ -224,6 +223,10 @@ policies: (key = <policyID> : timeUUID) {
     total_votes: int
     finalized_votes: int:timeUUID
     replaced_by: <policyID>
+}
+
+policy_links: (key = <policyID>) {
+    <timeUUID>: text
 }
 
 policy_tags: (key = <policyID>) {
@@ -235,33 +238,47 @@ policy_replaces: (key = <policyID>) {
 }
 
 user_pending_votes: (key = <userID>) {
-    <version> {
-        prev_version: timeUUID
-        // TODO: do we really want a variable list of subcolumns where we have to mess with prefixes? Breaks the type system. We have consistency requirements per record, so maybe should json-encode the whole record.
-        votes_<policyID> ... : increment:penaltyincrement:newtotal:penaltytotal (ints)
-        [policy_created: <policyID>]
+    <version> ... :
+        JSON : { // Due to consistency requirements, and variable subcolumn list: atomic record updates with single timestamp
+            prev_version: timeUUID
+            votes: [
+                <policyID> ... : {
+                    increment: int
+                    penaltyincrement: int
+                    newtotal: int
+                    penaltytotal: int
+                }
+            ]
+            [policy_created: <policyID>]
+        }
         cassandra timestamp = time of submitting vote, so newest wins
-    }
 }
 
-user_policy_votes: (key = <userID> : timeUUID) { - super column family
-    <prev_version> ... {
-        version: timeUUID
-        // TODO: do we really want a variable list of subcolumns where we have to mess with prefixes? Breaks the type system. We have consistency requirements per record, so maybe should json-encode the whole record.
-        votes_<policyID> ... : increment:penaltyincrement:newtotal:penaltytotal (ints)
-        [policy_created: <policyID>]
+user_policy_votes: (key = <userID> : timeUUID) {
+    <prev_version> ... :
+        JSON : { // Due to consistency requirements, and variable subcolumn list: atomic record updates with single timestamp
+            version: timeUUID
+            votes: [
+                <policyID> ... : {
+                    increment: int
+                    penaltyincrement: int
+                    newtotal: int
+                    penaltytotal: int
+                }
+            ]
+            [policy_created: <policyID>]
+        }
         cassandra timestamp copied from pending_votes.
-    }
 }
 
-policy_new_votes: (key = <policyID> : timeUUID) { - super column family
-    <prev_version> ...: {
-        // TODO: We have consistency requirements per record, so maybe should encode the whole record in one column.
-        vote_increment: int (can be -/0/+)
-        user_id: <userID>
-        version: timeUUID
-        cassandra timestamp: from user_policy_votes.pending_votes, so oldest wins
-    }
+policy_new_votes: (key = <policyID> : timeUUID) {
+    <prev_version> ... :
+        JSON : { // Due to consistency requirements: atomic record updates with single timestamp
+            vote_increment: int (can be -/0/+)
+            user_id: <userID>
+            version: timeUUID
+        }
+        cassandra timestamp: from user_policy_votes.pending_votes
 }
 
 policy_vote_history: (key = <policyID>_<date>) {

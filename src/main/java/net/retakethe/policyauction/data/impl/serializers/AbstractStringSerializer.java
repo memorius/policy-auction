@@ -1,28 +1,27 @@
 package net.retakethe.policyauction.data.impl.serializers;
 
 import java.nio.ByteBuffer;
-import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
+import me.prettyprint.cassandra.serializers.StringSerializer;
 
 /**
  * @author Nick Clarke
  */
-public abstract class AbstractUUIDSerializer<T> extends AbstractSerializer<T> {
+public abstract class AbstractStringSerializer<T> extends AbstractSerializer<T> {
 
-    protected AbstractUUIDSerializer() {}
+    protected AbstractStringSerializer() {}
 
-    protected abstract UUID toUUID(T obj);
+    protected abstract String toString(T obj);
 
-    protected abstract T fromUUID(UUID obj);
+    protected abstract T fromString(String obj);
 
     @Override
     public final ByteBuffer toByteBuffer(T obj) {
         if (obj == null) {
             return null;
         }
-        return UUIDSerializer.get().toByteBuffer(toUUID(obj));
+        return StringSerializer.get().toByteBuffer(toString(obj));
     }
 
     @Override
@@ -30,6 +29,6 @@ public abstract class AbstractUUIDSerializer<T> extends AbstractSerializer<T> {
         if (byteBuffer == null) {
             return null;
         }
-        return fromUUID(UUIDSerializer.get().fromByteBuffer(byteBuffer));
+        return fromString(StringSerializer.get().fromByteBuffer(byteBuffer));
     }
 }

@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 
@@ -13,14 +12,18 @@ import net.retakethe.policyauction.data.api.types.DateAndHour;
  *
  * @see me.prettyprint.cassandra.serializers.StringSerializer
  */
-public class DateAndHourSerializer extends AbstractSerializer<DateAndHour>
-        implements Serializer<DateAndHour> {
+public class DateAndHourSerializer extends AbstractSerializer<DateAndHour> {
 
     private static final DateAndHourSerializer INSTANCE = new DateAndHourSerializer();
 
     public static DateAndHourSerializer get() {
         return INSTANCE;
     }
+
+    /**
+     * @see #get()
+     */
+    private DateAndHourSerializer() {}
 
     @Override
     public ByteBuffer toByteBuffer(DateAndHour obj) {
