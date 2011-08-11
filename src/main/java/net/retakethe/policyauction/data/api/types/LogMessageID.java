@@ -1,5 +1,7 @@
 package net.retakethe.policyauction.data.api.types;
 
-public interface LogMessageID {
+import java.io.Serializable;
+
+public interface LogMessageID extends Serializable {
     String asString();
 }

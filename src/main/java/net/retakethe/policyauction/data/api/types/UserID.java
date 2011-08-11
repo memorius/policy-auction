@@ -1,5 +1,7 @@
 package net.retakethe.policyauction.data.api.types;
 
-public interface UserID {
+import java.io.Serializable;
+
+public interface UserID extends Serializable {
     String asString();
 }

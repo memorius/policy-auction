@@ -1,5 +1,6 @@
 package net.retakethe.policyauction.data.api.types;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -14,7 +15,8 @@ import org.apache.commons.lang.time.DateFormatUtils;
  *
  * @author Nick Clarke
  */
-public class DateAndHour {
+public class DateAndHour implements Serializable {
+    private static final long serialVersionUID = 0L;
 
     private static final String DATE_AND_HOUR_FORMAT = "yyyyMMdd-HH00";
     private static final String DATE_AND_HOUR_PARSE_FORMAT = "yyyyMMdd-HH00-z";
