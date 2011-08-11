@@ -2,29 +2,29 @@ package net.retakethe.policyauction.data.impl.types;
 
 import java.util.UUID;
 
-import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.UserID;
 
-public final class PolicyIDImpl extends AbstractTimeUUIDImpl implements PolicyID {
+public final class UserIDImpl extends AbstractTimeUUIDImpl implements UserID {
     private static final long serialVersionUID = 0L;
 
     /**
      * Create with new TimeUUID - current time.
      */
-    public PolicyIDImpl() {
+    public UserIDImpl() {
         super();
     }
 
     /**
      * Create with String representation of a TimeUUID.
      */
-    public PolicyIDImpl(String idString) {
+    public UserIDImpl(String idString) {
         super(idString);
     }
 
     /**
      * Create with TimeUUID.
      */
-    public PolicyIDImpl(UUID uuid) {
+    public UserIDImpl(UUID uuid) {
         super(uuid);
     }
 }
