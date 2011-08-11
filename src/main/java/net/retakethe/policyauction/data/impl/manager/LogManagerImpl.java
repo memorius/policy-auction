@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import me.prettyprint.cassandra.utils.TimeUUIDUtils;
@@ -50,16 +51,33 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
     }
 
     @Override
-    public void writeLogMessage(LogMessageID id, long originalTimestamp, String severityLevel, String loggerName, String message,
-            Throwable throwable) {
+    public void writeLogMessageBatch(List<OutboundLogMessage> messages) {
+        if (messages.isEmpty()) {
+            return;
+        }
+
+        MutatorWrapper<DateAndHour> m = Schema.LOG.createMutator(keyspaceManager);
+
+        for (OutboundLogMessage message : messages) {
+            addMessage(m, message);
+        }
+
+        m.execute();
+    }
+
+    private void addMessage(MutatorWrapper<DateAndHour> m, OutboundLogMessage olm) {
         // Note we intentionally do not use the message timestamp in the log message UUID, since this is likely to give
         // duplicates which overwrite each other - it's from log4j and has only millisecond precision.
         // Hour buckets must be based on message ID since we have to find it from the ID when retrieving.
 
-        DateAndHour key = new DateAndHour(TimeUUIDUtils.getTimeFromUUID(((LogMessageIDImpl) id).getUUID()));
+        LogMessageID id = olm.getId();
+        DateAndHour key = new DateAndHour(TimeUUIDUtils.getTimeFromUUID(
+                ((LogMessageIDImpl) id).getUUID()));
 
         ensureHourBucket(key);
 
+        Throwable throwable = olm.getThrowable();
+        String message = olm.getMessage();
         String fullMessage;
         if (throwable == null) {
             fullMessage = (message == null) ? "" : message;
@@ -67,17 +85,19 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
             fullMessage = printMessageAndStackTrace(message, throwable);
         }
 
-        MutatorWrapper<DateAndHour> m = Schema.LOG.createMutator(keyspaceManager);
         SubcolumnMutator<DateAndHour, LogMessageID, String> i = Schema.LOG.createSubcolumnMutator(m, key, id);
         LogMessageRange cols = Schema.LOG.getSupercolumnRange();
 
-        cols.LOCAL_TIME.addSubcolumnInsertion(i, DateFormatUtils.format(originalTimestamp, LOCAL_TIME_DATE_PATTERN));
+        cols.LOCAL_TIME.addSubcolumnInsertion(i,
+                DateFormatUtils.format(olm.getOriginalTimestamp(), LOCAL_TIME_DATE_PATTERN));
         cols.SERVER.addSubcolumnInsertion(i, HOSTNAME);
-        cols.LEVEL.addSubcolumnInsertion(i, (severityLevel == null) ? "" : severityLevel);
-        cols.LOGGER.addSubcolumnInsertion(i, (loggerName == null) ? "" : loggerName);
+        cols.LEVEL.addSubcolumnInsertion(i, emptyIfNull(olm.getSeverityLevel()));
+        cols.LOGGER.addSubcolumnInsertion(i, emptyIfNull(olm.getLoggerName()));
         cols.MESSAGE.addSubcolumnInsertion(i, fullMessage);
+    }
 
-        m.execute();
+    private String emptyIfNull(String value) {
+        return (value == null) ? "" : value;
     }
 
     private void ensureHourBucket(DateAndHour key) {
