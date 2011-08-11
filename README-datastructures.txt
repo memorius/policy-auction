@@ -90,46 +90,106 @@ users: (key = <userID> : timeUUID) {
     publish_real_name: boolean
     publish_votes: boolean
     vote_salary_last_paid_timestamp: time
-    vote_salary_<date> ...: int (never changed once written)
-    role_XXX: [nothing]
-    policy_watchlist_<policyID>: [nothing]
     last_login: <time>
     last_active: <time>
-    login_<timestamp> ... : nothing
-    comments_<commentID> ... : nothing
-    ip_<date>_ipaddress ... : nothing
-    anonymous_<date>_<anonymous_users cookie>
     maybe other user data as needed - password reset mechanism, etc.
 }
 
-user_messages: (key = <userID> : timeUUID) {
+user_vote_salary: (key = <userID>) {
+    <date> ...: int (never changed once written)
+}
+
+user_roles: (key = <userID>) {
+    <roleID> : [nothing]
+}
+
+user_policy_watchlist: (key = <userID>) {
+    <policyID>: [nothing]
+}
+
+user_access_history: (key = <userID>) {
+    <timestamp> ... : {
+        ip_address
+        cookie
+    }
+}
+
+user_ip_addresses: (key = <userID) {
+    <ipaddr> ... : last seen date
+}
+
+user_cookies: (key = <userID) {
+    <cookie> ... : last seen date
+}
+
+user_comments: (key = <userID) {
+    <commentID> ... : nothing
+}
+
+user_messages: (key = <userID>) {
     <timeUUID> ... : {
         message_type: <messageTypeID>
         other named fields as appropriate, e.g. policyID, ...
     }
 }
 
-anonymous_users: (key = cookie) {
+cookies: (key = cookie) {
     first_seen: time
     last_seen: time
-    ip_<date>_<ipaddress> ... : nothing
-    user_<date>_<userID> ... : nothing
-    comments_<commentID> ... : nothing
     [comment_hash: <random hash value>]
 }
 
-ipaddresses: (key = IPAddress) {
+cookie_access_history: (key = cookie) {
+    <timestamp> ... : {
+        ip_address
+        user
+    }
+}
+
+cookie_ip_addresses: (key = cookie) {
+    ip_addr ... : last-seen
+}
+
+cookie_users: (key = cookie) {
+    <userID> ... : last-seen
+}
+
+cookie_comments: (key = cookie) {
+    <commentID> ... : nothing
+}
+
+ip_addresses: (key = ipaddress) {
     first_seen: time
     last_seen: time
-    active_<date>_{anon_<anonUserID>|user_<userID>} ... : nothing
-    comments_<commentID> ... : nothing
     [comment_hash: <randomly generated string>]
+}
+
+ip_access_history: (key = ipaddress) {
+    <timestamp> ... : {
+        cookie
+        userid
+    }
+}
+
+ip_cookies: (key = ipaddress) {
+    cookie ... : last-seen
+}
+
+ip_users: (key = ipaddress) {
+    userID ... : last-seen
+}
+
+ip_comments: (key = ipaddress) {
+    <commentID> ... : nothing
 }
 
 categories: (key = <categoryID> : timeUUID) {
     short_name: text
     description: text
-    policy_<policyID> ... : policy name (TTL some multiple of the cycle time of the update-policies background process)
+}
+
+category_policies: (key = <categoryID> : timeUUID) {
+    <policyID> ... : policy name (TTL some multiple of the cycle time of the update-policies background process)
 }
 
 tags: (key = <tagID> : timeUUID) {
@@ -140,7 +200,10 @@ tags: (key = <tagID> : timeUUID) {
     last_changed: time
     last_used: time
     [deleted: boolean]
-    policy_<policyID> ... : policy name (TTL some multiple of the cycle time of the update-policies background process)
+}
+
+tag_policies: (key = <tagID>) {
+    <policyID> ... : policy name (TTL some multiple of the cycle time of the update-policies background process)
 }
 
 policies: (key = <policyID> : timeUUID) {
@@ -153,35 +216,47 @@ policies: (key = <policyID> : timeUUID) {
     who_affected: text
     how_affected: text
     is_party_official: boolean
-    link ...:
+    link ...: // TODO: separate table just for this? Maybe encode the list of links somehow.
     category: <categoryID>
     party: <partyID>
     owner: <userID>
     last_edit_date: <time>
     total_votes: int
     finalized_votes: int:timeUUID
-    replaces_<policyID> ...: [] (or timestamp maybe, or userID) 
     replaced_by: <policyID>
-    tag_<tagID> ...: <userID>
 }
 
-user_policy_votes: (key = <userID> : timeUUID) { - super column family
-    votes_<prev_version> ... {
-        version: timeUUID
-        votes_<policyID> ... : increment:penaltyincrement:newtotal:penaltytotal (ints)
-        [policy_created: <policyID>]
-        cassandra timestamp copied from pending_votes.
-    },
-    pending_votes_<version> {
+policy_tags: (key = <policyID>) {
+    <tagID> ...: <userID>
+}
+
+policy_replaces: (key = <policyID>) {
+    <policyID> ...: nothing (or timestamp maybe, or userID)
+}
+
+user_pending_votes: (key = <userID>) {
+    <version> {
         prev_version: timeUUID
+        // TODO: do we really want a variable list of subcolumns where we have to mess with prefixes? Breaks the type system. We have consistency requirements per record, so maybe should json-encode the whole record.
         votes_<policyID> ... : increment:penaltyincrement:newtotal:penaltytotal (ints)
         [policy_created: <policyID>]
         cassandra timestamp = time of submitting vote, so newest wins
     }
 }
 
+user_policy_votes: (key = <userID> : timeUUID) { - super column family
+    <prev_version> ... {
+        version: timeUUID
+        // TODO: do we really want a variable list of subcolumns where we have to mess with prefixes? Breaks the type system. We have consistency requirements per record, so maybe should json-encode the whole record.
+        votes_<policyID> ... : increment:penaltyincrement:newtotal:penaltytotal (ints)
+        [policy_created: <policyID>]
+        cassandra timestamp copied from pending_votes.
+    }
+}
+
 policy_new_votes: (key = <policyID> : timeUUID) { - super column family
     <prev_version> ...: {
+        // TODO: We have consistency requirements per record, so maybe should encode the whole record in one column.
         vote_increment: int (can be -/0/+)
         user_id: <userID>
         version: timeUUID
@@ -240,11 +315,15 @@ comments: (key = "category_" + <categoryID>|"policy_" + <policyID>) {
     }
 }
 
+comment_thread_roots: (key = "category_" + <categoryID>|"policy_" + <policyID>) {
+    <parentTimeUUID> ... : nothing // Top-level comment threads
+}
+
+// TODO: how do TimeUUIDs order if those from multiple nodes are sorted lexically?
+//       Can't use the TimeUUID comparator here, have to compare by bytes or by UTF8,
+//       but we still need things to be time-ordered.
 comments_threaded: (key = "category_" + <categoryID>|"policy_" + <policyID>) {
     <parentTimeUUID>[:<childTimeUUID>][:<childTimeUUID>...] ...: nothing
-    
-    and:
-    :<parentTimeUUID> // allows querying by ":"-prefix to get top-level threads only
 }
 
 moderation["policy"] {
@@ -333,7 +412,7 @@ misc["vote-history-dates"]: {
 }
 
 misc["log-hours"]: {
-    <date>:<hour> : (nothing)
+    <DateAndHour> : (nothing)
 }
 
 
