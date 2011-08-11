@@ -11,12 +11,14 @@ import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 import net.retakethe.policyauction.data.impl.serializers.JSONSerializer;
 import net.retakethe.policyauction.data.impl.serializers.LogMessageIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.NullSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
+import net.retakethe.policyauction.data.impl.serializers.UserIDSerializer;
 
 import org.apache.tapestry5.json.JSONObject;
 
@@ -68,6 +70,11 @@ public final class Type<T> {
      */
     public static final Type<PolicyID> POLICY_ID = new Type<PolicyID>(PolicyID.class, PolicyIDSerializer.get());
 
+    /**
+     * UserID: TimeUUIDType.
+     */
+    public static final Type<UserID> USER_ID = new Type<UserID>(UserID.class, UserIDSerializer.get());
+   
     /**
      * LogMessageD: TimeUUIDType.
      */
