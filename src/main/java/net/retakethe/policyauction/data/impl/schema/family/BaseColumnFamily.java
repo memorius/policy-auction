@@ -9,6 +9,8 @@ import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperImpl;
 import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
 
 /**
  * Base class for schema definitions of cassandra Column Families and Super Column Families.
@@ -19,16 +21,19 @@ import net.retakethe.policyauction.data.impl.schema.Type;
  *
  * @author Nick Clarke
  */
-public abstract class BaseColumnFamily<K> {
+public abstract class BaseColumnFamily<K, T extends Timestamp> {
 
     private final SchemaKeyspace keyspace;
     private final String name;
     private final Type<K> keyType;
+    private final TimestampFactory<T> timestampFactory;
 
-    protected BaseColumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType) {
+    protected BaseColumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType,
+            TimestampFactory<T> timestampFactory) {
         this.keyspace = keyspace;
         this.name = name;
         this.keyType = keyType;
+        this.timestampFactory = timestampFactory;
     }
 
     public SchemaKeyspace getKeyspace() {
@@ -45,6 +50,26 @@ public abstract class BaseColumnFamily<K> {
 
     public Serializer<K> getKeySerializer() {
         return keyType.getSerializer();
+    }
+
+    /**
+     * Create a new Timestamp value for "now". This may be based on the current system time, for example.
+     *
+     * @return new Timestamp
+     */
+    public T createCurrentTimestamp() {
+        return timestampFactory.createCurrentTimestamp();
+    }
+
+    /**
+     * Create a Timestamp from the long timestamp value returned by Cassandra.
+     *
+     * @param cassandraValue the long timestamp value from the cassandra column or subcolumn
+     * @return new Timestamp for this value
+     * @see Timestamp#getCassandraValue()
+     */
+    public T createTimestampFromCassandraTimestamp(long cassandraValue) {
+        return timestampFactory.fromCassandraTimestamp(cassandraValue);
     }
 
     /**
