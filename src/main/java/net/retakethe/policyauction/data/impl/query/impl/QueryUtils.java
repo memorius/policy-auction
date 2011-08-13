@@ -7,6 +7,7 @@ import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.util.Functional;
 
 public final class QueryUtils {
@@ -20,11 +21,11 @@ public final class QueryUtils {
      *      must be columns belonging to the specified ColumnFamily.
      * @throws IllegalArgumentException if any columns don't belong to this {@link ColumnFamily}.
      */
-    protected static <K, N> N[] getColumnNamesUnresolved(final ColumnFamily<K, N> cf,
-            List<NamedColumn<K, N, ?>> columns) {
-        List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, N, ?>, N>() {
+    protected static <K, T extends Timestamp, N> N[] getColumnNamesUnresolved(final ColumnFamily<K, T, N> cf,
+            List<NamedColumn<K, T, N, ?>> columns) {
+        List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, T, N, ?>, N>() {
                 @Override
-                public N convert(NamedColumn<K, N, ?> column) {
+                public N convert(NamedColumn<K, T, N, ?> column) {
                     if (column.getColumnFamily() != cf) {
                         throw new IllegalArgumentException("NamedColumn '" + column.getName() + "' is from column family '"
                                 + column.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");
@@ -44,12 +45,13 @@ public final class QueryUtils {
      *      must be supercolumns belonging to the specified SupercolumnFamily.
      * @throws IllegalArgumentException if any supercolumns don't belong to this {@link SupercolumnFamily}.
      */
-    protected static <K, SN, N> SN[] getSupercolumnNamesUnresolved(final SupercolumnFamily<K, SN, N> scf,
-            List<NamedSupercolumn<K, SN, N>> supercolumns) {
+    protected static <K, T extends Timestamp, SN, N> SN[] getSupercolumnNamesUnresolved(
+            final SupercolumnFamily<K, T, SN, N> scf,
+            List<NamedSupercolumn<K, T, SN, N>> supercolumns) {
         List<SN> supercolumnNames = Functional.map(supercolumns,
-                new Functional.Converter<NamedSupercolumn<K, SN, N>, SN>() {
+                new Functional.Converter<NamedSupercolumn<K, T, SN, N>, SN>() {
             @Override
-            public SN convert(NamedSupercolumn<K, SN, N> supercolumn) {
+            public SN convert(NamedSupercolumn<K, T, SN, N> supercolumn) {
                 checkSupercolumnBelongsToFamily(scf, supercolumn);
                 return supercolumn.getName();
             }
@@ -59,8 +61,9 @@ public final class QueryUtils {
         return toArray(supercolumnNames);
     }
 
-    protected static <K, SN, N> void checkSupercolumnBelongsToFamily(final SupercolumnFamily<K, SN, N> scf,
-            Supercolumn<K, SN, N> supercolumn) {
+    protected static <K, T extends Timestamp, SN, N> void checkSupercolumnBelongsToFamily(
+            SupercolumnFamily<K, T, SN, N> scf,
+            Supercolumn<K, T, SN, N> supercolumn) {
         if (supercolumn.getSupercolumnFamily() != scf) {
             throw new IllegalArgumentException("Supercolumn is from supercolumn family '"
                     + supercolumn.getSupercolumnFamily().getName()

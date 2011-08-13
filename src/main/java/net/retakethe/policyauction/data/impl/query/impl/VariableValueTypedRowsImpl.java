@@ -2,18 +2,18 @@ package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.Iterator;
 
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRows;
-
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.beans.Rows;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRows;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * @author Nick Clarke
  */
-public class VariableValueTypedRowsImpl<K, N> implements VariableValueTypedRows<K, N> {
+public class VariableValueTypedRowsImpl<K, T extends Timestamp, N> implements VariableValueTypedRows<K, T, N> {
 
-    private final class WrappingIterator implements Iterator<VariableValueTypedRow<K, N>> {
+    private final class WrappingIterator implements Iterator<VariableValueTypedRow<K, T, N>> {
         private final Iterator<Row<K, N, Object>> wrappedIterator;
 
         public WrappingIterator(Iterator<Row<K, N, Object>> wrappedIterator) {
@@ -26,7 +26,7 @@ public class VariableValueTypedRowsImpl<K, N> implements VariableValueTypedRows<
         }
 
         @Override
-        public VariableValueTypedRow<K, N> next() {
+        public VariableValueTypedRow<K, T, N> next() {
             return wrapRow(wrappedIterator.next());
         }
 
@@ -43,12 +43,12 @@ public class VariableValueTypedRowsImpl<K, N> implements VariableValueTypedRows<
     }
 
     @Override
-    public Iterator<VariableValueTypedRow<K, N>> iterator() {
+    public Iterator<VariableValueTypedRow<K, T, N>> iterator() {
         return new WrappingIterator(wrappedRows.iterator());
     }
 
     @Override
-    public VariableValueTypedRow<K, N> getByKey(K key) {
+    public VariableValueTypedRow<K, T, N> getByKey(K key) {
         return wrapRow(wrappedRows.getByKey(key));
     }
 
@@ -57,10 +57,10 @@ public class VariableValueTypedRowsImpl<K, N> implements VariableValueTypedRows<
         return wrappedRows.getCount();
     }
 
-    protected VariableValueTypedRow<K, N> wrapRow(Row<K, N, Object> wrappedRow) {
+    protected VariableValueTypedRow<K, T, N> wrapRow(Row<K, N, Object> wrappedRow) {
         if (wrappedRow == null) {
             return null;
         }
-        return new VariableValueTypedRowImpl<K, N>(wrappedRow);
+        return new VariableValueTypedRowImpl<K, T, N>(wrappedRow);
     }
 }

@@ -2,11 +2,14 @@ package net.retakethe.policyauction.data.impl.query.api;
 
 import java.util.List;
 
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+
 /**
  * @see me.prettyprint.hector.api.beans.OrderedSuperRows
  * @author Nick Clarke
  */
-public interface VariableValueTypedOrderedSuperRows<K, SN, N> extends VariableValueTypedSuperRows<K, SN, N> {
+public interface VariableValueTypedOrderedSuperRows<K, T extends Timestamp, SN, N>
+        extends VariableValueTypedSuperRows<K, T, SN, N> {
 
-    List<VariableValueTypedSuperRow<K, SN, N>> getList();
+    List<VariableValueTypedSuperRow<K, T, SN, N>> getList();
 }

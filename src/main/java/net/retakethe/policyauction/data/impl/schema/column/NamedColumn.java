@@ -6,6 +6,7 @@ import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Cassandra columns with fixed names.
@@ -16,11 +17,11 @@ import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
  *
  * @author Nick Clarke
  */
-public class NamedColumn<K, N, V> extends Column<K, N, V> {
+public class NamedColumn<K, T extends Timestamp, N, V> extends Column<K, T, N, V> {
  
     private final N name;
 
-    public NamedColumn(N name, ColumnFamily<K, N> columnFamily, Type<V> valueType) {
+    public NamedColumn(N name, ColumnFamily<K, T, N> columnFamily, Type<V> valueType) {
         super(columnFamily, valueType);
         this.name = name;
     }
@@ -29,11 +30,11 @@ public class NamedColumn<K, N, V> extends Column<K, N, V> {
         return name;
     }
 
-    public void addColumnInsertion(MutatorWrapper<K> m, K key, V value) {
-        ((MutatorWrapperInternal<K>) m).addColumnInsertion(key, this, value);
+    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, V value) {
+        ((MutatorWrapperInternal<K, T>) m).addColumnInsertion(key, this, value);
     }
 
-    public void addColumnDeletion(MutatorWrapper<K> m, K key) {
-        ((MutatorWrapperInternal<K>) m).addColumnDeletion(key, this);
+    public void addColumnDeletion(MutatorWrapper<K, T> m, K key) {
+        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this);
     }
 }

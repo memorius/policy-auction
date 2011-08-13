@@ -11,14 +11,16 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperco
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumnQuery;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
-public class VariableValueTypedSuperColumnQueryImpl<K, SN, N> implements VariableValueTypedSupercolumnQuery<SN, N> {
+public class VariableValueTypedSuperColumnQueryImpl<K, T extends Timestamp, SN, N>
+        implements VariableValueTypedSupercolumnQuery<T, SN, N> {
 
     private final SuperColumnQuery<K, SN, N, Object> wrappedQuery;
 
-    public VariableValueTypedSuperColumnQueryImpl(Keyspace ks, SupercolumnFamily<K, SN, N> scf,
-            Supercolumn<K, SN, N> supercolumn, SN supercolumnName, K key) {
+    public VariableValueTypedSuperColumnQueryImpl(Keyspace ks, SupercolumnFamily<K, T, SN, N> scf,
+            Supercolumn<K, T, SN, N> supercolumn, SN supercolumnName, K key) {
         QueryUtils.checkSupercolumnBelongsToFamily(scf, supercolumn);
 
         wrappedQuery = HFactory.createSuperColumnQuery(ks, scf.getKeySerializer(), scf.getSupercolumnNameSerializer(),
@@ -29,12 +31,12 @@ public class VariableValueTypedSuperColumnQueryImpl<K, SN, N> implements Variabl
     }
 
     @Override
-    public QueryResult<VariableValueTypedSupercolumn<SN, N>> execute() {
+    public QueryResult<VariableValueTypedSupercolumn<T, SN, N>> execute() {
         QueryResult<HSuperColumn<SN, N, Object>> wrappedResult = wrappedQuery.execute();
 
-        return new QueryResultImpl<VariableValueTypedSupercolumn<SN, N>>(
-                new ExecutionResult<VariableValueTypedSupercolumn<SN, N>>(
-                        new VariableValueTypedSupercolumnImpl<SN, N>(wrappedResult.get()),
+        return new QueryResultImpl<VariableValueTypedSupercolumn<T, SN, N>>(
+                new ExecutionResult<VariableValueTypedSupercolumn<T, SN, N>>(
+                        new VariableValueTypedSupercolumnImpl<T, SN, N>(wrappedResult.get()),
                         wrappedResult.getExecutionTimeMicro(),
                         wrappedResult.getHostUsed()),
                 this);

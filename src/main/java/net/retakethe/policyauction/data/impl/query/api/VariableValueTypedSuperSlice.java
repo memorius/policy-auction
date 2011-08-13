@@ -4,16 +4,17 @@ import java.util.List;
 
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * @author Nick Clarke
  * @see me.prettyprint.hector.api.beans.SuperSlice
  */
-public interface VariableValueTypedSuperSlice<SN, N> {
+public interface VariableValueTypedSuperSlice<T extends Timestamp, SN, N> {
 
-    List<VariableValueTypedSupercolumn<SN, N>> getSuperColumns();
+    List<VariableValueTypedSupercolumn<T, SN, N>> getSuperColumns();
 
-    VariableValueTypedSupercolumn<SN, N> getSupercolumn(NamedSupercolumn<?, SN, N> supercolumn);
+    VariableValueTypedSupercolumn<T, SN, N> getSupercolumn(NamedSupercolumn<?, T, SN, N> supercolumn);
 
-    VariableValueTypedSupercolumn<SN, N> getSupercolumn(SupercolumnRange<?, SN, N> supercolumn, SN supercolumnName);
+    VariableValueTypedSupercolumn<T, SN, N> getSupercolumn(SupercolumnRange<?, T, SN, N> supercolumn, SN supercolumnName);
 }

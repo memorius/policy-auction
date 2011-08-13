@@ -11,18 +11,21 @@ import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
 
 /**
  * Used for column families which contain a single column range in each row.
  *
  * @author Nick Clarke
  */
-public class RangeColumnFamily<K, N, V> extends ColumnFamily<K, N> {
+public class RangeColumnFamily<K, T extends Timestamp, N, V> extends ColumnFamily<K, T, N> {
 
-    private ColumnRange<K, N, V> columnRange;
+    private ColumnRange<K, T, N, V> columnRange;
 
-    public RangeColumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType, Type<N> columnNameType) {
-        super(keyspace, name, keyType, columnNameType);
+    public RangeColumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType,
+            TimestampFactory<T> timestampFactory, Type<N> columnNameType) {
+        super(keyspace, name, keyType, timestampFactory, columnNameType);
     }
 
     /**
@@ -31,23 +34,23 @@ public class RangeColumnFamily<K, N, V> extends ColumnFamily<K, N> {
      *
      * @throws IllegalStateException if called more than once
      */
-    protected void setColumnRange(ColumnRange<K, N, V> columnRange) {
+    protected void setColumnRange(ColumnRange<K, T, N, V> columnRange) {
         if (this.columnRange != null) {
             throw new IllegalStateException("columnRange already set");
         }
         this.columnRange = columnRange;
     }
 
-    public ColumnRange<K, N, V> getColumnRange() {
+    public ColumnRange<K, T, N, V> getColumnRange() {
         return columnRange;
     }
 
-    public void addColumnInsertion(MutatorWrapper<K> m, K key, N name, V value) {
-        ((MutatorWrapperInternal<K>) m).addColumnInsertion(key, columnRange, name, value);
+    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, N name, V value) {
+        ((MutatorWrapperInternal<K, T>) m).addColumnInsertion(key, columnRange, name, value);
     }
 
-    public void addColumnDeletion(MutatorWrapper<K> m, K key, N name) {
-        ((MutatorWrapperInternal<K>) m).addColumnDeletion(key, columnRange, name);
+    public void addColumnDeletion(MutatorWrapper<K, T> m, K key, N name) {
+        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, columnRange, name);
     }
     
     public ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, N columnName) {

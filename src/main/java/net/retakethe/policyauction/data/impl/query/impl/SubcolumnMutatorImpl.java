@@ -11,18 +11,19 @@ import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
-public class SubcolumnMutatorImpl<K, SN, N> implements SubcolumnMutatorInternal<K, SN, N> {
+public class SubcolumnMutatorImpl<K, T extends Timestamp, SN, N> implements SubcolumnMutatorInternal<K, T, SN, N> {
 
     private final Mutator<K> wrappedMutator;
     private final K key;
-    private final Supercolumn<K, SN, N> supercolumn;
+    private final Supercolumn<K, T, SN, N> supercolumn;
     private final SN supercolumnName;
     private final List<HColumn<N, ?>> subcolumns;
 
     public SubcolumnMutatorImpl(Mutator<K> wrappedMutator, K key,
-            Supercolumn<K, SN, N> supercolumn, SN supercolumnName) {
+            Supercolumn<K, T, SN, N> supercolumn, SN supercolumnName) {
         this.wrappedMutator = wrappedMutator;
         this.key = key;
         this.supercolumn = supercolumn;
@@ -31,7 +32,7 @@ public class SubcolumnMutatorImpl<K, SN, N> implements SubcolumnMutatorInternal<
     }
 
     @Override
-    public <V> void addSubcolumnInsertion(SubcolumnRange<K, SN, N, V> subcolumn, N subcolumnName, V value) {
+    public <V> void addSubcolumnInsertion(SubcolumnRange<K, T, SN, N, V> subcolumn, N subcolumnName, V value) {
         validateSubcolumn(subcolumn);
         HColumn<N, ?> hColumn = HFactory.createColumn(subcolumnName, value,
                 supercolumn.getSupercolumnFamily().getSubcolumnNameSerializer(),
@@ -40,7 +41,7 @@ public class SubcolumnMutatorImpl<K, SN, N> implements SubcolumnMutatorInternal<
     }
 
     @Override
-    public <V> void addSubcolumnInsertion(NamedSubcolumn<K, SN, N, V> subcolumn, V value) {
+    public <V> void addSubcolumnInsertion(NamedSubcolumn<K, T, SN, N, V> subcolumn, V value) {
         validateSubcolumn(subcolumn);
         HColumn<N, ?> hColumn = HFactory.createColumn(subcolumn.getName(), value,
                 supercolumn.getSupercolumnFamily().getSubcolumnNameSerializer(),
@@ -49,23 +50,23 @@ public class SubcolumnMutatorImpl<K, SN, N> implements SubcolumnMutatorInternal<
     }
 
     @Override
-    public void addSubcolumnDeletion(SubcolumnRange<K, SN, N, ?> subcolumn, N subcolumnName) {
+    public void addSubcolumnDeletion(SubcolumnRange<K, T, SN, N, ?> subcolumn, N subcolumnName) {
         validateSubcolumn(subcolumn);
-        SupercolumnFamily<K, SN, N> scf = supercolumn.getSupercolumnFamily();
+        SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
         wrappedMutator.addSubDelete(key, scf.getName(), supercolumnName, subcolumnName,
                 scf.getSupercolumnNameSerializer(), scf.getSubcolumnNameSerializer());
     }
 
     @Override
-    public void addSubcolumnDeletion(NamedSubcolumn<K, SN, N, ?> subcolumn) {
+    public void addSubcolumnDeletion(NamedSubcolumn<K, T, SN, N, ?> subcolumn) {
         validateSubcolumn(subcolumn);
-        SupercolumnFamily<K, SN, N> scf = supercolumn.getSupercolumnFamily();
+        SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
         wrappedMutator.addSubDelete(key, scf.getName(), supercolumnName, subcolumn.getName(),
                 scf.getSupercolumnNameSerializer(), scf.getSubcolumnNameSerializer());
     }
     
     protected void apply() {
-        SupercolumnFamily<K, SN, N> scf = supercolumn.getSupercolumnFamily();
+        SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
 
         // Must copy, HSuperColumnImpl stores a reference
         List<HColumn<N, Object>> copy = new ArrayList<HColumn<N, Object>>();
@@ -88,13 +89,13 @@ public class SubcolumnMutatorImpl<K, SN, N> implements SubcolumnMutatorInternal<
                         scf.getSubcolumnNameSerializer(), DummySerializer.get()));
     }
 
-    private void validateSubcolumn(SubcolumnRange<K, SN, N, ?> subcolumn) {
+    private void validateSubcolumn(SubcolumnRange<K, T, SN, N, ?> subcolumn) {
         if (subcolumn.getSupercolumn() != supercolumn) {
             throw new IllegalArgumentException("The supplied subcolumn does not belong to this mutator's supercolumn");
         }
     }
 
-    private void validateSubcolumn(NamedSubcolumn<K, SN, N, ?> subcolumn) {
+    private void validateSubcolumn(NamedSubcolumn<K, T, SN, N, ?> subcolumn) {
         if (subcolumn.getSupercolumn() != supercolumn) {
             throw new IllegalArgumentException("The supplied subcolumn does not belong to this mutator's supercolumn");
         }

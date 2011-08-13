@@ -6,6 +6,7 @@ import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Cassandra supercolumn ranges where there isn't a single supercolumn name.
@@ -16,18 +17,18 @@ import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
  *
  * @author Nick Clarke
  */
-public abstract class SupercolumnRange<K, SN, N> extends Supercolumn<K, SN, N> {
+public abstract class SupercolumnRange<K, T extends Timestamp, SN, N> extends Supercolumn<K, T, SN, N> {
 
-    protected SupercolumnRange(SupercolumnFamily<K, SN, N> supercolumnFamily) {
+    protected SupercolumnRange(SupercolumnFamily<K, T, SN, N> supercolumnFamily) {
         super(supercolumnFamily);
     }
 
-    public SubcolumnMutator<K, SN, N> createSubcolumnMutator(MutatorWrapper<K> m, K key,
+    public SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(MutatorWrapper<K, T> m, K key,
             SN supercolumnName) {
-        return ((MutatorWrapperInternal<K>) m).createSubcolumnMutator(key, this, supercolumnName);
+        return ((MutatorWrapperInternal<K, T>) m).createSubcolumnMutator(key, this, supercolumnName);
     }
 
-    public void addSupercolumnDeletion(MutatorWrapper<K> m, K key, SN supercolumnName) {
-        ((MutatorWrapperInternal<K>) m).addSupercolumnDeletion(key, this, supercolumnName);
+    public void addSupercolumnDeletion(MutatorWrapper<K, T> m, K key, SN supercolumnName) {
+        ((MutatorWrapperInternal<K, T>) m).addSupercolumnDeletion(key, this, supercolumnName);
     }
 }

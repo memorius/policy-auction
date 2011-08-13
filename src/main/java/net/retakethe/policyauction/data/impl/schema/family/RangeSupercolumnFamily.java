@@ -13,6 +13,8 @@ import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
 
 /**
  * Used for supercolumn families which contain a single supercolumn range in each row.
@@ -24,14 +26,15 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
  *
  * @author Nick Clarke
  */
-public class RangeSupercolumnFamily<K, SN, N, R extends SupercolumnRange<K, SN, N>>
-        extends SupercolumnFamily<K, SN, N> {
+public class RangeSupercolumnFamily<K, T extends Timestamp, SN, N, R extends SupercolumnRange<K, T, SN, N>>
+        extends SupercolumnFamily<K, T, SN, N> {
 
     private R supercolumnRange;
 
     public RangeSupercolumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType,
+            TimestampFactory<T> timestampFactory,
             Type<SN> supercolumnNameType, Type<N> subcolumnNameType) {
-        super(keyspace, name, keyType, supercolumnNameType, subcolumnNameType);
+        super(keyspace, name, keyType, timestampFactory, supercolumnNameType, subcolumnNameType);
     }
 
     /**
@@ -51,32 +54,32 @@ public class RangeSupercolumnFamily<K, SN, N, R extends SupercolumnRange<K, SN, 
         return supercolumnRange;
     }
 
-    public SubcolumnMutator<K, SN, N> createSubcolumnMutator(MutatorWrapper<K> m, K key,
+    public SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(MutatorWrapper<K, T> m, K key,
             SN supercolumnName) {
-        return ((MutatorWrapperInternal<K>) m).createSubcolumnMutator(key, supercolumnRange, supercolumnName);
+        return ((MutatorWrapperInternal<K, T>) m).createSubcolumnMutator(key, supercolumnRange, supercolumnName);
     }
 
-    public void addSupercolumnDeletion(MutatorWrapper<K> m, K key, SN supercolumnName) {
-        ((MutatorWrapperInternal<K>) m).addSupercolumnDeletion(key, supercolumnRange, supercolumnName);
+    public void addSupercolumnDeletion(MutatorWrapper<K, T> m, K key, SN supercolumnName) {
+        ((MutatorWrapperInternal<K, T>) m).addSupercolumnDeletion(key, supercolumnRange, supercolumnName);
     }
 
-    public VariableValueTypedSupercolumnQuery<SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager, K key,
+    public VariableValueTypedSupercolumnQuery<T, SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager, K key,
             SN supercolumnName) {
         return createSupercolumnQuery(keyspaceManager, key, supercolumnRange, supercolumnName);
     }
 
-    public VariableValueTypedSuperSliceQuery<K, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager, K key,
+    public VariableValueTypedSuperSliceQuery<K, T, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager, K key,
             SN start, SN finish, boolean reversed, int count) {
         return createSuperSliceQuery(keyspaceManager, key, supercolumnRange, start, finish, reversed, count);
     }
 
-    public VariableValueTypedMultigetSuperSliceQuery<K, SN, N> createMultigetSuperSliceQuery(
+    public VariableValueTypedMultigetSuperSliceQuery<K, T, SN, N> createMultigetSuperSliceQuery(
             KeyspaceManager keyspaceManager,
             SN start, SN finish, boolean reversed, int count) {
         return createMultigetSuperSliceQuery(keyspaceManager, supercolumnRange, start, finish, reversed, count);
     }
 
-    public VariableValueTypedRangeSuperSlicesQuery<K, SN, N> createRangeSuperSlicesQuery(
+    public VariableValueTypedRangeSuperSlicesQuery<K, T, SN, N> createRangeSuperSlicesQuery(
             KeyspaceManager keyspaceManager,
             SN start, SN finish, boolean reversed, int count) {
         return createRangeSuperSlicesQuery(keyspaceManager, supercolumnRange, start, finish, reversed, count);

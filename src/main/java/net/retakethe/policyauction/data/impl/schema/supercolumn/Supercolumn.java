@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.impl.schema.supercolumn;
 import java.util.UUID;
 
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Base class for Cassandra named supercolumns and supercolumn ranges.
@@ -13,15 +14,15 @@ import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
  *
  * @author Nick Clarke
  */
-public abstract class Supercolumn<K, SN, N> {
+public abstract class Supercolumn<K, T extends Timestamp, SN, N> {
 
-    private final SupercolumnFamily<K, SN, N> supercolumnFamily;
+    private final SupercolumnFamily<K, T, SN, N> supercolumnFamily;
 
-    protected Supercolumn(SupercolumnFamily<K, SN, N> supercolumnFamily) {
+    protected Supercolumn(SupercolumnFamily<K, T, SN, N> supercolumnFamily) {
         this.supercolumnFamily = supercolumnFamily;
     }
 
-    public SupercolumnFamily<K, SN, N> getSupercolumnFamily() {
+    public SupercolumnFamily<K, T, SN, N> getSupercolumnFamily() {
         return supercolumnFamily;
     }
 }

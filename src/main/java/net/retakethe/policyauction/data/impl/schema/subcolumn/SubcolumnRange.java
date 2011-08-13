@@ -3,14 +3,15 @@ package net.retakethe.policyauction.data.impl.schema.subcolumn;
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
-public interface SubcolumnRange<K, SN, N, V> {
+public interface SubcolumnRange<K, T extends Timestamp, SN, N, V> {
 
-    Supercolumn<K, SN, N> getSupercolumn();
+    Supercolumn<K, T, SN, N> getSupercolumn();
 
     Serializer<V> getValueSerializer();
 
-    void addSubcolumnInsertion(SubcolumnMutator<K, SN, N> m, N subcolumnName, V value);
+    void addSubcolumnInsertion(SubcolumnMutator<K, T, SN, N> m, N subcolumnName, V value);
 
-    void addSubcolumnDeletion(SubcolumnMutator<K, SN, N> m, N subcolumnName);
+    void addSubcolumnDeletion(SubcolumnMutator<K, T, SN, N> m, N subcolumnName);
 }

@@ -1,13 +1,14 @@
 package net.retakethe.policyauction.data.impl.query.impl;
 
+import me.prettyprint.hector.api.beans.Row;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
-import me.prettyprint.hector.api.beans.Row;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * @author Nick Clarke
  */
-public class VariableValueTypedRowImpl<K, N> implements VariableValueTypedRow<K, N> {
+public class VariableValueTypedRowImpl<K, T extends Timestamp, N> implements VariableValueTypedRow<K, T, N> {
 
     private final Row<K, N, Object> wrappedRow;
 
@@ -21,7 +22,7 @@ public class VariableValueTypedRowImpl<K, N> implements VariableValueTypedRow<K,
     }
 
     @Override
-    public VariableValueTypedColumnSlice<N> getColumnSlice() {
-        return new VariableValueTypedColumnSliceImpl<N>(wrappedRow.getColumnSlice());
+    public VariableValueTypedColumnSlice<T, N> getColumnSlice() {
+        return new VariableValueTypedColumnSliceImpl<T, N>(wrappedRow.getColumnSlice());
     }
 }

@@ -10,6 +10,8 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperco
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
 
 /**
  * Used for single-row lists such as those in "moderation" table.
@@ -20,14 +22,15 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
  *
  * @author Nick Clarke
  */
-public class SingleRowRangeSupercolumnFamily<K, SN, N, R extends SupercolumnRange<K, SN, N>>
-        extends RangeSupercolumnFamily<K, SN, N, R> {
+public class SingleRowRangeSupercolumnFamily<K, T extends Timestamp, SN, N, R extends SupercolumnRange<K, T, SN, N>>
+        extends RangeSupercolumnFamily<K, T, SN, N, R> {
 
     private final K key;
 
     public SingleRowRangeSupercolumnFamily(SchemaKeyspace keyspace, String name, K key, Type<K> keyType,
+            TimestampFactory<T> timestampFactory,
             Type<SN> supercolumnNameType, Type<N> subcolumnNameType) {
-        super(keyspace, name, keyType, supercolumnNameType, subcolumnNameType);
+        super(keyspace, name, keyType, timestampFactory, supercolumnNameType, subcolumnNameType);
         this.key = key;
     }
 
@@ -35,20 +38,20 @@ public class SingleRowRangeSupercolumnFamily<K, SN, N, R extends SupercolumnRang
         return key;
     }
 
-    public SubcolumnMutator<K, SN, N> createSubcolumnMutator(MutatorWrapper<K> mutator, SN supercolumnName) {
+    public SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(MutatorWrapper<K, T> mutator, SN supercolumnName) {
         return createSubcolumnMutator(mutator, key, supercolumnName);
     }
 
-    public void addSupercolumnDeletion(MutatorWrapper<K> mutator, SN supercolumnName) {
+    public void addSupercolumnDeletion(MutatorWrapper<K, T> mutator, SN supercolumnName) {
         addSupercolumnDeletion(mutator, key, supercolumnName);
     }
 
-    public VariableValueTypedSuperSliceQuery<K, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager,
+    public VariableValueTypedSuperSliceQuery<K, T, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager,
             SN start, SN finish, boolean reversed, int count) {
         return createSuperSliceQuery(keyspaceManager, key, start, finish, reversed, count);
     }
 
-    public VariableValueTypedSupercolumnQuery<SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager,
+    public VariableValueTypedSupercolumnQuery<T, SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager,
             SN supercolumnName) {
         return createSupercolumnQuery(keyspaceManager, key, supercolumnName);
     }

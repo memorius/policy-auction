@@ -11,6 +11,7 @@ import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
 import org.slf4j.Logger;
@@ -80,7 +81,8 @@ public abstract class DAOManagerTestBase {
         logger.info("DAOManagerTestBase.cleanCassandraDB finished");
     }
 
-    private <K, N> void cleanColumnFamily(KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf) {
+    private <K, T extends Timestamp, N> void cleanColumnFamily(KeyspaceManager keyspaceManager,
+            ColumnFamily<K, T, N> cf) {
         while (true) {
             logger.info("DAOManagerTestBase.cleanCassandraDB starting cycle for " + cf.getName());
             // Query a batch of keys in this column family.
@@ -99,7 +101,7 @@ public abstract class DAOManagerTestBase {
             }
 
             // Delete the rows for these keys
-            MutatorWrapper<K> m = cf.createMutator(keyspaceManager);
+            MutatorWrapper<K, T> m = cf.createMutator(keyspaceManager);
             boolean rowsExist = false;
             for (Row<K, N, Object> row : rows) {
                 logger.info("DAOManagerTestBase.cleanCassandraDB: key: " + row.getKey());

@@ -6,6 +6,7 @@ import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 
 /**
@@ -30,5 +31,5 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
  *
  * @author Nick Clarke
  */
-public interface SubcolumnMutator<K, SN, N> {
+public interface SubcolumnMutator<K, T extends Timestamp, SN, N> {
 }

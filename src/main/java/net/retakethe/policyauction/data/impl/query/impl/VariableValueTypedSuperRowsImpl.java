@@ -6,10 +6,12 @@ import me.prettyprint.hector.api.beans.SuperRow;
 import me.prettyprint.hector.api.beans.SuperRows;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperRow;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperRows;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
-public class VariableValueTypedSuperRowsImpl<K, SN, N> implements VariableValueTypedSuperRows<K, SN, N> {
+public class VariableValueTypedSuperRowsImpl<K, T extends Timestamp, SN, N>
+        implements VariableValueTypedSuperRows<K, T, SN, N> {
 
-    private final class WrappingIterator implements Iterator<VariableValueTypedSuperRow<K, SN, N>> {
+    private final class WrappingIterator implements Iterator<VariableValueTypedSuperRow<K, T, SN, N>> {
         private final Iterator<SuperRow<K, SN, N, Object>> wrappedIterator;
 
         public WrappingIterator(Iterator<SuperRow<K, SN, N, Object>> wrappedIterator) {
@@ -22,7 +24,7 @@ public class VariableValueTypedSuperRowsImpl<K, SN, N> implements VariableValueT
         }
 
         @Override
-        public VariableValueTypedSuperRow<K, SN, N> next() {
+        public VariableValueTypedSuperRow<K, T, SN, N> next() {
             return wrapRow(wrappedIterator.next());
         }
 
@@ -39,12 +41,12 @@ public class VariableValueTypedSuperRowsImpl<K, SN, N> implements VariableValueT
     }
 
     @Override
-    public Iterator<VariableValueTypedSuperRow<K, SN, N>> iterator() {
+    public Iterator<VariableValueTypedSuperRow<K, T, SN, N>> iterator() {
         return new WrappingIterator(wrappedRows.iterator());
     }
 
     @Override
-    public VariableValueTypedSuperRow<K, SN, N> getByKey(K key) {
+    public VariableValueTypedSuperRow<K, T, SN, N> getByKey(K key) {
         return wrapRow(wrappedRows.getByKey(key));
     }
 
@@ -53,10 +55,10 @@ public class VariableValueTypedSuperRowsImpl<K, SN, N> implements VariableValueT
         return wrappedRows.getCount();
     }
 
-    protected VariableValueTypedSuperRow<K, SN, N> wrapRow(SuperRow<K, SN, N, Object> wrappedRow) {
+    protected VariableValueTypedSuperRow<K, T, SN, N> wrapRow(SuperRow<K, SN, N, Object> wrappedRow) {
         if (wrappedRow == null) {
             return null;
         }
-        return new VariableValueTypedSuperRowImpl<K, SN, N>(wrappedRow);
+        return new VariableValueTypedSuperRowImpl<K, T, SN, N>(wrappedRow);
     }
 }

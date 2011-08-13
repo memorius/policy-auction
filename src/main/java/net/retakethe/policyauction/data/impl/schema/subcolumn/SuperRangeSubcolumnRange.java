@@ -6,6 +6,7 @@ import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.query.impl.SubcolumnMutatorInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Cassandra subcolumns where there isn't a fixed subcolumn name, of supercolumns where there isn't a fixed name.
@@ -17,20 +18,20 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
  *
  * @author Nick Clarke
  */
-public class SuperRangeSubcolumnRange<K, SN, N, V> extends SuperRangeSubcolumn<K, SN, N, V>
-        implements SubcolumnRange<K, SN, N, V> {
+public class SuperRangeSubcolumnRange<K, T extends Timestamp, SN, N, V> extends SuperRangeSubcolumn<K, T, SN, N, V>
+        implements SubcolumnRange<K, T, SN, N, V> {
 
-    public SuperRangeSubcolumnRange(SupercolumnRange<K, SN, N> supercolumn, Type<V> valueType) {
+    public SuperRangeSubcolumnRange(SupercolumnRange<K, T, SN, N> supercolumn, Type<V> valueType) {
         super(supercolumn, valueType);
     }
 
     @Override
-    public void addSubcolumnInsertion(SubcolumnMutator<K, SN, N> m, N subcolumnName, V value) {
-        ((SubcolumnMutatorInternal<K, SN, N>) m).addSubcolumnInsertion(this, subcolumnName, value);
+    public void addSubcolumnInsertion(SubcolumnMutator<K, T, SN, N> m, N subcolumnName, V value) {
+        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnInsertion(this, subcolumnName, value);
     }
 
     @Override
-    public void addSubcolumnDeletion(SubcolumnMutator<K, SN, N> m, N subcolumnName) {
-        ((SubcolumnMutatorInternal<K, SN, N>) m).addSubcolumnDeletion(this, subcolumnName);
+    public void addSubcolumnDeletion(SubcolumnMutator<K, T, SN, N> m, N subcolumnName) {
+        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnDeletion(this, subcolumnName);
     }
 }

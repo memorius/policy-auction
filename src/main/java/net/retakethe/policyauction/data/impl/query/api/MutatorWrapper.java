@@ -12,6 +12,7 @@ import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Column/supercolumn/subcolumn insertions/mutations/deletions using our Schema classes.
@@ -58,7 +59,7 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange
  * @see me.prettyprint.hector.api.mutation.Mutator
  * @author Nick Clarke
  */
-public interface MutatorWrapper<K> {
+public interface MutatorWrapper<K, T extends Timestamp> {
 
     /**
      * Batch executes all mutations scheduled to this Mutator instance by addInsertion, addDeletion etc.

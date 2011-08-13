@@ -14,6 +14,8 @@ import net.retakethe.policyauction.data.impl.schema.family.RangeSupercolumnFamil
 import net.retakethe.policyauction.data.impl.schema.family.SingleRowRangeColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeNamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.MillisecondsTimestamp;
+import net.retakethe.policyauction.data.impl.schema.timestamp.MillisecondsTimestampFactory;
 
 /**
  * Cassandra schema elements as in cassandra-schema.txt.
@@ -29,52 +31,55 @@ public final class Schema {
     public static final LogSCF LOG = new LogSCF();
 
 
-    public static final class PoliciesCF extends ColumnFamily<PolicyID, String> {
-        public final NamedColumn<PolicyID, String, String> SHORT_NAME;
-        public final NamedColumn<PolicyID, String, String> DESCRIPTION;
-        public final NamedColumn<PolicyID, String, Date> LAST_EDITED;
+    public static final class PoliciesCF extends ColumnFamily<PolicyID, MillisecondsTimestamp, String> {
+        public final NamedColumn<PolicyID, MillisecondsTimestamp, String, String> SHORT_NAME;
+        public final NamedColumn<PolicyID, MillisecondsTimestamp, String, String> DESCRIPTION;
+        public final NamedColumn<PolicyID, MillisecondsTimestamp, String, Date> LAST_EDITED;
 
         private PoliciesCF() {
-            super(SchemaKeyspace.MAIN, "policies", Type.POLICY_ID, Type.UTF8);
-            SHORT_NAME = new StringStringColumn<PolicyID>("short_name", this);
-            DESCRIPTION = new StringStringColumn<PolicyID>("description", this);
-            LAST_EDITED = new StringNamedColumn<PolicyID, Date>("last_edited", this, Type.DATE);
+            super(SchemaKeyspace.MAIN, "policies", Type.POLICY_ID, MillisecondsTimestampFactory.get(), Type.UTF8);
+            SHORT_NAME = new StringStringColumn<PolicyID, MillisecondsTimestamp>("short_name", this);
+            DESCRIPTION = new StringStringColumn<PolicyID, MillisecondsTimestamp>("description", this);
+            LAST_EDITED = new StringNamedColumn<PolicyID, MillisecondsTimestamp, Date>("last_edited", this, Type.DATE);
         }
     }
 
-    public static final class LogHoursRow extends SingleRowRangeColumnFamily<String, DateAndHour, Object> {
+    public static final class LogHoursRow extends SingleRowRangeColumnFamily<String, MillisecondsTimestamp, DateAndHour, Object> {
         private LogHoursRow() {
-            super(SchemaKeyspace.MAIN, "misc_string", "log hours", Type.UTF8, Type.DATE_AND_HOUR);
-            setColumnRange(new ColumnRange<String, DateAndHour, Object>(this, Type.NULL));
+            super(SchemaKeyspace.MAIN, "misc_string", "log hours", Type.UTF8, MillisecondsTimestampFactory.get(),
+                    Type.DATE_AND_HOUR);
+            setColumnRange(new ColumnRange<String, MillisecondsTimestamp, DateAndHour, Object>(this, Type.NULL));
         }
     }
 
-    public static final class LogSCF extends RangeSupercolumnFamily<DateAndHour, LogMessageID, String, LogSCF.LogMessageRange> {
+    public static final class LogSCF
+            extends RangeSupercolumnFamily<DateAndHour, MillisecondsTimestamp, LogMessageID, String, LogSCF.LogMessageRange> {
 
-        public final class LogMessageRange extends SupercolumnRange<DateAndHour, LogMessageID, String> {
-            public final SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String> LOCAL_TIME;
-            public final SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String> SERVER;
-            public final SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String> LEVEL;
-            public final SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String> LOGGER;
-            public final SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String> MESSAGE;
+        public final class LogMessageRange extends SupercolumnRange<DateAndHour, MillisecondsTimestamp, LogMessageID, String> {
+            public final SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String> LOCAL_TIME;
+            public final SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String> SERVER;
+            public final SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String> LEVEL;
+            public final SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String> LOGGER;
+            public final SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String> MESSAGE;
 
             private LogMessageRange() {
                 super(LogSCF.this);
-                LOCAL_TIME = new SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String>("local_time",
-                        this, Type.UTF8);
-                SERVER = new SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String>("server",
-                        this, Type.UTF8);
-                LEVEL = new SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String>("level",
-                        this, Type.UTF8);
-                LOGGER = new SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String>("logger",
-                        this, Type.UTF8);
-                MESSAGE = new SuperRangeNamedSubcolumn<DateAndHour, LogMessageID, String, String>("message",
-                        this, Type.UTF8);
+                LOCAL_TIME = new SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String>(
+                        "local_time", this, Type.UTF8);
+                SERVER = new SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String>(
+                        "server", this, Type.UTF8);
+                LEVEL = new SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String>(
+                        "level", this, Type.UTF8);
+                LOGGER = new SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String>(
+                        "logger", this, Type.UTF8);
+                MESSAGE = new SuperRangeNamedSubcolumn<DateAndHour, MillisecondsTimestamp, LogMessageID, String, String>(
+                        "message", this, Type.UTF8);
             }
         }
 
         private LogSCF() {
-            super(SchemaKeyspace.LOGS, "log", Type.DATE_AND_HOUR, Type.LOG_MESSAGE_ID, Type.UTF8);
+            super(SchemaKeyspace.LOGS, "log", Type.DATE_AND_HOUR, MillisecondsTimestampFactory.get(),
+                    Type.LOG_MESSAGE_ID, Type.UTF8);
             setSupercolumnRange(new LogMessageRange());
         }
     }

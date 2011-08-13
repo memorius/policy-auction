@@ -18,6 +18,7 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.MillisecondsTimestamp;
 import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
 import net.retakethe.policyauction.util.CollectionUtils;
 import net.retakethe.policyauction.util.Functional;
@@ -46,16 +47,16 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
 
     @Override
     public PolicyDAO getPolicy(PolicyID policyID) throws NoSuchPolicyException {
-        List<NamedColumn<PolicyID, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.SHORT_NAME,
-                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.DESCRIPTION,
-                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.LAST_EDITED);
-        VariableValueTypedSliceQuery<PolicyID, String> query =
+        List<NamedColumn<PolicyID, MillisecondsTimestamp, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<PolicyID, MillisecondsTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME,
+                (NamedColumn<PolicyID, MillisecondsTimestamp, String, ?>) Schema.POLICIES.DESCRIPTION,
+                (NamedColumn<PolicyID, MillisecondsTimestamp, String, ?>) Schema.POLICIES.LAST_EDITED);
+        VariableValueTypedSliceQuery<PolicyID, MillisecondsTimestamp, String> query =
                 Schema.POLICIES.createVariableValueTypedSliceQuery(keyspaceManager, policyID, list);
 
-        QueryResult<VariableValueTypedColumnSlice<String>> queryResult = query.execute();
+        QueryResult<VariableValueTypedColumnSlice<MillisecondsTimestamp, String>> queryResult = query.execute();
 
-        VariableValueTypedColumnSlice<String> cs = queryResult.get();
+        VariableValueTypedColumnSlice<MillisecondsTimestamp, String> cs = queryResult.get();
 
         String shortName;
         String description;
@@ -82,11 +83,11 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
 
     @Override
     public List<PolicyDAO> getAllPolicies() {
-        List<NamedColumn<PolicyID, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.SHORT_NAME,
-                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.DESCRIPTION,
-                (NamedColumn<PolicyID, String, ?>) Schema.POLICIES.LAST_EDITED);
-        VariableValueTypedRangeSlicesQuery<PolicyID, String> query =
+        List<NamedColumn<PolicyID, MillisecondsTimestamp, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<PolicyID, MillisecondsTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME,
+                (NamedColumn<PolicyID, MillisecondsTimestamp, String, ?>) Schema.POLICIES.DESCRIPTION,
+                (NamedColumn<PolicyID, MillisecondsTimestamp, String, ?>) Schema.POLICIES.LAST_EDITED);
+        VariableValueTypedRangeSlicesQuery<PolicyID, MillisecondsTimestamp, String> query =
                 Schema.POLICIES.createVariableValueTypedRangeSlicesQuery(keyspaceManager,
                         list);
 
@@ -97,18 +98,19 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
         // TODO: needed?
         // query.setKeys("fake_key_0", "fake_key_4");
 
-        QueryResult<VariableValueTypedOrderedRows<PolicyID, String>> result = query.execute();
+        QueryResult<VariableValueTypedOrderedRows<PolicyID, MillisecondsTimestamp, String>> result = query.execute();
 
-        VariableValueTypedOrderedRows<PolicyID, String> orderedRows = result.get();
+        VariableValueTypedOrderedRows<PolicyID, MillisecondsTimestamp, String> orderedRows = result.get();
         if (orderedRows == null) {
             return Collections.emptyList();
         }
 
         return Functional.filter(orderedRows.getList(),
-                new Filter<VariableValueTypedRow<PolicyID, String>, PolicyDAO>() {
+                new Filter<VariableValueTypedRow<PolicyID, MillisecondsTimestamp, String>, PolicyDAO>() {
                     @Override
-                    public PolicyDAO filter(VariableValueTypedRow<PolicyID, String> row) throws SkippedElementException {
-                        VariableValueTypedColumnSlice<String> cs = row.getColumnSlice();
+                    public PolicyDAO filter(VariableValueTypedRow<PolicyID, MillisecondsTimestamp, String> row)
+                            throws SkippedElementException {
+                        VariableValueTypedColumnSlice<MillisecondsTimestamp, String> cs = row.getColumnSlice();
                         if (cs == null) {
                             throw new SkippedElementException();
                         }
@@ -140,7 +142,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
     public void persist(PolicyDAO policy) {
         PolicyID policyID = policy.getPolicyID();
 
-        MutatorWrapper<PolicyID> m = Schema.POLICIES.createMutator(keyspaceManager);
+        MutatorWrapper<PolicyID, MillisecondsTimestamp> m = Schema.POLICIES.createMutator(keyspaceManager);
 
         Schema.POLICIES.SHORT_NAME.addColumnInsertion(m, policyID, policy.getShortName());
         Schema.POLICIES.DESCRIPTION.addColumnInsertion(m, policyID, policy.getDescription());
@@ -156,7 +158,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
     public void deletePolicy(PolicyDAO policy) {
         PolicyID policyID = policy.getPolicyID();
 
-        MutatorWrapper<PolicyID> m = Schema.POLICIES.createMutator(keyspaceManager);
+        MutatorWrapper<PolicyID, MillisecondsTimestamp> m = Schema.POLICIES.createMutator(keyspaceManager);
 
         Schema.POLICIES.addRowDeletion(m, policyID);
 

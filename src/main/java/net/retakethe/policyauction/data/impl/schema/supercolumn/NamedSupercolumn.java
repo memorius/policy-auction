@@ -6,6 +6,7 @@ import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Cassandra supercolumns with fixed names.
@@ -16,11 +17,11 @@ import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
  *
  * @author Nick Clarke
  */
-public abstract class NamedSupercolumn<K, SN, N> extends Supercolumn<K, SN, N> {
+public abstract class NamedSupercolumn<K, T extends Timestamp, SN, N> extends Supercolumn<K, T, SN, N> {
 
     private final SN name;
 
-    protected NamedSupercolumn(SN name, SupercolumnFamily<K, SN, N> supercolumnFamily) {
+    protected NamedSupercolumn(SN name, SupercolumnFamily<K, T, SN, N> supercolumnFamily) {
         super(supercolumnFamily);
         this.name = name;
     }
@@ -29,11 +30,11 @@ public abstract class NamedSupercolumn<K, SN, N> extends Supercolumn<K, SN, N> {
         return name;
     }
 
-    public SubcolumnMutator<K, SN, N> createSubcolumnMutator(MutatorWrapper<K> m, K key) {
-        return ((MutatorWrapperInternal<K>) m).createSubcolumnMutator(key, this);
+    public SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(MutatorWrapper<K, T> m, K key) {
+        return ((MutatorWrapperInternal<K, T>) m).createSubcolumnMutator(key, this);
     }
 
-    public void addSupercolumnDeletion(MutatorWrapper<K> m, K key) {
-        ((MutatorWrapperInternal<K>) m).addSupercolumnDeletion(key, this);
+    public void addSupercolumnDeletion(MutatorWrapper<K, T> m, K key) {
+        ((MutatorWrapperInternal<K, T>) m).addSupercolumnDeletion(key, this);
     }
 }

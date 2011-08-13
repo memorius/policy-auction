@@ -18,6 +18,8 @@ import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.column.Column;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
 
 /**
  * Schema definition and query creation for Cassandra Column Families.
@@ -27,12 +29,13 @@ import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
  *
  * @author Nick Clarke
  */
-public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
+public abstract class ColumnFamily<K, T extends Timestamp, N> extends BaseColumnFamily<K, T> {
 
     private final Type<N> columnNameType;
 
-    protected ColumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType, Type<N> columnNameType) {
-        super(keyspace, name, keyType);
+    protected ColumnFamily(SchemaKeyspace keyspace, String name, Type<K> keyType,
+            TimestampFactory<T> timestampFactory, Type<N> columnNameType) {
+        super(keyspace, name, keyType, timestampFactory);
         this.columnNameType = columnNameType;
     }
 
@@ -44,13 +47,13 @@ public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
         return columnNameType.getSerializer();
     }
 
-    public <V> ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, Column<K, N, V> column,
+    public <V> ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, Column<K, T, N, V> column,
             N columnName) {
         return QueryFactory.createColumnQuery(keyspaceManager, this, key, column, columnName);
     }
 
     public <V> SliceQuery<K, N, V> createSliceQuery(KeyspaceManager keyspaceManager, K key,
-            ColumnRange<K, N, V> columnRange, N start, N finish, boolean reversed, int count) {
+            ColumnRange<K, T, N, V> columnRange, N start, N finish, boolean reversed, int count) {
         return QueryFactory.createSliceQuery(keyspaceManager, this, key, columnRange, start, finish, reversed, count);
     }
 
@@ -58,13 +61,13 @@ public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
      * @param columns columns for {@link SliceQuery#setColumnNames(Object...)},
      *      must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(KeyspaceManager keyspaceManager,
-            K key, List<NamedColumn<K, N, ?>> columns) {
+    public VariableValueTypedSliceQuery<K, T, N> createVariableValueTypedSliceQuery(KeyspaceManager keyspaceManager,
+            K key, List<NamedColumn<K, T, N, ?>> columns) {
         return QueryFactory.createVariableValueTypedSliceQuery(keyspaceManager, this, key, columns);
     }
 
     public <V> MultigetSliceQuery<K, N, V> createMultigetSliceQuery(KeyspaceManager keyspaceManager,
-            ColumnRange<K, N, V> columnRange, N start, N finish, boolean reversed, int count) {
+            ColumnRange<K, T, N, V> columnRange, N start, N finish, boolean reversed, int count) {
         return QueryFactory.createMultigetSliceQuery(keyspaceManager, this, columnRange, start, finish, reversed, count);
     }
 
@@ -72,8 +75,8 @@ public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
      * @param columns columns for {@link MultigetSliceQuery#setColumnNames(Object...)},
      *      must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedMultigetSliceQuery<K, N> createVariableValueTypedMultigetSliceQuery(
-            KeyspaceManager keyspaceManager, List<NamedColumn<K, N, ?>> columns) {
+    public VariableValueTypedMultigetSliceQuery<K, T, N> createVariableValueTypedMultigetSliceQuery(
+            KeyspaceManager keyspaceManager, List<NamedColumn<K, T, N, ?>> columns) {
         return QueryFactory.createVariableValueTypedMultigetSliceQuery(keyspaceManager, this, columns);
     }
 
@@ -81,9 +84,9 @@ public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
      * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)},
      *      must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(
+    public VariableValueTypedRangeSlicesQuery<K, T, N> createVariableValueTypedRangeSlicesQuery(
             KeyspaceManager keyspaceManager,
-            List<NamedColumn<K, N, ?>> columns) {
+            List<NamedColumn<K, T, N, ?>> columns) {
         return QueryFactory.createVariableValueTypedRangeSlicesQuery(keyspaceManager, this, columns);
     }
 
@@ -92,12 +95,12 @@ public abstract class ColumnFamily<K, N> extends BaseColumnFamily<K> {
      *      must be columns belonging to this ColumnFamily.
      */
     public <V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
-            List<NamedColumn<K, N, V>> columns) {
+            List<NamedColumn<K, T, N, V>> columns) {
         return QueryFactory.createRangeSlicesQuery(keyspaceManager, this, columns);
     }
 
     public <V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
-            ColumnRange<K, N, V> columnRange,
+            ColumnRange<K, T, N, V> columnRange,
             N start, N finish, boolean reversed, int count) {
         return QueryFactory.createRangeSlicesQuery(keyspaceManager, this, columnRange, start, finish, reversed, count);
     }

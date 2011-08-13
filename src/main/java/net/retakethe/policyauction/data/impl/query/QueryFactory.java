@@ -31,6 +31,7 @@ import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.util.Functional;
 
 /**
@@ -42,9 +43,9 @@ public final class QueryFactory {
 
     private QueryFactory() {}
 
-    public static <K, N, V> SliceQuery<K, N, V> createSliceQuery(
-            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, K key,
-            ColumnRange<K, N, V> columnRange, N start, N finish, boolean reversed, int count) {
+    public static <K, T extends Timestamp, N, V> SliceQuery<K, N, V> createSliceQuery(
+            KeyspaceManager keyspaceManager, ColumnFamily<K, T, N> cf, K key,
+            ColumnRange<K, T, N, V> columnRange, N start, N finish, boolean reversed, int count) {
         checkColumnBelongsToColumnFamily(cf, columnRange);
 
         return HFactory.createSliceQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
@@ -54,9 +55,9 @@ public final class QueryFactory {
                 .setKey(key);
     }
 
-    public static <K, N, V> ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager,
-            ColumnFamily<K, N> cf, K key,
-            Column<K, N, V> column, N columnName) {
+    public static <K, T extends Timestamp, N, V> ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager,
+            ColumnFamily<K, T, N> cf, K key,
+            Column<K, T, N, V> column, N columnName) {
         checkColumnBelongsToColumnFamily(cf, column);
 
         return HFactory.createColumnQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
@@ -66,11 +67,11 @@ public final class QueryFactory {
                 .setKey(key);
     }
 
-    public static <K, SN, N> VariableValueTypedSupercolumnQuery<SN, N> createSupercolumnQuery(
+    public static <K, T extends Timestamp, SN, N> VariableValueTypedSupercolumnQuery<T, SN, N> createSupercolumnQuery(
             KeyspaceManager keyspaceManager,
-            SupercolumnFamily<K, SN, N> scf, K key,
-            Supercolumn<K, SN, N> supercolumn, SN supercolumnName) {
-        return new VariableValueTypedSuperColumnQueryImpl<K, SN, N>(keyspaceManager.getKeyspace(scf.getKeyspace()),
+            SupercolumnFamily<K, T, SN, N> scf, K key,
+            Supercolumn<K, T, SN, N> supercolumn, SN supercolumnName) {
+        return new VariableValueTypedSuperColumnQueryImpl<K, T, SN, N>(keyspaceManager.getKeyspace(scf.getKeyspace()),
                 scf, supercolumn, supercolumnName, key);
     }
 
@@ -84,9 +85,9 @@ public final class QueryFactory {
      * @param <K> key type
      * @param <N> column name type
      */
-    public static <K, N> VariableValueTypedSliceQuery<K, N> createVariableValueTypedSliceQuery(
-            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, K key, List<NamedColumn<K, N, ?>> columns) {
-        return new VariableValueTypedSliceQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
+    public static <K, T extends Timestamp, N> VariableValueTypedSliceQuery<K, T, N> createVariableValueTypedSliceQuery(
+            KeyspaceManager keyspaceManager, ColumnFamily<K, T, N> cf, K key, List<NamedColumn<K, T, N, ?>> columns) {
+        return new VariableValueTypedSliceQueryImpl<K, T, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
                 cf, columns, key);
     }
 
@@ -101,10 +102,10 @@ public final class QueryFactory {
      * @param <SN> supercolumn name type
      * @param <N> subcolumn name type
      */
-    public static <K, SN, N> VariableValueTypedSuperSliceQuery<K, SN, N> createVariableValueTypedSuperSliceQuery(
-            KeyspaceManager keyspaceManager, SupercolumnFamily<K, SN, N> scf,
-            K key, List<NamedSupercolumn<K, SN, N>> supercolumns) {
-        return new VariableValueTypedSuperSliceQueryImpl<K, SN, N>(keyspaceManager.getKeyspace(scf.getKeyspace()),
+    public static <K, T extends Timestamp, SN, N> VariableValueTypedSuperSliceQuery<K, T, SN, N> createVariableValueTypedSuperSliceQuery(
+            KeyspaceManager keyspaceManager, SupercolumnFamily<K, T, SN, N> scf,
+            K key, List<NamedSupercolumn<K, T, SN, N>> supercolumns) {
+        return new VariableValueTypedSuperSliceQueryImpl<K, T, SN, N>(keyspaceManager.getKeyspace(scf.getKeyspace()),
                 scf, key, supercolumns);
     }
 
@@ -117,11 +118,11 @@ public final class QueryFactory {
      * @param <N> subcolumn name type
      * @param scf the SupercolumnFamily owning the supercolumns
      */
-    public static <K, SN, N> VariableValueTypedSuperSliceQuery<K, SN, N> createVariableValueTypedSuperSliceQuery(
-            KeyspaceManager keyspaceManager, SupercolumnFamily<K, SN, N> scf,
-            K key, SupercolumnRange<K, SN, N> supercolumnRange,
+    public static <K, T extends Timestamp, SN, N> VariableValueTypedSuperSliceQuery<K, T, SN, N> createVariableValueTypedSuperSliceQuery(
+            KeyspaceManager keyspaceManager, SupercolumnFamily<K, T, SN, N> scf,
+            K key, SupercolumnRange<K, T, SN, N> supercolumnRange,
             SN start, SN finish, boolean reversed, int count) {
-        return new VariableValueTypedSuperSliceQueryImpl<K, SN, N>(keyspaceManager.getKeyspace(scf.getKeyspace()),
+        return new VariableValueTypedSuperSliceQueryImpl<K, T, SN, N>(keyspaceManager.getKeyspace(scf.getKeyspace()),
                 scf, key, supercolumnRange, start, finish, reversed, count);
     }
 
@@ -134,8 +135,8 @@ public final class QueryFactory {
      * @param <V> column value type
      * @param cf the ColumnFamily owning the columns
      */
-    public static <K, N, V> MultigetSliceQuery<K, N, V> createMultigetSliceQuery(
-            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, ColumnRange<K, N, V> columnRange,
+    public static <K, T extends Timestamp, N, V> MultigetSliceQuery<K, N, V> createMultigetSliceQuery(
+            KeyspaceManager keyspaceManager, ColumnFamily<K, T, N> cf, ColumnRange<K, T, N, V> columnRange,
             N start, N finish, boolean reversed, int count) {
         checkColumnBelongsToColumnFamily(cf, columnRange);
 
@@ -155,9 +156,9 @@ public final class QueryFactory {
      * @param columns columns to retrieve,
      *      must be columns belonging to the specified ColumnFamily.
      */
-    public static <K, N> VariableValueTypedMultigetSliceQuery<K, N> createVariableValueTypedMultigetSliceQuery(
-            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
-        return new VariableValueTypedMultigetSliceQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
+    public static <K, T extends Timestamp, N> VariableValueTypedMultigetSliceQuery<K, T, N> createVariableValueTypedMultigetSliceQuery(
+            KeyspaceManager keyspaceManager, ColumnFamily<K, T, N> cf, List<NamedColumn<K, T, N, ?>> columns) {
+        return new VariableValueTypedMultigetSliceQueryImpl<K, T, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
                 cf, columns);
     }
 
@@ -172,10 +173,10 @@ public final class QueryFactory {
      * @param supercolumns supercolumns to retrieve,
      *      must be supercolumns belonging to the specified SupercolumnFamily.
      */
-    public static <K, SN, N> VariableValueTypedMultigetSuperSliceQuery<K, SN, N>
+    public static <K, T extends Timestamp, SN, N> VariableValueTypedMultigetSuperSliceQuery<K, T, SN, N>
             createVariableValueTypedMultigetSuperSliceQuery(KeyspaceManager keyspaceManager,
-                    SupercolumnFamily<K, SN, N> scf, List<NamedSupercolumn<K, SN, N>> supercolumns) {
-        return new VariableValueTypedMultigetSuperSliceQueryImpl<K, SN, N>(
+                    SupercolumnFamily<K, T, SN, N> scf, List<NamedSupercolumn<K, T, SN, N>> supercolumns) {
+        return new VariableValueTypedMultigetSuperSliceQueryImpl<K, T, SN, N>(
                 keyspaceManager.getKeyspace(scf.getKeyspace()), scf, supercolumns);
     }
 
@@ -188,12 +189,12 @@ public final class QueryFactory {
      * @param <N> subcolumn name type
      * @param scf the SupercolumnFamily owning the supercolumns
      */
-    public static <K, SN, N> VariableValueTypedMultigetSuperSliceQuery<K, SN, N>
+    public static <K, T extends Timestamp, SN, N> VariableValueTypedMultigetSuperSliceQuery<K, T, SN, N>
             createVariableValueTypedMultigetSuperSliceQuery(KeyspaceManager keyspaceManager,
-                    SupercolumnFamily<K, SN, N> scf,
-                    SupercolumnRange<K, SN, N> supercolumnRange,
+                    SupercolumnFamily<K, T, SN, N> scf,
+                    SupercolumnRange<K, T, SN, N> supercolumnRange,
                     SN start, SN finish, boolean reversed, int count) {
-        return new VariableValueTypedMultigetSuperSliceQueryImpl<K, SN, N>(
+        return new VariableValueTypedMultigetSuperSliceQueryImpl<K, T, SN, N>(
                 keyspaceManager.getKeyspace(scf.getKeyspace()), scf, supercolumnRange, start, finish, reversed, count);
     }
 
@@ -207,9 +208,9 @@ public final class QueryFactory {
      * @param columns columns to retrieve,
      *      must be columns belonging to the specified ColumnFamily.
      */
-    public static <K, N> VariableValueTypedRangeSlicesQuery<K, N> createVariableValueTypedRangeSlicesQuery(
-            KeyspaceManager keyspaceManager, ColumnFamily<K, N> cf, List<NamedColumn<K, N, ?>> columns) {
-        return new VariableValueTypedRangeSlicesQueryImpl<K, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
+    public static <K, T extends Timestamp, N> VariableValueTypedRangeSlicesQuery<K, T, N> createVariableValueTypedRangeSlicesQuery(
+            KeyspaceManager keyspaceManager, ColumnFamily<K, T, N> cf, List<NamedColumn<K, T, N, ?>> columns) {
+        return new VariableValueTypedRangeSlicesQueryImpl<K, T, N>(keyspaceManager.getKeyspace(cf.getKeyspace()),
                 cf, columns);
     }
 
@@ -224,14 +225,14 @@ public final class QueryFactory {
      * @param columns columns for {@link RangeSlicesQuery#setColumnNames(Object...)}, must not be empty,
      *      must be columns belonging to the specified ColumnFamily.
      */
-    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
-            ColumnFamily<K, N> cf,
-            List<NamedColumn<K, N, V>> columns) {
+    public static <K, T extends Timestamp, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
+            ColumnFamily<K, T, N> cf,
+            List<NamedColumn<K, T, N, V>> columns) {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("At least one column is required");
         }
 
-        NamedColumn<K, N, V> firstColumn = columns.get(0);
+        NamedColumn<K, T, N, V> firstColumn = columns.get(0);
         Serializer<V> valueSerializer = firstColumn.getValueSerializer();
 
         N[] columnNames = getColumnNamesResolved(cf, columns);
@@ -251,9 +252,10 @@ public final class QueryFactory {
      * @param <V> column value type
      * @param cf the ColumnFamily owning the columns
      */
-    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
-            ColumnFamily<K, N> cf,
-            ColumnRange<K, N, V> columnRange,
+    public static <K, T extends Timestamp, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(
+            KeyspaceManager keyspaceManager,
+            ColumnFamily<K, T, N> cf,
+            ColumnRange<K, T, N, V> columnRange,
             N start, N finish, boolean reversed, int count) {
         checkColumnBelongsToColumnFamily(cf, columnRange);
 
@@ -272,8 +274,9 @@ public final class QueryFactory {
      * @param <V> column value type
      * @param cf the ColumnFamily owning the columns
      */
-    public static <K, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
-            ColumnFamily<K, N> cf,
+    public static <K, T extends Timestamp, N, V> RangeSlicesQuery<K, N, V> createRangeSlicesQuery(
+            KeyspaceManager keyspaceManager,
+            ColumnFamily<K, T, N> cf,
             Serializer<V> valueSerializer,
             N start, N finish, boolean reversed, int count) {
         return HFactory.createRangeSlicesQuery(keyspaceManager.getKeyspace(cf.getKeyspace()), cf.getKeySerializer(),
@@ -294,10 +297,10 @@ public final class QueryFactory {
      * @param supercolumns supercolumns to retrieve,
      *      must be supercolumns belonging to the specified SupercolumnFamily.
      */
-    public static <K, SN, N> VariableValueTypedRangeSuperSlicesQuery<K, SN, N>
+    public static <K, T extends Timestamp, SN, N> VariableValueTypedRangeSuperSlicesQuery<K, T, SN, N>
             createVariableValueTypedRangeSuperSlicesQuery(KeyspaceManager keyspaceManager,
-                    SupercolumnFamily<K, SN, N> scf, List<NamedSupercolumn<K, SN, N>> supercolumns) {
-        return new VariableValueTypedRangeSuperSlicesQueryImpl<K, SN, N>(
+                    SupercolumnFamily<K, T, SN, N> scf, List<NamedSupercolumn<K, T, SN, N>> supercolumns) {
+        return new VariableValueTypedRangeSuperSlicesQueryImpl<K, T, SN, N>(
                 keyspaceManager.getKeyspace(scf.getKeyspace()),
                 scf, supercolumns);
     }
@@ -312,11 +315,11 @@ public final class QueryFactory {
      * @param <N> subcolumn name type
      * @param scf the SupercolumnFamily owning the supercolumns
      */
-    public static <K, SN, N> VariableValueTypedRangeSuperSlicesQuery<K, SN, N>
+    public static <K, T extends Timestamp, SN, N> VariableValueTypedRangeSuperSlicesQuery<K, T, SN, N>
             createVariableValueTypedRangeSuperSlicesQuery(KeyspaceManager keyspaceManager,
-                    SupercolumnFamily<K, SN, N> scf, SupercolumnRange<K, SN, N> supercolumnRange,
+                    SupercolumnFamily<K, T, SN, N> scf, SupercolumnRange<K, T, SN, N> supercolumnRange,
                     SN start, SN finish, boolean reversed, int count) {
-        return new VariableValueTypedRangeSuperSlicesQueryImpl<K, SN, N>(
+        return new VariableValueTypedRangeSuperSlicesQueryImpl<K, T, SN, N>(
                 keyspaceManager.getKeyspace(scf.getKeyspace()),
                 scf, supercolumnRange, start, finish, reversed, count);
     }
@@ -329,11 +332,11 @@ public final class QueryFactory {
      *      must be columns belonging to the specified ColumnFamily.
      * @throws IllegalArgumentException if any columns don't belong to this {@link ColumnFamily}.
      */
-    private static <K, N, V> N[] getColumnNamesResolved(final ColumnFamily<K, N> cf,
-            List<NamedColumn<K, N, V>> columns) {
-        List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, N, V>, N>() {
+    private static <K, T extends Timestamp, N, V> N[] getColumnNamesResolved(final ColumnFamily<K, T, N> cf,
+            List<NamedColumn<K, T, N, V>> columns) {
+        List<N> columnNames = Functional.map(columns, new Functional.Converter<NamedColumn<K, T, N, V>, N>() {
             @Override
-            public N convert(NamedColumn<K, N, V> column) {
+            public N convert(NamedColumn<K, T, N, V> column) {
                 if (column.getColumnFamily() != cf) {
                     throw new IllegalArgumentException("NamedColumn '" + column.getName() + "' is from column family '"
                             + column.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");
@@ -345,8 +348,8 @@ public final class QueryFactory {
         return toArray(columnNames);
     }
 
-    private static <N> void checkColumnBelongsToColumnFamily(ColumnFamily<?, N> cf,
-            Column<?, N, ?> column) {
+    private static <K, T extends Timestamp, N> void checkColumnBelongsToColumnFamily(ColumnFamily<K, T, N> cf,
+            Column<K, T, N, ?> column) {
         if (column.getColumnFamily() != cf) {
             throw new IllegalArgumentException("Column is from column family '"
                     + column.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");

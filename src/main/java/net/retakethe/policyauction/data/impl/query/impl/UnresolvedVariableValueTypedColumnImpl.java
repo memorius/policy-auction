@@ -3,12 +3,14 @@ package net.retakethe.policyauction.data.impl.query.impl;
 import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import net.retakethe.policyauction.data.impl.query.api.UnresolvedVariableValueTypedColumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * @author Nick Clarke
  *
  */
-public class UnresolvedVariableValueTypedColumnImpl<N> implements UnresolvedVariableValueTypedColumn<N> {
+public class UnresolvedVariableValueTypedColumnImpl<T extends Timestamp, N>
+        implements UnresolvedVariableValueTypedColumn<T, N> {
 
     private final HColumn<N, Object> wrappedColumn;
 

@@ -6,6 +6,7 @@ import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumn;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
 
 /**
@@ -38,17 +39,19 @@ public class AbstractDAOManagerImpl {
         return value;
     }
 
-    protected <N, V> V getColumnOrNull(VariableValueTypedColumnSlice<N> cs, NamedColumn<?, N, V> column) {
-        VariableValueTypedColumn<N, V> col = cs.getColumn(column);
+    protected <T extends Timestamp, N, V> V getColumnOrNull(VariableValueTypedColumnSlice<T, N> cs,
+            NamedColumn<?, T, N, V> column) {
+        VariableValueTypedColumn<T, N, V> col = cs.getColumn(column);
         if (col == null) {
             return null;
         }
         return col.getValue();
     }
 
-    protected <N, V> V getNonNullColumn(VariableValueTypedColumnSlice<N> cs, NamedColumn<?, N, V> column)
+    protected <T extends Timestamp, N, V> V getNonNullColumn(VariableValueTypedColumnSlice<T, N> cs,
+            NamedColumn<?, T, N, V> column)
             throws NoSuchColumnException {
-        VariableValueTypedColumn<N, V> col = cs.getColumn(column);
+        VariableValueTypedColumn<T, N, V> col = cs.getColumn(column);
         if (col == null) {
             throw new NoSuchColumnException(column.getName().toString());
         }

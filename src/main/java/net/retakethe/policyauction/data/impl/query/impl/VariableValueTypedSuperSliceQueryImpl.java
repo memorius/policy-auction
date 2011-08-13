@@ -14,14 +14,16 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSl
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
-public class VariableValueTypedSuperSliceQueryImpl<K, SN, N> implements VariableValueTypedSuperSliceQuery<K, SN, N> {
+public class VariableValueTypedSuperSliceQueryImpl<K, T extends Timestamp, SN, N>
+        implements VariableValueTypedSuperSliceQuery<K, T, SN, N> {
 
     private final SuperSliceQuery<K, SN, N, Object> wrappedQuery;
 
-    public VariableValueTypedSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, SN, N> scf,
-            K key, List<NamedSupercolumn<K, SN, N>> supercolumns) {
+    public VariableValueTypedSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, T, SN, N> scf,
+            K key, List<NamedSupercolumn<K, T, SN, N>> supercolumns) {
         SN[] supercolumnNames = QueryUtils.getSupercolumnNamesUnresolved(scf, supercolumns);
 
         wrappedQuery = HFactory.createSuperSliceQuery(ks, scf.getKeySerializer(),
@@ -32,8 +34,8 @@ public class VariableValueTypedSuperSliceQueryImpl<K, SN, N> implements Variable
                 .setKey(key);
     }
 
-    public VariableValueTypedSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, SN, N> scf, K key,
-            SupercolumnRange<K, SN, N> supercolumnRange, SN start, SN finish, boolean reversed, int count) {
+    public VariableValueTypedSuperSliceQueryImpl(Keyspace ks, SupercolumnFamily<K, T, SN, N> scf, K key,
+            SupercolumnRange<K, T, SN, N> supercolumnRange, SN start, SN finish, boolean reversed, int count) {
         QueryUtils.checkSupercolumnBelongsToFamily(scf, supercolumnRange);
 
         wrappedQuery = HFactory.createSuperSliceQuery(ks, scf.getKeySerializer(),
@@ -45,12 +47,12 @@ public class VariableValueTypedSuperSliceQueryImpl<K, SN, N> implements Variable
     }
 
     @Override
-    public QueryResult<VariableValueTypedSuperSlice<SN, N>> execute() {
+    public QueryResult<VariableValueTypedSuperSlice<T, SN, N>> execute() {
         QueryResult<SuperSlice<SN, N, Object>> wrappedResult = wrappedQuery.execute();
 
-        return new QueryResultImpl<VariableValueTypedSuperSlice<SN, N>>(
-                new ExecutionResult<VariableValueTypedSuperSlice<SN, N>>(
-                        new VariableValueTypedSuperSliceImpl<SN, N>(wrappedResult.get()),
+        return new QueryResultImpl<VariableValueTypedSuperSlice<T, SN, N>>(
+                new ExecutionResult<VariableValueTypedSuperSlice<T, SN, N>>(
+                        new VariableValueTypedSuperSliceImpl<T, SN, N>(wrappedResult.get()),
                         wrappedResult.getExecutionTimeMicro(),
                         wrappedResult.getHostUsed()),
                 this);

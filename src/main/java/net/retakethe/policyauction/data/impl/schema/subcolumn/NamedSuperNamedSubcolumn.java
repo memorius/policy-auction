@@ -6,6 +6,7 @@ import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.query.impl.SubcolumnMutatorInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Cassandra subcolumns with fixed names, of supercolumns with fixed names.
@@ -17,12 +18,12 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn
  *
  * @author Nick Clarke
  */
-public class NamedSuperNamedSubcolumn<K, SN, N, V> extends NamedSuperSubcolumn<K, SN, N, V>
-        implements NamedSubcolumn<K, SN, N, V> {
+public class NamedSuperNamedSubcolumn<K, T extends Timestamp, SN, N, V> extends NamedSuperSubcolumn<K, T, SN, N, V>
+        implements NamedSubcolumn<K, T, SN, N, V> {
  
     private final N name;
 
-    public NamedSuperNamedSubcolumn(N name, NamedSupercolumn<K, SN, N> supercolumn, Type<V> valueType) {
+    public NamedSuperNamedSubcolumn(N name, NamedSupercolumn<K, T, SN, N> supercolumn, Type<V> valueType) {
         super(supercolumn, valueType);
         this.name = name;
     }
@@ -33,12 +34,12 @@ public class NamedSuperNamedSubcolumn<K, SN, N, V> extends NamedSuperSubcolumn<K
     }
 
     @Override
-    public void addSubcolumnInsertion(SubcolumnMutator<K, SN, N> m, V value) {
-        ((SubcolumnMutatorInternal<K, SN, N>) m).addSubcolumnInsertion(this, value);
+    public void addSubcolumnInsertion(SubcolumnMutator<K, T, SN, N> m, V value) {
+        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnInsertion(this, value);
     }
 
     @Override
-    public void addSubcolumnDeletion(SubcolumnMutator<K, SN, N> m) {
-        ((SubcolumnMutatorInternal<K, SN, N>) m).addSubcolumnDeletion(this);
+    public void addSubcolumnDeletion(SubcolumnMutator<K, T, SN, N> m) {
+        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnDeletion(this);
     }
 }

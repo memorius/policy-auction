@@ -19,6 +19,7 @@ import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.LogSCF.LogMessageRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.MillisecondsTimestamp;
 import net.retakethe.policyauction.data.impl.types.LogMessageIDImpl;
 
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -56,7 +57,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
             return;
         }
 
-        MutatorWrapper<DateAndHour> m = Schema.LOG.createMutator(keyspaceManager);
+        MutatorWrapper<DateAndHour, MillisecondsTimestamp> m = Schema.LOG.createMutator(keyspaceManager);
 
         for (OutboundLogMessage message : messages) {
             addMessage(m, message);
@@ -65,7 +66,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
         m.execute();
     }
 
-    private void addMessage(MutatorWrapper<DateAndHour> m, OutboundLogMessage olm) {
+    private void addMessage(MutatorWrapper<DateAndHour, MillisecondsTimestamp> m, OutboundLogMessage olm) {
         // Note we intentionally do not use the message timestamp in the log message UUID, since this is likely to give
         // duplicates which overwrite each other - it's from log4j and has only millisecond precision.
         // Hour buckets must be based on message ID since we have to find it from the ID when retrieving.
@@ -85,7 +86,8 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
             fullMessage = printMessageAndStackTrace(message, throwable);
         }
 
-        SubcolumnMutator<DateAndHour, LogMessageID, String> i = Schema.LOG.createSubcolumnMutator(m, key, id);
+        SubcolumnMutator<DateAndHour, MillisecondsTimestamp, LogMessageID, String> i =
+                Schema.LOG.createSubcolumnMutator(m, key, id);
         LogMessageRange cols = Schema.LOG.getSupercolumnRange();
 
         cols.LOCAL_TIME.addSubcolumnInsertion(i,
@@ -112,7 +114,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
     }
 
     private void createHourBucket(DateAndHour bucket) {
-        MutatorWrapper<String> m = Schema.LOG_HOURS.createMutator(keyspaceManager);
+        MutatorWrapper<String, MillisecondsTimestamp> m = Schema.LOG_HOURS.createMutator(keyspaceManager);
         Schema.LOG_HOURS.addColumnInsertion(m, bucket, DUMMY_VALUE);
         m.execute();
     }

@@ -13,18 +13,19 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnS
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
 /**
  * @author Nick Clarke
- *
  */
-public class VariableValueTypedSliceQueryImpl<K, N> implements VariableValueTypedSliceQuery<K, N> {
+public class VariableValueTypedSliceQueryImpl<K, T extends Timestamp, N>
+        implements VariableValueTypedSliceQuery<K, T, N> {
 
     private final SliceQuery<K, N, Object> wrappedQuery;
 
-    public VariableValueTypedSliceQueryImpl(Keyspace ks, ColumnFamily<K, N> cf,
-            List<NamedColumn<K, N, ?>> columns, K key) {
+    public VariableValueTypedSliceQueryImpl(Keyspace ks, ColumnFamily<K, T, N> cf,
+            List<NamedColumn<K, T, N, ?>> columns, K key) {
         N[] columnNames = QueryUtils.getColumnNamesUnresolved(cf, columns);
 
         wrappedQuery = HFactory.createSliceQuery(ks, cf.getKeySerializer(),
@@ -35,12 +36,12 @@ public class VariableValueTypedSliceQueryImpl<K, N> implements VariableValueType
     }
 
     @Override
-    public QueryResult<VariableValueTypedColumnSlice<N>> execute() {
+    public QueryResult<VariableValueTypedColumnSlice<T, N>> execute() {
         QueryResult<ColumnSlice<N, Object>> wrappedResult = wrappedQuery.execute();
 
-        return new QueryResultImpl<VariableValueTypedColumnSlice<N>>(
-                new ExecutionResult<VariableValueTypedColumnSlice<N>>(
-                        new VariableValueTypedColumnSliceImpl<N>(wrappedResult.get()),
+        return new QueryResultImpl<VariableValueTypedColumnSlice<T, N>>(
+                new ExecutionResult<VariableValueTypedColumnSlice<T, N>>(
+                        new VariableValueTypedColumnSliceImpl<T, N>(wrappedResult.get()),
                         wrappedResult.getExecutionTimeMicro(),
                         wrappedResult.getHostUsed()),
                 this);

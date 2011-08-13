@@ -5,6 +5,7 @@ import java.util.UUID;
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Base class for Cassandra named subcolumns and subcolumn ranges.
@@ -16,17 +17,17 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
  *
  * @author Nick Clarke
  */
-public abstract class Subcolumn<K, SN, N, V> {
+public abstract class Subcolumn<K, T extends Timestamp, SN, N, V> {
 
-    private final Supercolumn<K, SN, N> supercolumn;
+    private final Supercolumn<K, T, SN, N> supercolumn;
     private final Type<V> valueType;
 
-    protected Subcolumn(Supercolumn<K, SN, N> supercolumn, Type<V> valueType) {
+    protected Subcolumn(Supercolumn<K, T, SN, N> supercolumn, Type<V> valueType) {
         this.supercolumn = supercolumn;
         this.valueType = valueType;
     }
 
-    public Supercolumn<K, SN, N> getSupercolumn() {
+    public Supercolumn<K, T, SN, N> getSupercolumn() {
         return supercolumn;
     }
 

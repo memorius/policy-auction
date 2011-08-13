@@ -9,8 +9,10 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSl
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
-public class VariableValueTypedSuperSliceImpl<SN, N> implements VariableValueTypedSuperSlice<SN, N> {
+public class VariableValueTypedSuperSliceImpl<T extends Timestamp, SN, N>
+        implements VariableValueTypedSuperSlice<T, SN, N> {
 
     private final SuperSlice<SN, N, Object> wrappedSlice;
 
@@ -19,32 +21,32 @@ public class VariableValueTypedSuperSliceImpl<SN, N> implements VariableValueTyp
     }
 
     @Override
-    public List<VariableValueTypedSupercolumn<SN, N>> getSuperColumns() {
+    public List<VariableValueTypedSupercolumn<T, SN, N>> getSuperColumns() {
         List<HSuperColumn<SN, N, Object>> wrappedSupercolumns = wrappedSlice.getSuperColumns();
-        List<VariableValueTypedSupercolumn<SN, N>> supercolumns =
-                new ArrayList<VariableValueTypedSupercolumn<SN, N>>(wrappedSupercolumns.size());
+        List<VariableValueTypedSupercolumn<T, SN, N>> supercolumns =
+                new ArrayList<VariableValueTypedSupercolumn<T, SN, N>>(wrappedSupercolumns.size());
         for (HSuperColumn<SN, N, Object> wrappedSupercolumn : wrappedSupercolumns) {
-            supercolumns.add(new VariableValueTypedSupercolumnImpl<SN, N>(wrappedSupercolumn));
+            supercolumns.add(new VariableValueTypedSupercolumnImpl<T, SN, N>(wrappedSupercolumn));
         }
         return supercolumns;
     }
 
     @Override
-    public VariableValueTypedSupercolumn<SN, N> getSupercolumn(NamedSupercolumn<?, SN, N> supercolumn) {
+    public VariableValueTypedSupercolumn<T, SN, N> getSupercolumn(NamedSupercolumn<?, T, SN, N> supercolumn) {
         HSuperColumn<SN, N, Object> wrappedSupercolumn = wrappedSlice.getColumnByName(supercolumn.getName());
         if (wrappedSupercolumn == null) {
             return null;
         }
-        return new VariableValueTypedSupercolumnImpl<SN, N>(wrappedSupercolumn);
+        return new VariableValueTypedSupercolumnImpl<T, SN, N>(wrappedSupercolumn);
     }
 
     @Override
-    public VariableValueTypedSupercolumn<SN, N> getSupercolumn(SupercolumnRange<?, SN, N> supercolumn,
+    public VariableValueTypedSupercolumn<T, SN, N> getSupercolumn(SupercolumnRange<?, T, SN, N> supercolumn,
             SN supercolumnName) {
         HSuperColumn<SN, N, Object> wrappedSupercolumn = wrappedSlice.getColumnByName(supercolumnName);
         if (wrappedSupercolumn == null) {
             return null;
         }
-        return new VariableValueTypedSupercolumnImpl<SN, N>(wrappedSupercolumn);
+        return new VariableValueTypedSupercolumnImpl<T, SN, N>(wrappedSupercolumn);
     }
 }

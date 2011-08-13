@@ -6,18 +6,21 @@ import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
 
 /**
  * Used for single-row lookup indexes such as those in "misc" table.
  *
  * @author Nick Clarke
  */
-public class SingleRowRangeColumnFamily<K, N, V> extends RangeColumnFamily<K, N, V> {
+public class SingleRowRangeColumnFamily<K, T extends Timestamp, N, V> extends RangeColumnFamily<K, T, N, V> {
 
     private final K key;
 
-    public SingleRowRangeColumnFamily(SchemaKeyspace keyspace, String name, K key, Type<K> keyType, Type<N> columnNameType) {
-        super(keyspace, name, keyType, columnNameType);
+    public SingleRowRangeColumnFamily(SchemaKeyspace keyspace, String name, K key, Type<K> keyType,
+            TimestampFactory<T> timestampFactory, Type<N> columnNameType) {
+        super(keyspace, name, keyType, timestampFactory, columnNameType);
         this.key = key;
     }
 
@@ -25,11 +28,11 @@ public class SingleRowRangeColumnFamily<K, N, V> extends RangeColumnFamily<K, N,
         return key;
     }
 
-    public void addColumnInsertion(MutatorWrapper<K> m, N name, V value) {
+    public void addColumnInsertion(MutatorWrapper<K, T> m, N name, V value) {
         addColumnInsertion(m, key, name, value);
     }
 
-    public void addColumnDeletion(MutatorWrapper<K> m, N name) {
+    public void addColumnDeletion(MutatorWrapper<K, T> m, N name) {
         addColumnDeletion(m, key, name);
     }
 

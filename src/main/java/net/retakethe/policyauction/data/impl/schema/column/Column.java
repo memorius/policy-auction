@@ -5,6 +5,7 @@ import java.util.UUID;
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Base class for Cassandra named columns and column ranges.
@@ -15,18 +16,18 @@ import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
  *
  * @author Nick Clarke
  */
-public abstract class Column<K, N, V> {
+public abstract class Column<K, T extends Timestamp, N, V> {
 
     private final Type<V> valueType;
-    private final ColumnFamily<K, N> columnFamily;
+    private final ColumnFamily<K, T, N> columnFamily;
 
-    protected Column(ColumnFamily<K, N> columnFamily,
+    protected Column(ColumnFamily<K, T, N> columnFamily,
             Type<V> valueType) {
         this.columnFamily = columnFamily;
         this.valueType = valueType;
     }
 
-    public ColumnFamily<K, N> getColumnFamily() {
+    public ColumnFamily<K, T, N> getColumnFamily() {
         return columnFamily;
     }
 

@@ -17,27 +17,28 @@ import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * @author Nick Clarke
  */
-public class MutatorWrapperImpl<K> implements MutatorWrapperInternal<K> {
+public class MutatorWrapperImpl<K, T extends Timestamp> implements MutatorWrapperInternal<K, T> {
 
     private final SchemaKeyspace keyspace;
     private final Serializer<K> keySerializer;
     private final Mutator<K> wrappedMutator;
-    private final List<SubcolumnMutatorImpl<K, ?, ?>> supercolumnMutators;
+    private final List<SubcolumnMutatorImpl<K, T, ?, ?>> supercolumnMutators;
 
     public MutatorWrapperImpl(SchemaKeyspace keyspace, Serializer<K> keySerializer, KeyspaceManager keyspaceManager) {
         this.keyspace = keyspace;
         this.keySerializer = keySerializer;
         this.wrappedMutator = HFactory.createMutator(keyspaceManager.getKeyspace(keyspace), keySerializer);
-        this.supercolumnMutators = new LinkedList<SubcolumnMutatorImpl<K, ?, ?>>();
+        this.supercolumnMutators = new LinkedList<SubcolumnMutatorImpl<K, T, ?, ?>>();
     }
 
     @Override
-    public <N, V> void addColumnInsertion(K key, NamedColumn<K, N, V> column, V value) {
-        ColumnFamily<K, N> cf = column.getColumnFamily();
+    public <N, V> void addColumnInsertion(K key, NamedColumn<K, T, N, V> column, V value) {
+        ColumnFamily<K, T, N> cf = column.getColumnFamily();
         validateCF(cf);
         wrappedMutator.addInsertion(key, cf.getName(),
                 HFactory.createColumn(column.getName(), value,
@@ -45,57 +46,57 @@ public class MutatorWrapperImpl<K> implements MutatorWrapperInternal<K> {
     }
 
     @Override
-    public <N, V> void addColumnInsertion(K key, ColumnRange<K, N, V> column, N name, V value) {
-        ColumnFamily<K, N> cf = column.getColumnFamily();
+    public <N, V> void addColumnInsertion(K key, ColumnRange<K, T, N, V> column, N name, V value) {
+        ColumnFamily<K, T, N> cf = column.getColumnFamily();
         validateCF(cf);
         wrappedMutator.addInsertion(key, cf.getName(),
                 HFactory.createColumn(name, value, cf.getColumnNameSerializer(), column.getValueSerializer()));
     }
 
     @Override
-    public <N, V> void addColumnDeletion(K key, NamedColumn<K, N, V> column) {
-        ColumnFamily<K, N> cf = column.getColumnFamily();
+    public <N, V> void addColumnDeletion(K key, NamedColumn<K, T, N, V> column) {
+        ColumnFamily<K, T, N> cf = column.getColumnFamily();
         validateCF(cf);
         wrappedMutator.addDeletion(key, cf.getName(), column.getName(), cf.getColumnNameSerializer());
     }
 
     @Override
-    public <N, V> void addColumnDeletion(K key, ColumnRange<K, N, V> column, N name) {
-        ColumnFamily<K, N> cf = column.getColumnFamily();
+    public <N, V> void addColumnDeletion(K key, ColumnRange<K, T, N, V> column, N name) {
+        ColumnFamily<K, T, N> cf = column.getColumnFamily();
         validateCF(cf);
         wrappedMutator.addDeletion(key, cf.getName(), name, cf.getColumnNameSerializer());
     }
 
     @Override
-    public <SN> void addSupercolumnDeletion(K key, SupercolumnRange<K, SN, ?> supercolumn,
+    public <SN> void addSupercolumnDeletion(K key, SupercolumnRange<K, T, SN, ?> supercolumn,
             SN supercolumnName) {
-        SupercolumnFamily<K, SN, ?> scf = supercolumn.getSupercolumnFamily();
+        SupercolumnFamily<K, T, SN, ?> scf = supercolumn.getSupercolumnFamily();
         validateCF(scf);
         wrappedMutator.addSuperDelete(key, scf.getName(), supercolumnName, scf.getSupercolumnNameSerializer());
     }
 
     @Override
-    public <SN> void addSupercolumnDeletion(K key, NamedSupercolumn<K, SN, ?> supercolumn) {
-        SupercolumnFamily<K, SN, ?> scf = supercolumn.getSupercolumnFamily();
+    public <SN> void addSupercolumnDeletion(K key, NamedSupercolumn<K, T, SN, ?> supercolumn) {
+        SupercolumnFamily<K, T, SN, ?> scf = supercolumn.getSupercolumnFamily();
         validateCF(scf);
         wrappedMutator.addSuperDelete(key, scf.getName(), supercolumn.getName(), scf.getSupercolumnNameSerializer());
     }
 
     @Override
-    public void addRowDeletion(BaseColumnFamily<K> cf, K key) {
+    public void addRowDeletion(BaseColumnFamily<K, T> cf, K key) {
         validateCF(cf);
         wrappedMutator.addDeletion(key, cf.getName());
     }
 
     @Override
     public MutationResult execute() {
-        for (SubcolumnMutatorImpl<K, ?, ?> mutator : supercolumnMutators) {
+        for (SubcolumnMutatorImpl<K, T, ?, ?> mutator : supercolumnMutators) {
             mutator.apply();
         }
         return wrappedMutator.execute();
     }
 
-    private void validateCF(BaseColumnFamily<K> cf) {
+    private void validateCF(BaseColumnFamily<K, T> cf) {
         if (cf.getKeyspace() != keyspace) {
             throw new IllegalArgumentException("Column Family " + cf.getName() + " has the wrong keyspace "
                     + " to be used with this Mutator. Got " + cf.getKeyspace() + ", expected " + keyspace);
@@ -107,23 +108,23 @@ public class MutatorWrapperImpl<K> implements MutatorWrapperInternal<K> {
     }
 
     @Override
-    public <SN, N> SubcolumnMutator<K, SN, N> createSubcolumnMutator(
-            K key, SupercolumnRange<K, SN, N> supercolumn, SN supercolumnName) {
-        SupercolumnFamily<K, SN, N> scf = supercolumn.getSupercolumnFamily();
+    public <SN, N> SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(
+            K key, SupercolumnRange<K, T, SN, N> supercolumn, SN supercolumnName) {
+        SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
         validateCF(scf);
-        SubcolumnMutatorImpl<K, SN, N> mutator =
-            new SubcolumnMutatorImpl<K, SN, N>(wrappedMutator, key, supercolumn, supercolumnName);
+        SubcolumnMutatorImpl<K, T, SN, N> mutator =
+            new SubcolumnMutatorImpl<K, T, SN, N>(wrappedMutator, key, supercolumn, supercolumnName);
         supercolumnMutators.add(mutator);
         return mutator;
     }
 
     @Override
-    public <SN, N> SubcolumnMutator<K, SN, N> createSubcolumnMutator(
-            K key, NamedSupercolumn<K, SN, N> supercolumn) {
-        SupercolumnFamily<K, SN, N> scf = supercolumn.getSupercolumnFamily();
+    public <SN, N> SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(
+            K key, NamedSupercolumn<K, T, SN, N> supercolumn) {
+        SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
         validateCF(scf);
-        SubcolumnMutatorImpl<K, SN, N> mutator =
-                new SubcolumnMutatorImpl<K, SN, N>(wrappedMutator, key, supercolumn, supercolumn.getName());
+        SubcolumnMutatorImpl<K, T, SN, N> mutator =
+                new SubcolumnMutatorImpl<K, T, SN, N>(wrappedMutator, key, supercolumn, supercolumn.getName());
         supercolumnMutators.add(mutator);
         return mutator;
     }

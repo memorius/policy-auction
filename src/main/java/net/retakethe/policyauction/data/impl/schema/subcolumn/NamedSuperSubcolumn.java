@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
  * Base class for Cassandra named subcolumns and subcolumn ranges of named supercolumns.
@@ -15,17 +16,17 @@ import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn
  *
  * @author Nick Clarke
  */
-public abstract class NamedSuperSubcolumn<K, SN, N, V> extends Subcolumn<K, SN, N, V>{
+public abstract class NamedSuperSubcolumn<K, T extends Timestamp, SN, N, V> extends Subcolumn<K, T, SN, N, V>{
 
-    private final NamedSupercolumn<K, SN, N> supercolumn;
+    private final NamedSupercolumn<K, T, SN, N> supercolumn;
 
-    protected NamedSuperSubcolumn(NamedSupercolumn<K, SN, N> supercolumn, Type<V> valueType) {
+    protected NamedSuperSubcolumn(NamedSupercolumn<K, T, SN, N> supercolumn, Type<V> valueType) {
         super(supercolumn, valueType);
         this.supercolumn = supercolumn;
     }
 
     @Override
-    public NamedSupercolumn<K, SN, N> getSupercolumn() {
+    public NamedSupercolumn<K, T, SN, N> getSupercolumn() {
         return supercolumn;
     }
 }

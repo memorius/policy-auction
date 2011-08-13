@@ -86,11 +86,11 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
      * A single mutator may be reused across multiple column families sharing the same keytype <K>
      * and key serializer, which allows updates to be sent more efficiently.
      */
-    public MutatorWrapper<K> createMutator(KeyspaceManager keyspaceManager) {
-        return new MutatorWrapperImpl<K>(getKeyspace(), getKeySerializer(), keyspaceManager);
+    public MutatorWrapper<K, T> createMutator(KeyspaceManager keyspaceManager) {
+        return new MutatorWrapperImpl<K, T>(getKeyspace(), getKeySerializer(), keyspaceManager);
     }
 
-    public void addRowDeletion(MutatorWrapper<K> m, K key) {
-        ((MutatorWrapperInternal<K>) m).addRowDeletion(this, key);
+    public void addRowDeletion(MutatorWrapper<K, T> m, K key) {
+        ((MutatorWrapperInternal<K, T>) m).addRowDeletion(this, key);
     }
 }

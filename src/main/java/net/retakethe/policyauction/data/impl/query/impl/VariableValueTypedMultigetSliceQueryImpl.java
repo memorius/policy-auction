@@ -13,17 +13,19 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultige
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRows;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
 /**
  * @author Nick Clarke
  */
-public class VariableValueTypedMultigetSliceQueryImpl<K, N> implements VariableValueTypedMultigetSliceQuery<K, N> {
+public class VariableValueTypedMultigetSliceQueryImpl<K, T extends Timestamp, N>
+        implements VariableValueTypedMultigetSliceQuery<K, T, N> {
 
     private final MultigetSliceQuery<K, N, Object> wrappedQuery;
 
-    public VariableValueTypedMultigetSliceQueryImpl(Keyspace ks, ColumnFamily<K, N> cf,
-            List<NamedColumn<K, N, ?>> columns) {
+    public VariableValueTypedMultigetSliceQueryImpl(Keyspace ks, ColumnFamily<K, T, N> cf,
+            List<NamedColumn<K, T, N, ?>> columns) {
         N[] columnNames = QueryUtils.getColumnNamesUnresolved(cf, columns);
 
         wrappedQuery = HFactory.createMultigetSliceQuery(ks, cf.getKeySerializer(),
@@ -33,24 +35,24 @@ public class VariableValueTypedMultigetSliceQueryImpl<K, N> implements VariableV
     }
 
     @Override
-    public VariableValueTypedMultigetSliceQuery<K, N> setKeys(Iterable<K> keys) {
+    public VariableValueTypedMultigetSliceQuery<K, T, N> setKeys(Iterable<K> keys) {
         wrappedQuery.setKeys(keys);
         return this;
     }
 
     @Override
-    public VariableValueTypedMultigetSliceQuery<K,N> setKeys(K... keys) {
+    public VariableValueTypedMultigetSliceQuery<K, T, N> setKeys(K... keys) {
         wrappedQuery.setKeys(keys);
         return this;
     }
 
     @Override
-    public QueryResult<VariableValueTypedRows<K, N>> execute() {
+    public QueryResult<VariableValueTypedRows<K, T, N>> execute() {
         QueryResult<Rows<K, N, Object>> wrappedResult = wrappedQuery.execute();
 
-        return new QueryResultImpl<VariableValueTypedRows<K, N>>(
-                new ExecutionResult<VariableValueTypedRows<K, N>>(
-                        new VariableValueTypedRowsImpl<K, N>(wrappedResult.get()),
+        return new QueryResultImpl<VariableValueTypedRows<K, T, N>>(
+                new ExecutionResult<VariableValueTypedRows<K, T, N>>(
+                        new VariableValueTypedRowsImpl<K, T, N>(wrappedResult.get()),
                         wrappedResult.getExecutionTimeMicro(),
                         wrappedResult.getHostUsed()),
                 this);
