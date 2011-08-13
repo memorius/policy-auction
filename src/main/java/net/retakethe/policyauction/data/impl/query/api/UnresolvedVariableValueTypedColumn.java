@@ -15,6 +15,4 @@ public interface UnresolvedVariableValueTypedColumn<N> {
     <V> V getValue(Serializer<V> valueSerializer);
 
     long getClock();
-
-    int getTtl();
 }

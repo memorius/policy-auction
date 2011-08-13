@@ -34,9 +34,4 @@ public class UnresolvedVariableValueTypedColumnImpl<N> implements UnresolvedVari
     public long getClock() {
         return wrappedColumn.getClock();
     }
-
-    @Override
-    public int getTtl() {
-        return wrappedColumn.getTtl();
-    }
 }
