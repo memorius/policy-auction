@@ -18,6 +18,8 @@ import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.schema.Schema;
+import net.retakethe.policyauction.data.impl.schema.Schema.LogHoursRow;
+import net.retakethe.policyauction.data.impl.schema.Schema.LogSCF;
 import net.retakethe.policyauction.data.impl.schema.Schema.LogSCF.LogMessageRange;
 import net.retakethe.policyauction.data.impl.schema.timestamp.MillisecondsTimestamp;
 import net.retakethe.policyauction.data.impl.types.LogMessageIDImpl;
@@ -86,16 +88,18 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
             fullMessage = printMessageAndStackTrace(message, throwable);
         }
 
+        LogSCF cf = Schema.LOG;
         SubcolumnMutator<DateAndHour, MillisecondsTimestamp, LogMessageID, String> i =
-                Schema.LOG.createSubcolumnMutator(m, key, id);
-        LogMessageRange cols = Schema.LOG.getSupercolumnRange();
+                cf.createSubcolumnMutator(m, key, id);
+        LogMessageRange cols = cf.getSupercolumnRange();
+        MillisecondsTimestamp ts = cf.createCurrentTimestamp();
 
         cols.LOCAL_TIME.addSubcolumnInsertion(i,
-                DateFormatUtils.format(olm.getOriginalTimestamp(), LOCAL_TIME_DATE_PATTERN));
-        cols.SERVER.addSubcolumnInsertion(i, HOSTNAME);
-        cols.LEVEL.addSubcolumnInsertion(i, emptyIfNull(olm.getSeverityLevel()));
-        cols.LOGGER.addSubcolumnInsertion(i, emptyIfNull(olm.getLoggerName()));
-        cols.MESSAGE.addSubcolumnInsertion(i, fullMessage);
+                cf.createValue(DateFormatUtils.format(olm.getOriginalTimestamp(), LOCAL_TIME_DATE_PATTERN), ts));
+        cols.SERVER.addSubcolumnInsertion(i, cf.createValue(HOSTNAME, ts));
+        cols.LEVEL.addSubcolumnInsertion(i, cf.createValue(emptyIfNull(olm.getSeverityLevel()), ts));
+        cols.LOGGER.addSubcolumnInsertion(i, cf.createValue(emptyIfNull(olm.getLoggerName()), ts));
+        cols.MESSAGE.addSubcolumnInsertion(i, cf.createValue(fullMessage, ts));
     }
 
     private String emptyIfNull(String value) {
@@ -114,8 +118,9 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
     }
 
     private void createHourBucket(DateAndHour bucket) {
-        MutatorWrapper<String, MillisecondsTimestamp> m = Schema.LOG_HOURS.createMutator(keyspaceManager);
-        Schema.LOG_HOURS.addColumnInsertion(m, bucket, DUMMY_VALUE);
+        LogHoursRow cf = Schema.LOG_HOURS;
+        MutatorWrapper<String, MillisecondsTimestamp> m = cf.createMutator(keyspaceManager);
+        cf.addColumnInsertion(m, bucket, cf.createValue(DUMMY_VALUE));
         m.execute();
     }
 

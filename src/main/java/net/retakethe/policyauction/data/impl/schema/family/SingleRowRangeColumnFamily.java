@@ -8,6 +8,7 @@ import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
 
 /**
  * Used for single-row lookup indexes such as those in "misc" table.
@@ -28,14 +29,24 @@ public class SingleRowRangeColumnFamily<K, T extends Timestamp, N, V> extends Ra
         return key;
     }
 
-    public void addColumnInsertion(MutatorWrapper<K, T> m, N name, V value) {
+    public void addColumnInsertion(MutatorWrapper<K, T> m, N name, Value<T, V> value) {
         addColumnInsertion(m, key, name, value);
     }
 
+    /**
+     * Delete column, using current timestamp
+     */
     public void addColumnDeletion(MutatorWrapper<K, T> m, N name) {
         addColumnDeletion(m, key, name);
     }
 
+    /**
+     * Delete column, using specified timestamp
+     */
+    public void addColumnDeletion(MutatorWrapper<K, T> m, N name, T timestamp) {
+        addColumnDeletion(m, key, name, timestamp);
+    }
+    
     public ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager, N columnName) {
         return createColumnQuery(keyspaceManager, key, columnName);
     }

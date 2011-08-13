@@ -7,6 +7,7 @@ import net.retakethe.policyauction.data.impl.query.impl.SubcolumnMutatorInternal
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
 
 /**
  * Cassandra subcolumns where there isn't a fixed subcolumn name, of supercolumns with fixed names.
@@ -26,12 +27,18 @@ public class NamedSuperSubcolumnRange<K, T extends Timestamp, SN, N, V> extends 
     }
 
     @Override
-    public void addSubcolumnInsertion(SubcolumnMutator<K, T, SN, N> m, N subcolumnName, V value) {
+    public void addSubcolumnInsertion(SubcolumnMutator<K, T, SN, N> m, N subcolumnName, Value<T, V> value) {
         ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnInsertion(this, subcolumnName, value);
     }
 
     @Override
     public void addSubcolumnDeletion(SubcolumnMutator<K, T, SN, N> m, N subcolumnName) {
-        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnDeletion(this, subcolumnName);
+        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnDeletion(this, subcolumnName,
+                getSupercolumn().getSupercolumnFamily().createCurrentTimestamp());
+    }
+
+    @Override
+    public void addSubcolumnDeletion(SubcolumnMutator<K, T, SN, N> m, N subcolumnName, T timestamp) {
+        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnDeletion(this, subcolumnName, timestamp);
     }
 }

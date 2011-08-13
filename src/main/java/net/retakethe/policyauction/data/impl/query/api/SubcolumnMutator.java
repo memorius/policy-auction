@@ -7,6 +7,7 @@ import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
 
 
 /**
@@ -22,12 +23,14 @@ import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
  * {@link SingleRowRangeSupercolumnFamily#createSubcolumnMutator(MutatorWrapper, Object)}
  * <p>
  * Subcolumn insertion: using the subcolumn mutator created above:
- * {@link NamedSubcolumn#addSubcolumnInsertion(SubcolumnMutator, Object)}
- * {@link SubcolumnRange#addSubcolumnInsertion(SubcolumnMutator, Object, Object)}
+ * {@link NamedSubcolumn#addSubcolumnInsertion(SubcolumnMutator, Value)}
+ * {@link SubcolumnRange#addSubcolumnInsertion(SubcolumnMutator, Object, Value)}
  * <p>
  * Subcolumn deletion: using the subcolumn mutator created above:
  * {@link NamedSubcolumn#addSubcolumnDeletion(SubcolumnMutator)}
+ * {@link NamedSubcolumn#addSubcolumnDeletion(SubcolumnMutator, Timestamp)}
  * {@link SubcolumnRange#addSubcolumnDeletion(SubcolumnMutator, Object)}
+ * {@link SubcolumnRange#addSubcolumnDeletion(SubcolumnMutator, Object, Timestamp)}
  *
  * @author Nick Clarke
  */

@@ -11,6 +11,8 @@ import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.Subcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
+import net.retakethe.policyauction.data.impl.schema.value.ValueImpl;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
 public class SubcolumnMutatorImpl<K, T extends Timestamp, SN, N> implements SubcolumnMutatorInternal<K, T, SN, N> {
@@ -31,20 +33,28 @@ public class SubcolumnMutatorImpl<K, T extends Timestamp, SN, N> implements Subc
     }
 
     @Override
-    public <V> void addSubcolumnInsertion(Subcolumn<K, T, SN, N, V> subcolumn, N subcolumnName, V value) {
+    public <V> void addSubcolumnInsertion(Subcolumn<K, T, SN, N, V> subcolumn, N subcolumnName, Value<T, V> value) {
         validateSubcolumn(subcolumn);
-        HColumn<N, ?> hColumn = HFactory.createColumn(subcolumnName, value,
-                supercolumn.getSupercolumnFamily().getSubcolumnNameSerializer(),
-                subcolumn.getValueSerializer());
+        HColumn<N, V> hColumn;
+        long timestamp = value.getTimestamp().getCassandraValue();
+        Integer ttl = ((ValueImpl<T, V>) value).getTimeToLiveSeconds();
+        if (ttl == null) {
+            hColumn = HFactory.createColumn(subcolumnName, value.getValue(), timestamp,
+                    supercolumn.getSupercolumnFamily().getSubcolumnNameSerializer(), subcolumn.getValueSerializer());
+        } else {
+            hColumn = HFactory.createColumn(subcolumnName, value.getValue(), timestamp, ttl,
+                    supercolumn.getSupercolumnFamily().getSubcolumnNameSerializer(), subcolumn.getValueSerializer());
+        }
         subcolumns.add(hColumn);
     }
 
     @Override
-    public void addSubcolumnDeletion(Subcolumn<K, T, SN, N, ?> subcolumn, N subcolumnName) {
+    public void addSubcolumnDeletion(Subcolumn<K, T, SN, N, ?> subcolumn, N subcolumnName, T timestamp) {
         validateSubcolumn(subcolumn);
         SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
         wrappedMutator.addSubDelete(key, scf.getName(), supercolumnName, subcolumnName,
-                scf.getSupercolumnNameSerializer(), scf.getSubcolumnNameSerializer());
+                scf.getSupercolumnNameSerializer(), scf.getSubcolumnNameSerializer(),
+                timestamp.getCassandraValue());
     }
 
     protected void apply() {

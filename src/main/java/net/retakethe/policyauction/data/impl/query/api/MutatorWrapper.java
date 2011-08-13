@@ -13,6 +13,7 @@ import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
 
 /**
  * Column/supercolumn/subcolumn insertions/mutations/deletions using our Schema classes.
@@ -23,18 +24,23 @@ import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
  * <p>
  * Row deletion:
  * {@link BaseColumnFamily#addRowDeletion(MutatorWrapper, Object)}.
+ * {@link BaseColumnFamily#addRowDeletion(MutatorWrapper, Object, Timestamp)}.
  * <p>
  * Column deletion:
  * {@link NamedColumn#addColumnDeletion(MutatorWrapper, Object)},
+ * {@link NamedColumn#addColumnDeletion(MutatorWrapper, Object, Timestamp)},
  * {@link ColumnRange#addColumnDeletion(MutatorWrapper, Object, Object)}.
+ * {@link ColumnRange#addColumnDeletion(MutatorWrapper, Object, Object, Timestamp)}.
  * {@link RangeColumnFamily#addColumnDeletion(MutatorWrapper, Object, Object)}.
+ * {@link RangeColumnFamily#addColumnDeletion(MutatorWrapper, Object, Object, Timestamp)}.
  * {@link SingleRowRangeColumnFamily#addColumnDeletion(MutatorWrapper, Object)}.
+ * {@link SingleRowRangeColumnFamily#addColumnDeletion(MutatorWrapper, Object, Timestamp)}.
  * <p>
  * Column insertion:
- * {@link NamedColumn#addColumnInsertion(MutatorWrapper, Object, Object)},
- * {@link ColumnRange#addColumnInsertion(MutatorWrapper, Object, Object, Object)}.
- * {@link RangeColumnFamily#addColumnInsertion(MutatorWrapper, Object, Object, Object)}.
- * {@link SingleRowRangeColumnFamily#addColumnInsertion(MutatorWrapper, Object, Object)}.
+ * {@link NamedColumn#addColumnInsertion(MutatorWrapper, Object, Value)},
+ * {@link ColumnRange#addColumnInsertion(MutatorWrapper, Object, Object, Value)}.
+ * {@link RangeColumnFamily#addColumnInsertion(MutatorWrapper, Object, Object, Value)}.
+ * {@link SingleRowRangeColumnFamily#addColumnInsertion(MutatorWrapper, Object, Value)}.
  * <p>
  * Supercolumn deletion:
  * {@link NamedSupercolumn#addSupercolumnDeletion(MutatorWrapper, Object)}
@@ -49,12 +55,14 @@ import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
  * {@link SingleRowRangeSupercolumnFamily#createSubcolumnMutator(MutatorWrapper, Object)}
  * <p>
  * Subcolumn insertion: using the subcolumn mutator created above:
- * {@link NamedSubcolumn#addSubcolumnInsertion(SubcolumnMutator, Object)}
- * {@link SubcolumnRange#addSubcolumnInsertion(SubcolumnMutator, Object, Object)}
+ * {@link NamedSubcolumn#addSubcolumnInsertion(SubcolumnMutator, Value)}
+ * {@link SubcolumnRange#addSubcolumnInsertion(SubcolumnMutator, Object, Value)}
  * <p>
  * Subcolumn deletion: using the subcolumn mutator created above:
  * {@link NamedSubcolumn#addSubcolumnDeletion(SubcolumnMutator)}
+ * {@link NamedSubcolumn#addSubcolumnDeletion(SubcolumnMutator, Timestamp)}
  * {@link SubcolumnRange#addSubcolumnDeletion(SubcolumnMutator, Object)}
+ * {@link SubcolumnRange#addSubcolumnDeletion(SubcolumnMutator, Object, Timestamp)}
  *
  * @see me.prettyprint.hector.api.mutation.Mutator
  * @author Nick Clarke

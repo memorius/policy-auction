@@ -11,8 +11,8 @@ import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
-import net.retakethe.policyauction.data.impl.schema.value.ColumnValue;
-import net.retakethe.policyauction.data.impl.schema.value.ColumnValueImpl;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
+import net.retakethe.policyauction.data.impl.schema.value.ValueImpl;
 
 /**
  * Base class for schema definitions of cassandra Column Families and Super Column Families.
@@ -81,8 +81,8 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
      * @param value the value for the column
      * @return new column value object
      */
-    public <V> ColumnValue<T, V> createColumnValue(V value) {
-        return new ColumnValueImpl<T, V>(value, createCurrentTimestamp(), null);
+    public <V> Value<T, V> createValue(V value) {
+        return new ValueImpl<T, V>(value, createCurrentTimestamp(), null);
     }
 
     /**
@@ -93,8 +93,8 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
      * @param timeToLiveSeconds the TTL after which the column will be deleted
      * @return new column value object
      */
-    public <V> ColumnValue<T, V> createColumnValue(V value, int timeToLiveSeconds) {
-        return new ColumnValueImpl<T, V>(value, createCurrentTimestamp(), timeToLiveSeconds);
+    public <V> Value<T, V> createValue(V value, int timeToLiveSeconds) {
+        return new ValueImpl<T, V>(value, createCurrentTimestamp(), timeToLiveSeconds);
     }
 
     /**
@@ -105,8 +105,8 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
      * @param timestamp the timestamp for the column
      * @return new column value object
      */
-    public <V> ColumnValue<T, V> createColumnValue(V value, T timestamp) {
-        return new ColumnValueImpl<T, V>(value, timestamp, null);
+    public <V> Value<T, V> createValue(V value, T timestamp) {
+        return new ValueImpl<T, V>(value, timestamp, null);
     }
 
     /**
@@ -118,8 +118,8 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
      * @param timeToLiveSeconds the TTL after which the column will be deleted
      * @return new column value object
      */
-    public <V> ColumnValue<T, V> createColumnValue(V value, T timestamp, int timeToLiveSeconds) {
-        return new ColumnValueImpl<T, V>(value, timestamp, timeToLiveSeconds);
+    public <V> Value<T, V> createValue(V value, T timestamp, int timeToLiveSeconds) {
+        return new ValueImpl<T, V>(value, timestamp, timeToLiveSeconds);
     }
 
     /**
@@ -140,7 +140,17 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
         return new MutatorWrapperImpl<K, T>(getKeyspace(), getKeySerializer(), keyspaceManager);
     }
 
+    /**
+     * Delete row, using current timestamp
+     */
     public void addRowDeletion(MutatorWrapper<K, T> m, K key) {
-        ((MutatorWrapperInternal<K, T>) m).addRowDeletion(this, key);
+        ((MutatorWrapperInternal<K, T>) m).addRowDeletion(this, key, createCurrentTimestamp());
+    }
+
+    /**
+     * Delete row, using specified timestamp
+     */
+    public void addRowDeletion(MutatorWrapper<K, T> m, K key, T timestamp) {
+        ((MutatorWrapperInternal<K, T>) m).addRowDeletion(this, key, timestamp);
     }
 }

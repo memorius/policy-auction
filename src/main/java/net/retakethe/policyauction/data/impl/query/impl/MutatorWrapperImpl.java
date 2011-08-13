@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import me.prettyprint.hector.api.Serializer;
+import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
@@ -16,6 +17,8 @@ import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
+import net.retakethe.policyauction.data.impl.schema.value.ValueImpl;
 
 /**
  * @author Nick Clarke
@@ -35,18 +38,28 @@ public class MutatorWrapperImpl<K, T extends Timestamp> implements MutatorWrappe
     }
 
     @Override
-    public <N, V> void addColumnInsertion(K key, Column<K, T, N, V> column, N name, V value) {
+    public <N, V> void addColumnInsertion(K key, Column<K, T, N, V> column, N name, Value<T, V> value) {
         ColumnFamily<K, T, N> cf = column.getColumnFamily();
         validateCF(cf);
-        wrappedMutator.addInsertion(key, cf.getName(),
-                HFactory.createColumn(name, value, cf.getColumnNameSerializer(), column.getValueSerializer()));
+        HColumn<N, V> hColumn;
+        long timestamp = value.getTimestamp().getCassandraValue();
+        Integer ttl = ((ValueImpl<T, V>) value).getTimeToLiveSeconds();
+        if (ttl == null) {
+            hColumn = HFactory.createColumn(name, value.getValue(), timestamp,
+                    cf.getColumnNameSerializer(), column.getValueSerializer());
+        } else {
+            hColumn = HFactory.createColumn(name, value.getValue(), timestamp, ttl,
+                    cf.getColumnNameSerializer(), column.getValueSerializer());
+        }
+        wrappedMutator.addInsertion(key, cf.getName(), hColumn);
     }
 
     @Override
-    public <N, V> void addColumnDeletion(K key, Column<K, T, N, V> column, N name) {
+    public <N, V> void addColumnDeletion(K key, Column<K, T, N, V> column, N name, T timestamp) {
         ColumnFamily<K, T, N> cf = column.getColumnFamily();
         validateCF(cf);
-        wrappedMutator.addDeletion(key, cf.getName(), name, cf.getColumnNameSerializer());
+        wrappedMutator.addDeletion(key, cf.getName(), name, cf.getColumnNameSerializer(),
+                timestamp.getCassandraValue());
     }
 
     @Override
@@ -58,9 +71,9 @@ public class MutatorWrapperImpl<K, T extends Timestamp> implements MutatorWrappe
     }
 
     @Override
-    public void addRowDeletion(BaseColumnFamily<K, T> cf, K key) {
+    public void addRowDeletion(BaseColumnFamily<K, T> cf, K key, T timestamp) {
         validateCF(cf);
-        wrappedMutator.addDeletion(key, cf.getName());
+        wrappedMutator.addDeletion(key, cf.getName(), timestamp.getCassandraValue());
     }
 
     @Override
@@ -69,17 +82,6 @@ public class MutatorWrapperImpl<K, T extends Timestamp> implements MutatorWrappe
             mutator.apply();
         }
         return wrappedMutator.execute();
-    }
-
-    private void validateCF(BaseColumnFamily<K, T> cf) {
-        if (cf.getKeyspace() != keyspace) {
-            throw new IllegalArgumentException("Column Family " + cf.getName() + " has the wrong keyspace "
-                    + " to be used with this Mutator. Got " + cf.getKeyspace() + ", expected " + keyspace);
-        }
-        if (cf.getKeySerializer() != keySerializer) {
-            throw new IllegalArgumentException("Column Family " + cf.getName() + " has the wrong key serializer"
-                    + " to be used with this Mutator");
-        }
     }
 
     @Override
@@ -91,5 +93,16 @@ public class MutatorWrapperImpl<K, T extends Timestamp> implements MutatorWrappe
             new SubcolumnMutatorImpl<K, T, SN, N>(wrappedMutator, key, supercolumn, supercolumnName);
         supercolumnMutators.add(mutator);
         return mutator;
+    }
+
+    private void validateCF(BaseColumnFamily<K, T> cf) {
+        if (cf.getKeyspace() != keyspace) {
+            throw new IllegalArgumentException("Column Family " + cf.getName() + " has the wrong keyspace "
+                    + " to be used with this Mutator. Got " + cf.getKeyspace() + ", expected " + keyspace);
+        }
+        if (cf.getKeySerializer() != keySerializer) {
+            throw new IllegalArgumentException("Column Family " + cf.getName() + " has the wrong key serializer"
+                    + " to be used with this Mutator");
+        }
     }
 }

@@ -17,6 +17,7 @@ import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSl
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema;
+import net.retakethe.policyauction.data.impl.schema.Schema.PoliciesCF;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.MillisecondsTimestamp;
 import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
@@ -142,13 +143,15 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
     public void persist(PolicyDAO policy) {
         PolicyID policyID = policy.getPolicyID();
 
-        MutatorWrapper<PolicyID, MillisecondsTimestamp> m = Schema.POLICIES.createMutator(keyspaceManager);
+        PoliciesCF cf = Schema.POLICIES;
+        MillisecondsTimestamp ts = cf.createCurrentTimestamp();
+        MutatorWrapper<PolicyID, MillisecondsTimestamp> m = cf.createMutator(keyspaceManager);
 
-        Schema.POLICIES.SHORT_NAME.addColumnInsertion(m, policyID, policy.getShortName());
-        Schema.POLICIES.DESCRIPTION.addColumnInsertion(m, policyID, policy.getDescription());
+        cf.SHORT_NAME.addColumnInsertion(m, policyID, cf.createValue(policy.getShortName(), ts));
+        cf.DESCRIPTION.addColumnInsertion(m, policyID, cf.createValue(policy.getDescription(), ts));
 
         // We're saving changes, so update the edit time
-        Schema.POLICIES.LAST_EDITED.addColumnInsertion(m, policyID, new Date());
+        cf.LAST_EDITED.addColumnInsertion(m, policyID, cf.createValue(new Date(), ts));
 
         // TODO: error handling? Throws HectorException.
         m.execute();

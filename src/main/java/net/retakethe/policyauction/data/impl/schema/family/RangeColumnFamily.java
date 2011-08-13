@@ -13,6 +13,7 @@ import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
 
 /**
  * Used for column families which contain a single column range in each row.
@@ -45,14 +46,25 @@ public class RangeColumnFamily<K, T extends Timestamp, N, V> extends ColumnFamil
         return columnRange;
     }
 
-    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, N name, V value) {
+    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, N name, Value<T, V> value) {
         ((MutatorWrapperInternal<K, T>) m).addColumnInsertion(key, columnRange, name, value);
     }
 
+    /**
+     * Delete column, using current timestamp
+     */
     public void addColumnDeletion(MutatorWrapper<K, T> m, K key, N name) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, columnRange, name);
+        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, columnRange, name,
+                createCurrentTimestamp());
     }
     
+    /**
+     * Delete column, using specified timestamp
+     */
+    public void addColumnDeletion(MutatorWrapper<K, T> m, K key, N name, T timestamp) {
+        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, columnRange, name, timestamp);
+    }
+
     public ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, N columnName) {
         return createColumnQuery(keyspaceManager, key, columnRange, columnName);
     }

@@ -7,6 +7,7 @@ import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
 
 /**
  * Cassandra columns with fixed names.
@@ -30,11 +31,22 @@ public class NamedColumn<K, T extends Timestamp, N, V> extends Column<K, T, N, V
         return name;
     }
 
-    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, V value) {
+    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, Value<T, V> value) {
         ((MutatorWrapperInternal<K, T>) m).addColumnInsertion(key, this, getName(), value);
     }
 
+    /**
+     * Delete column, using current timestamp
+     */
     public void addColumnDeletion(MutatorWrapper<K, T> m, K key) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this, getName());
+        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this, getName(),
+                getColumnFamily().createCurrentTimestamp());
+    }
+
+    /**
+     * Delete column, using specified timestamp
+     */
+    public void addColumnDeletion(MutatorWrapper<K, T> m, K key, T timestamp) {
+        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this, getName(), timestamp);
     }
 }

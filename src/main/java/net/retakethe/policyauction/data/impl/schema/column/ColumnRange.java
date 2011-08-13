@@ -7,6 +7,7 @@ import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
 
 /**
  * Cassandra column ranges where there isn't a single column name.
@@ -23,11 +24,22 @@ public class ColumnRange<K, T extends Timestamp, N, V> extends Column<K, T, N, V
         super(columnFamily, valueType);
     }
 
-    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, N name, V value) {
+    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, N name, Value<T, V> value) {
         ((MutatorWrapperInternal<K, T>) m).addColumnInsertion(key, this, name, value);
     }
 
+    /**
+     * Delete column, using current timestamp
+     */
     public void addColumnDeletion(MutatorWrapper<K, T> m, K key, N name) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this, name);
+        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this, name,
+                getColumnFamily().createCurrentTimestamp());
+    }
+
+    /**
+     * Delete column, using specified timestamp
+     */
+    public void addColumnDeletion(MutatorWrapper<K, T> m, K key, N name, T timestamp) {
+        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this, name, timestamp);
     }
 }
