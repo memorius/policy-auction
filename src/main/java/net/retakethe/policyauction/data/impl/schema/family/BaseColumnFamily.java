@@ -11,6 +11,8 @@ import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
+import net.retakethe.policyauction.data.impl.schema.value.ColumnValue;
+import net.retakethe.policyauction.data.impl.schema.value.ColumnValueImpl;
 
 /**
  * Base class for schema definitions of cassandra Column Families and Super Column Families.
@@ -70,6 +72,54 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
      */
     public T createTimestampFromCassandraTimestamp(long cassandraValue) {
         return timestampFactory.fromCassandraTimestamp(cassandraValue);
+    }
+
+    /**
+     * Create column value with current timestamp and without setting time-to-live (a non-expiring column).
+     *
+     * @param <V> the column value type
+     * @param value the value for the column
+     * @return new column value object
+     */
+    public <V> ColumnValue<T, V> createColumnValue(V value) {
+        return new ColumnValueImpl<T, V>(value, createCurrentTimestamp(), null);
+    }
+
+    /**
+     * Create column value with current timestamp, setting time-to-live (an expiring column).
+     *
+     * @param <V> the column value type
+     * @param value the value for the column
+     * @param timeToLiveSeconds the TTL after which the column will be deleted
+     * @return new column value object
+     */
+    public <V> ColumnValue<T, V> createColumnValue(V value, int timeToLiveSeconds) {
+        return new ColumnValueImpl<T, V>(value, createCurrentTimestamp(), timeToLiveSeconds);
+    }
+
+    /**
+     * Create column value with specified timestamp, without setting time-to-live (a non-expiring column).
+     *
+     * @param <V> the column value type
+     * @param value the value for the column
+     * @param timestamp the timestamp for the column
+     * @return new column value object
+     */
+    public <V> ColumnValue<T, V> createColumnValue(V value, T timestamp) {
+        return new ColumnValueImpl<T, V>(value, timestamp, null);
+    }
+
+    /**
+     * Create column value with specified timestamp, setting time-to-live (an expiring column).
+     *
+     * @param <V> the column value type
+     * @param value the value for the column
+     * @param timestamp the timestamp for the column
+     * @param timeToLiveSeconds the TTL after which the column will be deleted
+     * @return new column value object
+     */
+    public <V> ColumnValue<T, V> createColumnValue(V value, T timestamp, int timeToLiveSeconds) {
+        return new ColumnValueImpl<T, V>(value, timestamp, timeToLiveSeconds);
     }
 
     /**
