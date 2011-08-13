@@ -8,8 +8,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.NamedSubcolumn;
-import net.retakethe.policyauction.data.impl.schema.subcolumn.SubcolumnRange;
+import net.retakethe.policyauction.data.impl.schema.subcolumn.Subcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
@@ -32,7 +31,7 @@ public class SubcolumnMutatorImpl<K, T extends Timestamp, SN, N> implements Subc
     }
 
     @Override
-    public <V> void addSubcolumnInsertion(SubcolumnRange<K, T, SN, N, V> subcolumn, N subcolumnName, V value) {
+    public <V> void addSubcolumnInsertion(Subcolumn<K, T, SN, N, V> subcolumn, N subcolumnName, V value) {
         validateSubcolumn(subcolumn);
         HColumn<N, ?> hColumn = HFactory.createColumn(subcolumnName, value,
                 supercolumn.getSupercolumnFamily().getSubcolumnNameSerializer(),
@@ -41,30 +40,13 @@ public class SubcolumnMutatorImpl<K, T extends Timestamp, SN, N> implements Subc
     }
 
     @Override
-    public <V> void addSubcolumnInsertion(NamedSubcolumn<K, T, SN, N, V> subcolumn, V value) {
-        validateSubcolumn(subcolumn);
-        HColumn<N, ?> hColumn = HFactory.createColumn(subcolumn.getName(), value,
-                supercolumn.getSupercolumnFamily().getSubcolumnNameSerializer(),
-                subcolumn.getValueSerializer());
-        subcolumns.add(hColumn);
-    }
-
-    @Override
-    public void addSubcolumnDeletion(SubcolumnRange<K, T, SN, N, ?> subcolumn, N subcolumnName) {
+    public void addSubcolumnDeletion(Subcolumn<K, T, SN, N, ?> subcolumn, N subcolumnName) {
         validateSubcolumn(subcolumn);
         SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
         wrappedMutator.addSubDelete(key, scf.getName(), supercolumnName, subcolumnName,
                 scf.getSupercolumnNameSerializer(), scf.getSubcolumnNameSerializer());
     }
 
-    @Override
-    public void addSubcolumnDeletion(NamedSubcolumn<K, T, SN, N, ?> subcolumn) {
-        validateSubcolumn(subcolumn);
-        SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
-        wrappedMutator.addSubDelete(key, scf.getName(), supercolumnName, subcolumn.getName(),
-                scf.getSupercolumnNameSerializer(), scf.getSubcolumnNameSerializer());
-    }
-    
     protected void apply() {
         SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
 
@@ -89,13 +71,7 @@ public class SubcolumnMutatorImpl<K, T extends Timestamp, SN, N> implements Subc
                         scf.getSubcolumnNameSerializer(), DummySerializer.get()));
     }
 
-    private void validateSubcolumn(SubcolumnRange<K, T, SN, N, ?> subcolumn) {
-        if (subcolumn.getSupercolumn() != supercolumn) {
-            throw new IllegalArgumentException("The supplied subcolumn does not belong to this mutator's supercolumn");
-        }
-    }
-
-    private void validateSubcolumn(NamedSubcolumn<K, T, SN, N, ?> subcolumn) {
+    private void validateSubcolumn(Subcolumn<K, T, SN, N, ?> subcolumn) {
         if (subcolumn.getSupercolumn() != supercolumn) {
             throw new IllegalArgumentException("The supplied subcolumn does not belong to this mutator's supercolumn");
         }

@@ -31,10 +31,10 @@ public abstract class NamedSupercolumn<K, T extends Timestamp, SN, N> extends Su
     }
 
     public SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(MutatorWrapper<K, T> m, K key) {
-        return ((MutatorWrapperInternal<K, T>) m).createSubcolumnMutator(key, this);
+        return ((MutatorWrapperInternal<K, T>) m).createSubcolumnMutator(key, this, getName());
     }
 
     public void addSupercolumnDeletion(MutatorWrapper<K, T> m, K key) {
-        ((MutatorWrapperInternal<K, T>) m).addSupercolumnDeletion(key, this);
+        ((MutatorWrapperInternal<K, T>) m).addSupercolumnDeletion(key, this, getName());
     }
 }

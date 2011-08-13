@@ -31,10 +31,10 @@ public class NamedColumn<K, T extends Timestamp, N, V> extends Column<K, T, N, V
     }
 
     public void addColumnInsertion(MutatorWrapper<K, T> m, K key, V value) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnInsertion(key, this, value);
+        ((MutatorWrapperInternal<K, T>) m).addColumnInsertion(key, this, getName(), value);
     }
 
     public void addColumnDeletion(MutatorWrapper<K, T> m, K key) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this);
+        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this, getName());
     }
 }

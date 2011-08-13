@@ -10,13 +10,11 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
-import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
-import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.column.Column;
 import net.retakethe.policyauction.data.impl.schema.family.BaseColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
-import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
-import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
+import net.retakethe.policyauction.data.impl.schema.supercolumn.Supercolumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 /**
@@ -37,16 +35,7 @@ public class MutatorWrapperImpl<K, T extends Timestamp> implements MutatorWrappe
     }
 
     @Override
-    public <N, V> void addColumnInsertion(K key, NamedColumn<K, T, N, V> column, V value) {
-        ColumnFamily<K, T, N> cf = column.getColumnFamily();
-        validateCF(cf);
-        wrappedMutator.addInsertion(key, cf.getName(),
-                HFactory.createColumn(column.getName(), value,
-                        cf.getColumnNameSerializer(), column.getValueSerializer()));
-    }
-
-    @Override
-    public <N, V> void addColumnInsertion(K key, ColumnRange<K, T, N, V> column, N name, V value) {
+    public <N, V> void addColumnInsertion(K key, Column<K, T, N, V> column, N name, V value) {
         ColumnFamily<K, T, N> cf = column.getColumnFamily();
         validateCF(cf);
         wrappedMutator.addInsertion(key, cf.getName(),
@@ -54,32 +43,18 @@ public class MutatorWrapperImpl<K, T extends Timestamp> implements MutatorWrappe
     }
 
     @Override
-    public <N, V> void addColumnDeletion(K key, NamedColumn<K, T, N, V> column) {
-        ColumnFamily<K, T, N> cf = column.getColumnFamily();
-        validateCF(cf);
-        wrappedMutator.addDeletion(key, cf.getName(), column.getName(), cf.getColumnNameSerializer());
-    }
-
-    @Override
-    public <N, V> void addColumnDeletion(K key, ColumnRange<K, T, N, V> column, N name) {
+    public <N, V> void addColumnDeletion(K key, Column<K, T, N, V> column, N name) {
         ColumnFamily<K, T, N> cf = column.getColumnFamily();
         validateCF(cf);
         wrappedMutator.addDeletion(key, cf.getName(), name, cf.getColumnNameSerializer());
     }
 
     @Override
-    public <SN> void addSupercolumnDeletion(K key, SupercolumnRange<K, T, SN, ?> supercolumn,
+    public <SN> void addSupercolumnDeletion(K key, Supercolumn<K, T, SN, ?> supercolumn,
             SN supercolumnName) {
         SupercolumnFamily<K, T, SN, ?> scf = supercolumn.getSupercolumnFamily();
         validateCF(scf);
         wrappedMutator.addSuperDelete(key, scf.getName(), supercolumnName, scf.getSupercolumnNameSerializer());
-    }
-
-    @Override
-    public <SN> void addSupercolumnDeletion(K key, NamedSupercolumn<K, T, SN, ?> supercolumn) {
-        SupercolumnFamily<K, T, SN, ?> scf = supercolumn.getSupercolumnFamily();
-        validateCF(scf);
-        wrappedMutator.addSuperDelete(key, scf.getName(), supercolumn.getName(), scf.getSupercolumnNameSerializer());
     }
 
     @Override
@@ -109,22 +84,11 @@ public class MutatorWrapperImpl<K, T extends Timestamp> implements MutatorWrappe
 
     @Override
     public <SN, N> SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(
-            K key, SupercolumnRange<K, T, SN, N> supercolumn, SN supercolumnName) {
+            K key, Supercolumn<K, T, SN, N> supercolumn, SN supercolumnName) {
         SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
         validateCF(scf);
         SubcolumnMutatorImpl<K, T, SN, N> mutator =
             new SubcolumnMutatorImpl<K, T, SN, N>(wrappedMutator, key, supercolumn, supercolumnName);
-        supercolumnMutators.add(mutator);
-        return mutator;
-    }
-
-    @Override
-    public <SN, N> SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(
-            K key, NamedSupercolumn<K, T, SN, N> supercolumn) {
-        SupercolumnFamily<K, T, SN, N> scf = supercolumn.getSupercolumnFamily();
-        validateCF(scf);
-        SubcolumnMutatorImpl<K, T, SN, N> mutator =
-                new SubcolumnMutatorImpl<K, T, SN, N>(wrappedMutator, key, supercolumn, supercolumn.getName());
         supercolumnMutators.add(mutator);
         return mutator;
     }

@@ -35,11 +35,11 @@ public class SuperRangeNamedSubcolumn<K, T extends Timestamp, SN, N, V> extends 
 
     @Override
     public void addSubcolumnInsertion(SubcolumnMutator<K, T, SN, N> m, V value) {
-        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnInsertion(this, value);
+        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnInsertion(this, getName(), value);
     }
 
     @Override
     public void addSubcolumnDeletion(SubcolumnMutator<K, T, SN, N> m) {
-        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnDeletion(this);
+        ((SubcolumnMutatorInternal<K, T, SN, N>) m).addSubcolumnDeletion(this, getName());
     }
 }
