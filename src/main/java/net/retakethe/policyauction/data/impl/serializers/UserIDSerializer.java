@@ -8,7 +8,7 @@ import net.retakethe.policyauction.data.impl.types.UserIDImpl;
 /**
  * @author Nick Clarke
  */
-public class UserIDSerializer extends AbstractUUIDSerializer<UserID> {
+public class UserIDSerializer extends AbstractTimeUUIDSerializer<UserID> {
 
     private static final UserIDSerializer INSTANCE = new UserIDSerializer();
 

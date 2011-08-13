@@ -5,17 +5,26 @@ import java.util.Date;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
+import net.retakethe.policyauction.data.impl.schema.column.DefaultValuedNamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringStringColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.RangeColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.RangeSupercolumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.SingleRowNamedColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SingleRowRangeColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeNamedSubcolumn;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 import net.retakethe.policyauction.data.impl.schema.timestamp.MillisTimestamp;
 import net.retakethe.policyauction.data.impl.schema.timestamp.MillisTimestampFactory;
+import net.retakethe.policyauction.data.impl.schema.timestamp.UniqueTimestamp;
+import net.retakethe.policyauction.data.impl.schema.timestamp.UniqueTimestampFactory;
+import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
+
+import org.apache.tapestry5.json.JSONObject;
 
 /**
  * Cassandra schema elements as in cassandra-schema.txt.
@@ -25,6 +34,12 @@ import net.retakethe.policyauction.data.impl.schema.timestamp.MillisTimestampFac
 public final class Schema {
 
     public static final PoliciesCF POLICIES = new PoliciesCF();
+
+    public static final UserVotesCF USER_VOTES_PENDING = new UserVotesCF("user_policy_votes_pending");
+
+    public static final UserVotesCF USER_VOTES = new UserVotesCF("user_policy_votes");
+
+    public static final VotingConfigRow VOTING_CONFIG = new VotingConfigRow();
 
     public static final LogHoursRow LOG_HOURS = new LogHoursRow();
 
@@ -41,6 +56,25 @@ public final class Schema {
             SHORT_NAME = new StringStringColumn<PolicyID, MillisTimestamp>("short_name", this);
             DESCRIPTION = new StringStringColumn<PolicyID, MillisTimestamp>("description", this);
             LAST_EDITED = new StringNamedColumn<PolicyID, MillisTimestamp, Date>("last_edited", this, Type.DATE);
+        }
+    }
+
+    public static final class UserVotesCF extends RangeColumnFamily<UserID, UniqueTimestamp, VoteRecordID, JSONObject> {
+        private UserVotesCF(String columnFamilyName) {
+            super(SchemaKeyspace.MAIN, columnFamilyName, Type.USER_ID, UniqueTimestampFactory.get(),
+                    Type.VOTE_RECORD_ID);
+            setColumnRange(new ColumnRange<UserID, UniqueTimestamp, VoteRecordID, JSONObject>(this, Type.JSON));
+        }
+    }
+
+    public static final class VotingConfigRow extends SingleRowNamedColumnFamily<String, MillisTimestamp, String> {
+        public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Byte> VOTE_WITHDRAWAL_PENALTY_PERCENTAGE;
+
+        private VotingConfigRow() {
+            super(SchemaKeyspace.MAIN, "memcache_string", "voting config", Type.UTF8, MillisTimestampFactory.get(),
+                    Type.UTF8);
+            VOTE_WITHDRAWAL_PENALTY_PERCENTAGE = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Byte>(
+                    "vote_withdrawal_penalty_percentage", this, Type.BYTE, (byte) 50); 
         }
     }
 

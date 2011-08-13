@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.api;
 import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 
 
@@ -10,14 +11,6 @@ import net.retakethe.policyauction.data.api.types.PolicyID;
  * @author Nick Clarke
  */
 public interface PolicyManager {
-
-    public class NoSuchPolicyException extends Exception {
-        private static final long serialVersionUID = 0L;
-
-        public NoSuchPolicyException(PolicyID policyID) {
-            super("No policy found with id '" + policyID.asString() + "'");
-        }
-    }
 
     PolicyID makePolicyID(String asString);
 
@@ -27,7 +20,7 @@ public interface PolicyManager {
 
     List<PolicyDAO> getAllPolicies();
 
-    void persist(PolicyDAO policy);
+    void save(PolicyDAO policy);
 
     void deletePolicy(PolicyDAO policy);
 }

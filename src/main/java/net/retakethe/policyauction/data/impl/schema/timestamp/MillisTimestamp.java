@@ -8,7 +8,7 @@ package net.retakethe.policyauction.data.impl.schema.timestamp;
 public class MillisTimestamp extends AbstractTimestamp {
     private static final long serialVersionUID = 0L;
 
-    public MillisTimestamp(long millis) {
+    protected MillisTimestamp(long millis) {
         super(millis);
     }
 }

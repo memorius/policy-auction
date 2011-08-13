@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import me.prettyprint.cassandra.utils.TimeUUIDUtils;
 import net.retakethe.policyauction.data.api.LogManager;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
@@ -23,6 +22,7 @@ import net.retakethe.policyauction.data.impl.schema.Schema.LogSCF;
 import net.retakethe.policyauction.data.impl.schema.Schema.LogSCF.LogMessageRange;
 import net.retakethe.policyauction.data.impl.schema.timestamp.MillisTimestamp;
 import net.retakethe.policyauction.data.impl.types.LogMessageIDImpl;
+import net.retakethe.policyauction.data.impl.util.UUIDUtils;
 
 import org.apache.commons.lang.time.DateFormatUtils;
 
@@ -50,7 +50,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
 
     @Override
     public LogMessageID createCurrentTimeLogMessageID() {
-        return new LogMessageIDImpl(TimeUUIDUtils.getUniqueTimeUUIDinMillis());
+        return new LogMessageIDImpl();
     }
 
     @Override
@@ -74,8 +74,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
         // Hour buckets must be based on message ID since we have to find it from the ID when retrieving.
 
         LogMessageID id = olm.getId();
-        DateAndHour key = new DateAndHour(TimeUUIDUtils.getTimeFromUUID(
-                ((LogMessageIDImpl) id).getUUID()));
+        DateAndHour key = new DateAndHour(UUIDUtils.getTimeMillisFromTimeUUID(((LogMessageIDImpl) id).getUUID()));
 
         ensureHourBucket(key);
 

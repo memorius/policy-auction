@@ -27,6 +27,7 @@ public class DAOManagerImpl implements DAOManager {
 
     private final LogManagerImpl logManager;
     private final PolicyManagerImpl policyManager;
+    private final UserVoteManagerImpl userVoteManager;
 
     /**
      * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
@@ -53,6 +54,7 @@ public class DAOManagerImpl implements DAOManager {
         initializeCassandraLogAppender();
 
         policyManager = new PolicyManagerImpl(keyspaceManager);
+        userVoteManager = new UserVoteManagerImpl(keyspaceManager);
     }
 
     private void initializeCassandraLogAppender() {
@@ -79,8 +81,17 @@ public class DAOManagerImpl implements DAOManager {
     }
 
     @Override
+    public LogManagerImpl getLogManager() {
+        return logManager;
+    }
+
+    @Override
     public PolicyManagerImpl getPolicyManager() {
         return policyManager;
     }
 
+    @Override
+    public UserVoteManagerImpl getUserVoteManager() {
+        return userVoteManager;
+    }
 }

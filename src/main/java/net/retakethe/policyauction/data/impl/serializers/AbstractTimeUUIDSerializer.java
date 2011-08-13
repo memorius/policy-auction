@@ -5,13 +5,14 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
+import me.prettyprint.hector.api.ddl.ComparatorType;
 
 /**
  * @author Nick Clarke
  */
-public abstract class AbstractUUIDSerializer<T> extends AbstractSerializer<T> {
+public abstract class AbstractTimeUUIDSerializer<T> extends AbstractSerializer<T> {
 
-    protected AbstractUUIDSerializer() {}
+    protected AbstractTimeUUIDSerializer() {}
 
     protected abstract UUID toUUID(T obj);
 
@@ -31,5 +32,10 @@ public abstract class AbstractUUIDSerializer<T> extends AbstractSerializer<T> {
             return null;
         }
         return fromUUID(UUIDSerializer.get().fromByteBuffer(byteBuffer));
+    }
+
+    @Override
+    public ComparatorType getComparatorType() {
+        return ComparatorType.TIMEUUIDTYPE;
     }
 }

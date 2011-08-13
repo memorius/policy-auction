@@ -7,6 +7,7 @@ import java.util.List;
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.PolicyManager;
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.dao.PolicyDAOImpl;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
@@ -140,7 +141,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
     }
 
     @Override
-    public void persist(PolicyDAO policy) {
+    public void save(PolicyDAO policy) {
         PolicyID policyID = policy.getPolicyID();
 
         PoliciesCF cf = Schema.POLICIES;

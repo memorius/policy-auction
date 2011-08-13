@@ -8,7 +8,7 @@ import net.retakethe.policyauction.data.impl.types.LogMessageIDImpl;
 /**
  * @author Nick Clarke
  */
-public class LogMessageIDSerializer extends AbstractUUIDSerializer<LogMessageID> {
+public class LogMessageIDSerializer extends AbstractTimeUUIDSerializer<LogMessageID> {
 
     private static final LogMessageIDSerializer INSTANCE = new LogMessageIDSerializer();
 

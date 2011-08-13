@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
 import me.prettyprint.cassandra.serializers.DateSerializer;
+import me.prettyprint.cassandra.serializers.IntegerSerializer;
+import me.prettyprint.cassandra.serializers.ShortSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Serializer;
@@ -12,6 +14,7 @@ import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.UserID;
+import net.retakethe.policyauction.data.impl.serializers.ByteSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 import net.retakethe.policyauction.data.impl.serializers.JSONSerializer;
@@ -19,6 +22,8 @@ import net.retakethe.policyauction.data.impl.serializers.LogMessageIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.NullSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.UserIDSerializer;
+import net.retakethe.policyauction.data.impl.serializers.VoteRecordIDSerializer;
+import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
 
 import org.apache.tapestry5.json.JSONObject;
 
@@ -40,7 +45,7 @@ public final class Type<T> {
     /**
      * java.util.UUID, for cassandra TimeUUIDType.
      *
-     * @see me.prettyprint.cassandra.utils.TimeUUIDUtils
+     * @see net.retakethe.policyauction.data.impl.util.UUIDUtils
      */
     public static final Type<UUID>    TIME_UUID = new Type<UUID>(UUID.class, UUIDSerializer.get());
 
@@ -54,6 +59,21 @@ public final class Type<T> {
      */
     public static final Type<DateAndHour> DATE_AND_HOUR = new Type<DateAndHour>(DateAndHour.class,
             DateAndHourSerializer.get());
+
+    /**
+     * Byte, stored as a single byte.
+     */
+    public static final Type<Byte> BYTE = new Type<Byte>(Byte.class, ByteSerializer.get());
+
+    /**
+     * Short, stored as two bytes.
+     */
+    public static final Type<Short> SHORT = new Type<Short>(Short.class, ShortSerializer.get());
+
+    /**
+     * Integer, stored as four bytes.
+     */
+    public static final Type<Integer> INT = new Type<Integer>(Integer.class, IntegerSerializer.get());
 
     /**
      * Boolean, stored in cassandra as a 1 or 0 byte (BytesType).
@@ -74,7 +94,13 @@ public final class Type<T> {
      * UserID: TimeUUIDType.
      */
     public static final Type<UserID> USER_ID = new Type<UserID>(UserID.class, UserIDSerializer.get());
-   
+
+    /**
+     * VoteRecordID: TimeUUIDType.
+     */
+    public static final Type<VoteRecordID> VOTE_RECORD_ID = new Type<VoteRecordID>(VoteRecordID.class,
+            VoteRecordIDSerializer.get());
+
     /**
      * LogMessageD: TimeUUIDType.
      */
@@ -88,6 +114,7 @@ public final class Type<T> {
      * Values are ignored when storing, an empty byte array is stored instead. Queries always return null values.
      */
     public static final Type<Object> NULL = new Type<Object>(Object.class, NullSerializer.get());
+
 
     private final Class<T> type;
     private final Serializer<T> serializer;

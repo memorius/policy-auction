@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.hector.api.ddl.ComparatorType;
 
 /**
  * @author Nick Clarke
@@ -30,5 +31,10 @@ public abstract class AbstractStringSerializer<T> extends AbstractSerializer<T> 
             return null;
         }
         return fromString(StringSerializer.get().fromByteBuffer(byteBuffer));
+    }
+
+    @Override
+    public ComparatorType getComparatorType() {
+        return ComparatorType.UTF8TYPE;
     }
 }
