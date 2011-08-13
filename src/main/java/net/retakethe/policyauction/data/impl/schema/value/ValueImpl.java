@@ -12,6 +12,15 @@ public class ValueImpl<T extends Timestamp, V> implements Value<T, V> {
     private final Integer timeToLiveSeconds;
 
     /**
+     * Construct without setting TTL.
+     */
+    public ValueImpl(V value, T timestamp) {
+        this(value, timestamp, null);
+    }
+
+    /**
+     * Construct with TTL.
+     *
      * @param timeToLiveSeconds null means don't set ttl
      */
     public ValueImpl(V value, T timestamp, Integer timeToLiveSeconds) {
@@ -25,7 +34,7 @@ public class ValueImpl<T extends Timestamp, V> implements Value<T, V> {
         this.timestamp = timestamp;
         this.timeToLiveSeconds = timeToLiveSeconds;
     }
-
+    
     /**
      * Get TTL value to set for the column, or null if no TTL should be set
      * <p>

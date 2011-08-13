@@ -14,7 +14,7 @@ public interface VariableValueTypedSupercolumn<T extends Timestamp, SN, N> {
      * Note the column values are not accessible through this method because they are allowed to be different types
      * in each column.
      */
-    List<UnresolvedVariableValueTypedColumn<T, N>> getSubcolumns();
+    List<UnresolvedVariableValueTypedColumn<N>> getSubcolumns();
 
     <V> VariableValueTypedColumn<T, N, V> getSubcolumn(NamedSubcolumn<?, T, SN, N, V> subcolumn);
 

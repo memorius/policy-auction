@@ -19,22 +19,22 @@ import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 public class VariableValueTypedColumnSliceImpl<T extends Timestamp, N> implements VariableValueTypedColumnSlice<T, N> {
 
     private final ColumnSlice<N, Object> wrappedColumnSlice;
-    private final List<UnresolvedVariableValueTypedColumn<T, N>> columns;
+    private final List<UnresolvedVariableValueTypedColumn<N>> columns;
 
     public VariableValueTypedColumnSliceImpl(ColumnSlice<N, Object> wrappedColumnSlice) {
         this.wrappedColumnSlice = wrappedColumnSlice;
 
         List<HColumn<N, Object>> wrappedColumns = wrappedColumnSlice.getColumns();
         int size = wrappedColumns.size();
-        columns = new ArrayList<UnresolvedVariableValueTypedColumn<T, N>>(size);
+        columns = new ArrayList<UnresolvedVariableValueTypedColumn<N>>(size);
 
         for (HColumn<N, Object> wrappedColumn : wrappedColumns) {
-            columns.add(new UnresolvedVariableValueTypedColumnImpl<T, N>(wrappedColumn));
+            columns.add(new UnresolvedVariableValueTypedColumnImpl<N>(wrappedColumn));
         }
     }
 
     @Override
-    public List<UnresolvedVariableValueTypedColumn<T, N>> getColumns() {
+    public List<UnresolvedVariableValueTypedColumn<N>> getColumns() {
         return Collections.unmodifiableList(columns);
     }
 
@@ -44,7 +44,8 @@ public class VariableValueTypedColumnSliceImpl<T extends Timestamp, N> implement
         if (wrappedColumn == null) {
             return null;
         }
-        return new VariableValueTypedColumnImpl<T, N, V>(wrappedColumn, column.getValueSerializer());
+        return new VariableValueTypedColumnImpl<T, N, V>(wrappedColumn, column.getColumnFamily(),
+                column.getValueSerializer());
     }
 
     @Override
@@ -53,6 +54,7 @@ public class VariableValueTypedColumnSliceImpl<T extends Timestamp, N> implement
         if (wrappedColumn == null) {
             return null;
         }
-        return new VariableValueTypedColumnImpl<T, N, V>(wrappedColumn, column.getValueSerializer());
+        return new VariableValueTypedColumnImpl<T, N, V>(wrappedColumn, column.getColumnFamily(),
+                column.getValueSerializer());
     }
 }

@@ -45,7 +45,7 @@ public class AbstractDAOManagerImpl {
         if (col == null) {
             return null;
         }
-        return col.getValue();
+        return col.getValue().getValue();
     }
 
     protected <T extends Timestamp, N, V> V getNonNullColumn(VariableValueTypedColumnSlice<T, N> cs,
@@ -55,7 +55,7 @@ public class AbstractDAOManagerImpl {
         if (col == null) {
             throw new NoSuchColumnException(column.getName().toString());
         }
-        V value = col.getValue();
+        V value = col.getValue().getValue();
         if (value == null) {
             throw new NoSuchColumnException(column.getName().toString());
         }

@@ -19,7 +19,7 @@ public class VariableValueTypedSupercolumnImpl<T extends Timestamp, SN, N>
         implements VariableValueTypedSupercolumn<T, SN, N> {
 
     private final HSuperColumn<SN, N, Object> wrappedSupercolumn;
-    private final List<UnresolvedVariableValueTypedColumn<T, N>> columns;
+    private final List<UnresolvedVariableValueTypedColumn<N>> columns;
     private final Map<N, HColumn<N, Object>> columnsByName;
 
     public VariableValueTypedSupercolumnImpl(HSuperColumn<SN, N, Object> wrappedSupercolumn) {
@@ -27,11 +27,11 @@ public class VariableValueTypedSupercolumnImpl<T extends Timestamp, SN, N>
 
         List<HColumn<N, Object>> wrappedColumns = wrappedSupercolumn.getColumns();
         int size = wrappedColumns.size();
-        columns = new ArrayList<UnresolvedVariableValueTypedColumn<T, N>>(size);
+        columns = new ArrayList<UnresolvedVariableValueTypedColumn<N>>(size);
         columnsByName = new HashMap<N, HColumn<N, Object>>(size);
 
         for (HColumn<N, Object> wrappedColumn : wrappedColumns) {
-            columns.add(new UnresolvedVariableValueTypedColumnImpl<T, N>(wrappedColumn));
+            columns.add(new UnresolvedVariableValueTypedColumnImpl<N>(wrappedColumn));
             columnsByName.put(wrappedColumn.getName(), wrappedColumn);
         }
     }
@@ -42,7 +42,7 @@ public class VariableValueTypedSupercolumnImpl<T extends Timestamp, SN, N>
     }
 
     @Override
-    public List<UnresolvedVariableValueTypedColumn<T, N>> getSubcolumns() {
+    public List<UnresolvedVariableValueTypedColumn<N>> getSubcolumns() {
         return Collections.unmodifiableList(columns);
     }
 
@@ -52,7 +52,9 @@ public class VariableValueTypedSupercolumnImpl<T extends Timestamp, SN, N>
         if (wrappedColumn == null) {
             return null;
         }
-        return new VariableValueTypedColumnImpl<T, N, V>(wrappedColumn, subcolumn.getValueSerializer());
+        return new VariableValueTypedColumnImpl<T, N, V>(wrappedColumn,
+                subcolumn.getSupercolumn().getSupercolumnFamily(),
+                subcolumn.getValueSerializer());
     }
 
     @Override
@@ -61,6 +63,8 @@ public class VariableValueTypedSupercolumnImpl<T extends Timestamp, SN, N>
         if (wrappedColumn == null) {
             return null;
         }
-        return new VariableValueTypedColumnImpl<T, N, V>(wrappedColumn, subcolumn.getValueSerializer());
+        return new VariableValueTypedColumnImpl<T, N, V>(wrappedColumn,
+                subcolumn.getSupercolumn().getSupercolumnFamily(),
+                subcolumn.getValueSerializer());
     }
 }

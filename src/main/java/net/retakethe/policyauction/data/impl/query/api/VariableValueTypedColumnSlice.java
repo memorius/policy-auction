@@ -16,7 +16,7 @@ public interface VariableValueTypedColumnSlice<T extends Timestamp, N> {
     * Note the column values are not accessible through this method because they are allowed to be different types
     * in each column.
     */
-   List<UnresolvedVariableValueTypedColumn<T, N>> getColumns();
+   List<UnresolvedVariableValueTypedColumn<N>> getColumns();
 
    <V> VariableValueTypedColumn<T, N, V> getColumn(NamedColumn<?, T, N, V> column);
 

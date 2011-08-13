@@ -1,6 +1,7 @@
 package net.retakethe.policyauction.data.impl.query.api;
 
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.data.impl.schema.value.Value;
 
 
 /**
@@ -10,7 +11,7 @@ import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
  * @param <V> column value type
  * @author Nick Clarke
  */
-public interface VariableValueTypedColumn<T extends Timestamp, N, V> extends UnresolvedVariableValueTypedColumn<T, N> {
+public interface VariableValueTypedColumn<T extends Timestamp, N, V> extends UnresolvedVariableValueTypedColumn<N> {
 
-    V getValue();
+    Value<T, V> getValue();
 }
