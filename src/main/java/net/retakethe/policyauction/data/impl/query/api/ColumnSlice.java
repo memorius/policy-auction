@@ -18,7 +18,9 @@ public interface ColumnSlice<T extends Timestamp, N> {
     */
    List<UnresolvedColumnResult<N>> getColumns();
 
+   <V> List<ColumnResult<T, N, V>> getColumns(ColumnRange<?, T, N, V> columnRange);
+
    <V> ColumnResult<T, N, V> getColumn(NamedColumn<?, T, N, V> column);
 
-   <V> ColumnResult<T, N, V> getColumn(ColumnRange<?, T, N, V> column, N columnName);
+   <V> ColumnResult<T, N, V> getColumn(ColumnRange<?, T, N, V> columnRange, N columnName);
 }
