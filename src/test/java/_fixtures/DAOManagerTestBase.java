@@ -9,7 +9,7 @@ import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.manager.DAOManagerImpl;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
@@ -90,7 +90,7 @@ public abstract class DAOManagerTestBase {
             // Use of the common-to-all-CFs "EXISTS" column allows us to omit tombstone rows:
             // they will be present in the result but will lack this column.
 
-            RangeSlicesQuery<K, N, Object> query = QueryFactory.createRangeSlicesQuery(
+            RangeSlicesQuery<K, N, Object> query = QueryFactory.createHectorRangeSlicesQuery(
                     keyspaceManager, cf, DummySerializer.get(), null, null, false, 1);
 
             query.setRowCount(100000);
@@ -102,7 +102,7 @@ public abstract class DAOManagerTestBase {
             }
 
             // Delete the rows for these keys
-            MutatorWrapper<K, T> m = cf.createMutator(keyspaceManager);
+            Mutator<K, T> m = cf.createMutator(keyspaceManager);
             boolean rowsExist = false;
             for (Row<K, N, Object> row : rows) {
                 logger.info("DAOManagerTestBase.cleanCassandraDB: key: " + row.getKey());

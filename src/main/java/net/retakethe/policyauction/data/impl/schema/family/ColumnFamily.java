@@ -5,11 +5,11 @@ import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
-import net.retakethe.policyauction.data.impl.query.api.ColumnValueQuery;
+import net.retakethe.policyauction.data.impl.query.api.ColumnQuery;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSliceQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.MultigetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.RangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.api.SliceQuery;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.column.Column;
@@ -44,53 +44,53 @@ public abstract class ColumnFamily<K, T extends Timestamp, N> extends BaseColumn
         return columnNameType.getSerializer();
     }
 
-    public <V> ColumnValueQuery<K, T, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, Column<K, T, N, V> column,
+    public <V> ColumnQuery<K, T, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, Column<K, T, N, V> column,
             N columnName) {
         return QueryFactory.createColumnQuery(keyspaceManager, this, key, column, columnName);
     }
 
-    public VariableValueTypedSliceQuery<K, T, N> createSliceQuery(KeyspaceManager keyspaceManager, K key,
+    public SliceQuery<K, T, N> createSliceQuery(KeyspaceManager keyspaceManager, K key,
             ColumnRange<K, T, N, ?> columnRange, N start, N finish, boolean reversed, int count) {
-        return QueryFactory.createVariableValueTypedSliceQuery(keyspaceManager, this, key, columnRange,
+        return QueryFactory.createSliceQuery(keyspaceManager, this, key, columnRange,
                 start, finish, reversed, count);
     }
 
     /**
      * @param columns must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedSliceQuery<K, T, N> createVariableValueTypedSliceQuery(KeyspaceManager keyspaceManager,
+    public SliceQuery<K, T, N> createSliceQuery(KeyspaceManager keyspaceManager,
             K key, List<NamedColumn<K, T, N, ?>> columns) {
-        return QueryFactory.createVariableValueTypedSliceQuery(keyspaceManager, this, key, columns);
+        return QueryFactory.createSliceQuery(keyspaceManager, this, key, columns);
     }
 
-    public VariableValueTypedMultigetSliceQuery<K, T, N> createVariableValueTypedMultigetSliceQuery(KeyspaceManager keyspaceManager,
+    public MultigetSliceQuery<K, T, N> createMultigetSliceQuery(KeyspaceManager keyspaceManager,
             ColumnRange<K, T, N, ?> columnRange, N start, N finish, boolean reversed, int count) {
-        return QueryFactory.createVariableValueTypedMultigetSliceQuery(keyspaceManager, this, columnRange,
+        return QueryFactory.createMultigetSliceQuery(keyspaceManager, this, columnRange,
                 start, finish, reversed, count);
     }
 
     /**
      * @param columns must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedMultigetSliceQuery<K, T, N> createVariableValueTypedMultigetSliceQuery(
+    public MultigetSliceQuery<K, T, N> createMultigetSliceQuery(
             KeyspaceManager keyspaceManager, List<NamedColumn<K, T, N, ?>> columns) {
-        return QueryFactory.createVariableValueTypedMultigetSliceQuery(keyspaceManager, this, columns);
+        return QueryFactory.createMultigetSliceQuery(keyspaceManager, this, columns);
     }
 
     /**
      * @param columns must be columns belonging to this ColumnFamily.
      */
-    public VariableValueTypedRangeSlicesQuery<K, T, N> createVariableValueTypedRangeSlicesQuery(
+    public RangeSlicesQuery<K, T, N> createRangeSlicesQuery(
             KeyspaceManager keyspaceManager,
             List<NamedColumn<K, T, N, ?>> columns) {
-        return QueryFactory.createVariableValueTypedRangeSlicesQuery(keyspaceManager, this, columns);
+        return QueryFactory.createRangeSlicesQuery(keyspaceManager, this, columns);
     }
 
-    public VariableValueTypedRangeSlicesQuery<K, T, N> createVariableValueTypedRangeSlicesQuery(
+    public RangeSlicesQuery<K, T, N> createRangeSlicesQuery(
             KeyspaceManager keyspaceManager,
             ColumnRange<K, T, N, ?> columnRange,
             N start, N finish, boolean reversed, int count) {
-        return QueryFactory.createVariableValueTypedRangeSlicesQuery(keyspaceManager, this, columnRange,
+        return QueryFactory.createRangeSlicesQuery(keyspaceManager, this, columnRange,
                 start, finish, reversed, count);
     }
 }

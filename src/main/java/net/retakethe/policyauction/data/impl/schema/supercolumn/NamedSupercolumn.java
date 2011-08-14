@@ -2,9 +2,9 @@ package net.retakethe.policyauction.data.impl.schema.supercolumn;
 
 import java.util.UUID;
 
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
 import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
-import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorInternal;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
@@ -30,11 +30,11 @@ public abstract class NamedSupercolumn<K, T extends Timestamp, SN, N> extends Su
         return name;
     }
 
-    public SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(MutatorWrapper<K, T> m, K key) {
-        return ((MutatorWrapperInternal<K, T>) m).createSubcolumnMutator(key, this, getName());
+    public SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(Mutator<K, T> m, K key) {
+        return ((MutatorInternal<K, T>) m).createSubcolumnMutator(key, this, getName());
     }
 
-    public void addSupercolumnDeletion(MutatorWrapper<K, T> m, K key) {
-        ((MutatorWrapperInternal<K, T>) m).addSupercolumnDeletion(key, this, getName());
+    public void addSupercolumnDeletion(Mutator<K, T> m, K key) {
+        ((MutatorInternal<K, T>) m).addSupercolumnDeletion(key, this, getName());
     }
 }

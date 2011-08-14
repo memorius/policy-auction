@@ -2,8 +2,8 @@ package net.retakethe.policyauction.data.impl.schema.column;
 
 import java.util.UUID;
 
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorInternal;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
@@ -24,22 +24,22 @@ public class ColumnRange<K, T extends Timestamp, N, V> extends Column<K, T, N, V
         super(columnFamily, valueType);
     }
 
-    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, N name, Value<T, V> value) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnInsertion(key, this, name, value);
+    public void addColumnInsertion(Mutator<K, T> m, K key, N name, Value<T, V> value) {
+        ((MutatorInternal<K, T>) m).addColumnInsertion(key, this, name, value);
     }
 
     /**
      * Delete column, using current timestamp
      */
-    public void addColumnDeletion(MutatorWrapper<K, T> m, K key, N name) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this, name,
+    public void addColumnDeletion(Mutator<K, T> m, K key, N name) {
+        ((MutatorInternal<K, T>) m).addColumnDeletion(key, this, name,
                 getColumnFamily().createCurrentTimestamp());
     }
 
     /**
      * Delete column, using specified timestamp
      */
-    public void addColumnDeletion(MutatorWrapper<K, T> m, K key, N name, T timestamp) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, this, name, timestamp);
+    public void addColumnDeletion(Mutator<K, T> m, K key, N name, T timestamp) {
+        ((MutatorInternal<K, T>) m).addColumnDeletion(key, this, name, timestamp);
     }
 }

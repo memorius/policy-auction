@@ -4,9 +4,9 @@ import java.util.UUID;
 
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperImpl;
-import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorImpl;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
@@ -126,7 +126,7 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
      * Create a mutator for setting up batch mutations.
      * This can then accumulate multiple column/supercolumn/subcolumn inserts,
      * and/or row/column/supercolumn/subcolumn deletes
-     * to be sent to Cassandra as a single unit by calling {@link MutatorWrapper#execute()}.
+     * to be sent to Cassandra as a single unit by calling {@link Mutator#execute()}.
      * <p>
      * Note the mutations are not ordered or atomic across different column families or rows!
      * <p>
@@ -136,21 +136,21 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
      * A single mutator may be reused across multiple column families sharing the same keytype <K>
      * and key serializer, which allows updates to be sent more efficiently.
      */
-    public MutatorWrapper<K, T> createMutator(KeyspaceManager keyspaceManager) {
-        return new MutatorWrapperImpl<K, T>(getKeyspace(), getKeySerializer(), keyspaceManager);
+    public Mutator<K, T> createMutator(KeyspaceManager keyspaceManager) {
+        return new MutatorImpl<K, T>(getKeyspace(), getKeySerializer(), keyspaceManager);
     }
 
     /**
      * Delete row, using current timestamp
      */
-    public void addRowDeletion(MutatorWrapper<K, T> m, K key) {
-        ((MutatorWrapperInternal<K, T>) m).addRowDeletion(this, key, createCurrentTimestamp());
+    public void addRowDeletion(Mutator<K, T> m, K key) {
+        ((MutatorInternal<K, T>) m).addRowDeletion(this, key, createCurrentTimestamp());
     }
 
     /**
      * Delete row, using specified timestamp
      */
-    public void addRowDeletion(MutatorWrapper<K, T> m, K key, T timestamp) {
-        ((MutatorWrapperInternal<K, T>) m).addRowDeletion(this, key, timestamp);
+    public void addRowDeletion(Mutator<K, T> m, K key, T timestamp) {
+        ((MutatorInternal<K, T>) m).addRowDeletion(this, key, timestamp);
     }
 }

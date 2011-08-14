@@ -1,10 +1,8 @@
 package net.retakethe.policyauction.data.impl.manager;
 
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.HColumn;
 import net.retakethe.policyauction.data.api.types.PolicyID;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumn;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
+import net.retakethe.policyauction.data.impl.query.api.ColumnResult;
+import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
@@ -24,49 +22,25 @@ public class AbstractDAOManagerImpl {
         }
     }
 
-    protected String getStringColumnOrNull(ColumnSlice<String, String> cs, String columnName) {
-        if (cs == null) {
-            return null;
-        }
-        HColumn<String, String> col = cs.getColumnByName(columnName);
-        if (col == null) {
-            return null;
-        }
-        String value = col.getValue();
-        if (value == null) {
-            return null;
-        }
-        return value;
-    }
-
-    protected <T extends Timestamp, N, V> V getColumnOrNull(VariableValueTypedColumnSlice<T, N> cs,
+    protected <T extends Timestamp, N, V> V getColumnOrNull(ColumnSlice<T, N> cs,
             NamedColumn<?, T, N, V> column) {
-        VariableValueTypedColumn<T, N, V> col = cs.getColumn(column);
+        ColumnResult<T, N, V> col = cs.getColumn(column);
         if (col == null) {
             return null;
         }
         return col.getValue().getValue();
     }
 
-    protected <T extends Timestamp, N, V> V getNonNullColumn(VariableValueTypedColumnSlice<T, N> cs,
+    protected <T extends Timestamp, N, V> V getNonNullColumn(ColumnSlice<T, N> cs,
             NamedColumn<?, T, N, V> column)
             throws NoSuchColumnException {
-        VariableValueTypedColumn<T, N, V> col = cs.getColumn(column);
+        ColumnResult<T, N, V> col = cs.getColumn(column);
         if (col == null) {
             throw new NoSuchColumnException(column.getName().toString());
         }
         V value = col.getValue().getValue();
         if (value == null) {
             throw new NoSuchColumnException(column.getName().toString());
-        }
-        return value;
-    }
-
-    protected String getNonNullStringColumn(ColumnSlice<String, String> cs, String columnName) 
-            throws NoSuchColumnException {
-        String value = getStringColumnOrNull(cs, columnName);
-        if (value == null) {
-            throw new NoSuchColumnException(columnName);
         }
         return value;
     }

@@ -6,10 +6,10 @@ import java.util.UUID;
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSuperSliceQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSuperSlicesQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumnQuery;
+import net.retakethe.policyauction.data.impl.query.api.MultigetSuperSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.RangeSuperSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.api.SuperSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.SupercolumnQuery;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.NamedSupercolumn;
@@ -55,44 +55,44 @@ public abstract class SupercolumnFamily<K, T extends Timestamp, SN, N> extends B
         return this.subcolumnNameType.getSerializer();
     }
 
-    public VariableValueTypedSupercolumnQuery<T, SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager, K key,
+    public SupercolumnQuery<T, SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager, K key,
             Supercolumn<K, T, SN, N> supercolumn, SN supercolumnName) {
         return QueryFactory.createSupercolumnQuery(keyspaceManager, this, key, supercolumn, supercolumnName);
     }
 
-    public VariableValueTypedSuperSliceQuery<K, T, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager,
+    public SuperSliceQuery<K, T, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager,
             K key, List<NamedSupercolumn<K, T, SN, N>> supercolumns) {
-        return QueryFactory.createVariableValueTypedSuperSliceQuery(keyspaceManager, this, key, supercolumns);
+        return QueryFactory.createSuperSliceQuery(keyspaceManager, this, key, supercolumns);
     }
 
-    public VariableValueTypedSuperSliceQuery<K, T, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager,
+    public SuperSliceQuery<K, T, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager,
             K key, SupercolumnRange<K, T, SN, N> supercolumnRange,
             SN start, SN finish, boolean reversed, int count) {
-        return QueryFactory.createVariableValueTypedSuperSliceQuery(keyspaceManager, this, key,
+        return QueryFactory.createSuperSliceQuery(keyspaceManager, this, key,
                 supercolumnRange, start, finish, reversed, count);
     }
 
-    public VariableValueTypedMultigetSuperSliceQuery<K, T, SN, N> createMultigetSuperSliceQuery(
+    public MultigetSuperSliceQuery<K, T, SN, N> createMultigetSuperSliceQuery(
             KeyspaceManager keyspaceManager, List<NamedSupercolumn<K, T, SN, N>> supercolumns) {
-        return QueryFactory.createVariableValueTypedMultigetSuperSliceQuery(keyspaceManager, this, supercolumns);
+        return QueryFactory.createMultigetSuperSliceQuery(keyspaceManager, this, supercolumns);
     }
 
-    public VariableValueTypedMultigetSuperSliceQuery<K, T, SN, N> createMultigetSuperSliceQuery(
+    public MultigetSuperSliceQuery<K, T, SN, N> createMultigetSuperSliceQuery(
             KeyspaceManager keyspaceManager, SupercolumnRange<K, T, SN, N> supercolumnRange,
             SN start, SN finish, boolean reversed, int count) {
-        return QueryFactory.createVariableValueTypedMultigetSuperSliceQuery(keyspaceManager, this,
+        return QueryFactory.createMultigetSuperSliceQuery(keyspaceManager, this,
                 supercolumnRange, start, finish, reversed, count);
     }
 
-    public VariableValueTypedRangeSuperSlicesQuery<K, T, SN, N> createRangeSuperSlicesQuery(
+    public RangeSuperSlicesQuery<K, T, SN, N> createRangeSuperSlicesQuery(
             KeyspaceManager keyspaceManager, List<NamedSupercolumn<K, T, SN, N>> supercolumns) {
-        return QueryFactory.createVariableValueTypedRangeSuperSlicesQuery(keyspaceManager, this, supercolumns);
+        return QueryFactory.createRangeSuperSlicesQuery(keyspaceManager, this, supercolumns);
     }
 
-    public VariableValueTypedRangeSuperSlicesQuery<K, T, SN, N> createRangeSuperSlicesQuery(
+    public RangeSuperSlicesQuery<K, T, SN, N> createRangeSuperSlicesQuery(
             KeyspaceManager keyspaceManager, SupercolumnRange<K, T, SN, N> supercolumnRange,
             SN start, SN finish, boolean reversed, int count) {
-        return QueryFactory.createVariableValueTypedRangeSuperSlicesQuery(keyspaceManager, this,
+        return QueryFactory.createRangeSuperSlicesQuery(keyspaceManager, this,
                 supercolumnRange, start, finish, reversed, count);
     }
 }

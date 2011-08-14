@@ -1,13 +1,13 @@
 package net.retakethe.policyauction.data.impl.schema.family;
 
 
-import net.retakethe.policyauction.data.impl.query.api.ColumnValueQuery;
+import net.retakethe.policyauction.data.impl.query.api.ColumnQuery;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSliceQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
-import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
+import net.retakethe.policyauction.data.impl.query.api.MultigetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.RangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.api.SliceQuery;
+import net.retakethe.policyauction.data.impl.query.impl.MutatorInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
@@ -46,41 +46,41 @@ public class RangeColumnFamily<K, T extends Timestamp, N, V> extends ColumnFamil
         return columnRange;
     }
 
-    public void addColumnInsertion(MutatorWrapper<K, T> m, K key, N name, Value<T, V> value) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnInsertion(key, columnRange, name, value);
+    public void addColumnInsertion(Mutator<K, T> m, K key, N name, Value<T, V> value) {
+        ((MutatorInternal<K, T>) m).addColumnInsertion(key, columnRange, name, value);
     }
 
     /**
      * Delete column, using current timestamp
      */
-    public void addColumnDeletion(MutatorWrapper<K, T> m, K key, N name) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, columnRange, name,
+    public void addColumnDeletion(Mutator<K, T> m, K key, N name) {
+        ((MutatorInternal<K, T>) m).addColumnDeletion(key, columnRange, name,
                 createCurrentTimestamp());
     }
     
     /**
      * Delete column, using specified timestamp
      */
-    public void addColumnDeletion(MutatorWrapper<K, T> m, K key, N name, T timestamp) {
-        ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, columnRange, name, timestamp);
+    public void addColumnDeletion(Mutator<K, T> m, K key, N name, T timestamp) {
+        ((MutatorInternal<K, T>) m).addColumnDeletion(key, columnRange, name, timestamp);
     }
 
-    public ColumnValueQuery<K, T, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, N columnName) {
+    public ColumnQuery<K, T, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, N columnName) {
         return createColumnQuery(keyspaceManager, key, columnRange, columnName);
     }
 
-    public VariableValueTypedSliceQuery<K, T, N> createSliceQuery(KeyspaceManager keyspaceManager, K key,
+    public SliceQuery<K, T, N> createSliceQuery(KeyspaceManager keyspaceManager, K key,
             N start, N finish, boolean reversed, int count) {
         return createSliceQuery(keyspaceManager, key, columnRange, start, finish, reversed, count);
     }
 
-    public VariableValueTypedMultigetSliceQuery<K, T, N> createMultigetSliceQuery(KeyspaceManager keyspaceManager,
+    public MultigetSliceQuery<K, T, N> createMultigetSliceQuery(KeyspaceManager keyspaceManager,
             N start, N finish, boolean reversed, int count) {
-        return createVariableValueTypedMultigetSliceQuery(keyspaceManager, columnRange, start, finish, reversed, count);
+        return createMultigetSliceQuery(keyspaceManager, columnRange, start, finish, reversed, count);
     }
 
-    public VariableValueTypedRangeSlicesQuery<K, T, N> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
+    public RangeSlicesQuery<K, T, N> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
             N start, N finish, boolean reversed, int count) {
-        return createVariableValueTypedRangeSlicesQuery(keyspaceManager, columnRange, start, finish, reversed, count);
+        return createRangeSlicesQuery(keyspaceManager, columnRange, start, finish, reversed, count);
     }
 }

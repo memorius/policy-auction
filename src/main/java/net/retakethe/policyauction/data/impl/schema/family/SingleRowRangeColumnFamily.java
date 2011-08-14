@@ -1,9 +1,9 @@
 package net.retakethe.policyauction.data.impl.schema.family;
 
-import net.retakethe.policyauction.data.impl.query.api.ColumnValueQuery;
+import net.retakethe.policyauction.data.impl.query.api.ColumnQuery;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
+import net.retakethe.policyauction.data.impl.query.api.SliceQuery;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
@@ -29,29 +29,29 @@ public class SingleRowRangeColumnFamily<K, T extends Timestamp, N, V> extends Ra
         return key;
     }
 
-    public void addColumnInsertion(MutatorWrapper<K, T> m, N name, Value<T, V> value) {
+    public void addColumnInsertion(Mutator<K, T> m, N name, Value<T, V> value) {
         addColumnInsertion(m, key, name, value);
     }
 
     /**
      * Delete column, using current timestamp
      */
-    public void addColumnDeletion(MutatorWrapper<K, T> m, N name) {
+    public void addColumnDeletion(Mutator<K, T> m, N name) {
         addColumnDeletion(m, key, name);
     }
 
     /**
      * Delete column, using specified timestamp
      */
-    public void addColumnDeletion(MutatorWrapper<K, T> m, N name, T timestamp) {
+    public void addColumnDeletion(Mutator<K, T> m, N name, T timestamp) {
         addColumnDeletion(m, key, name, timestamp);
     }
     
-    public ColumnValueQuery<K, T, N, V> createColumnQuery(KeyspaceManager keyspaceManager, N columnName) {
+    public ColumnQuery<K, T, N, V> createColumnQuery(KeyspaceManager keyspaceManager, N columnName) {
         return createColumnQuery(keyspaceManager, key, columnName);
     }
 
-    public VariableValueTypedSliceQuery<K, T, N> createSliceQuery(KeyspaceManager keyspaceManager,
+    public SliceQuery<K, T, N> createSliceQuery(KeyspaceManager keyspaceManager,
             N start, N finish, boolean reversed, int count) {
         return createSliceQuery(keyspaceManager, key, start, finish, reversed, count);
     }

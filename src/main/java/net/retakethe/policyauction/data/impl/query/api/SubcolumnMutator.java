@@ -13,14 +13,14 @@ import net.retakethe.policyauction.data.impl.schema.value.Value;
 /**
  * Subcolumn insertions/mutations/deletions using our Schema classes.
  * <p>
- * To use, create via a {@link MutatorWrapper}, queue any number of mutations as below,
- * then call {@link MutatorWrapper#execute()}.
+ * To use, create via a {@link Mutator}, queue any number of mutations as below,
+ * then call {@link Mutator#execute()}.
  * <p>
  * To create a subcolumn mutator:
- * {@link SupercolumnRange#createSubcolumnMutator(MutatorWrapper, Object, Object)}
- * {@link NamedSupercolumn#createSubcolumnMutator(MutatorWrapper, Object)}
- * {@link RangeSupercolumnFamily#createSubcolumnMutator(MutatorWrapper, Object, Object)}
- * {@link SingleRowRangeSupercolumnFamily#createSubcolumnMutator(MutatorWrapper, Object)}
+ * {@link SupercolumnRange#createSubcolumnMutator(Mutator, Object, Object)}
+ * {@link NamedSupercolumn#createSubcolumnMutator(Mutator, Object)}
+ * {@link RangeSupercolumnFamily#createSubcolumnMutator(Mutator, Object, Object)}
+ * {@link SingleRowRangeSupercolumnFamily#createSubcolumnMutator(Mutator, Object)}
  * <p>
  * Subcolumn insertion: using the subcolumn mutator created above:
  * {@link NamedSubcolumn#addSubcolumnInsertion(SubcolumnMutator, Value)}

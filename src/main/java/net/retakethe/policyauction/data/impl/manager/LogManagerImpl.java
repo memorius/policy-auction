@@ -15,7 +15,7 @@ import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.impl.logging.LogWriter;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
 import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.LogHoursRow;
@@ -59,7 +59,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
             return;
         }
 
-        MutatorWrapper<DateAndHour, MillisTimestamp> m = Schema.LOG.createMutator(keyspaceManager);
+        Mutator<DateAndHour, MillisTimestamp> m = Schema.LOG.createMutator(keyspaceManager);
 
         for (OutboundLogMessage message : messages) {
             addMessage(m, message);
@@ -68,7 +68,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
         m.execute();
     }
 
-    private void addMessage(MutatorWrapper<DateAndHour, MillisTimestamp> m, OutboundLogMessage olm) {
+    private void addMessage(Mutator<DateAndHour, MillisTimestamp> m, OutboundLogMessage olm) {
         // Note we intentionally do not use the message timestamp in the log message UUID, since this is likely to give
         // duplicates which overwrite each other - it's from log4j and has only millisecond precision.
         // Hour buckets must be based on message ID since we have to find it from the ID when retrieving.
@@ -119,7 +119,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
 
     private void createHourBucket(DateAndHour bucket) {
         LogHoursRow cf = Schema.LOG_HOURS;
-        MutatorWrapper<String, MillisTimestamp> m = cf.createMutator(keyspaceManager);
+        Mutator<String, MillisTimestamp> m = cf.createMutator(keyspaceManager);
         cf.addColumnInsertion(m, bucket, cf.createValue(DUMMY_VALUE));
         m.execute();
     }

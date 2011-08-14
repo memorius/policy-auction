@@ -3,10 +3,10 @@ package net.retakethe.policyauction.data.impl.schema.family;
 import java.util.UUID;
 
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
 import net.retakethe.policyauction.data.impl.query.api.SubcolumnMutator;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSuperSliceQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSupercolumnQuery;
+import net.retakethe.policyauction.data.impl.query.api.SuperSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.SupercolumnQuery;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
@@ -38,20 +38,20 @@ public class SingleRowRangeSupercolumnFamily<K, T extends Timestamp, SN, N, R ex
         return key;
     }
 
-    public SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(MutatorWrapper<K, T> mutator, SN supercolumnName) {
+    public SubcolumnMutator<K, T, SN, N> createSubcolumnMutator(Mutator<K, T> mutator, SN supercolumnName) {
         return createSubcolumnMutator(mutator, key, supercolumnName);
     }
 
-    public void addSupercolumnDeletion(MutatorWrapper<K, T> mutator, SN supercolumnName) {
+    public void addSupercolumnDeletion(Mutator<K, T> mutator, SN supercolumnName) {
         addSupercolumnDeletion(mutator, key, supercolumnName);
     }
 
-    public VariableValueTypedSuperSliceQuery<K, T, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager,
+    public SuperSliceQuery<K, T, SN, N> createSuperSliceQuery(KeyspaceManager keyspaceManager,
             SN start, SN finish, boolean reversed, int count) {
         return createSuperSliceQuery(keyspaceManager, key, start, finish, reversed, count);
     }
 
-    public VariableValueTypedSupercolumnQuery<T, SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager,
+    public SupercolumnQuery<T, SN, N> createSupercolumnQuery(KeyspaceManager keyspaceManager,
             SN supercolumnName) {
         return createSupercolumnQuery(keyspaceManager, key, supercolumnName);
     }
