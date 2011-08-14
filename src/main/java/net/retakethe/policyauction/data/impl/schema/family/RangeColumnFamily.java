@@ -1,12 +1,12 @@
 package net.retakethe.policyauction.data.impl.schema.family;
 
 
-import me.prettyprint.hector.api.query.ColumnQuery;
-import me.prettyprint.hector.api.query.MultigetSliceQuery;
-import me.prettyprint.hector.api.query.RangeSlicesQuery;
-import me.prettyprint.hector.api.query.SliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.ColumnValueQuery;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.query.impl.MutatorWrapperInternal;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
@@ -65,22 +65,22 @@ public class RangeColumnFamily<K, T extends Timestamp, N, V> extends ColumnFamil
         ((MutatorWrapperInternal<K, T>) m).addColumnDeletion(key, columnRange, name, timestamp);
     }
 
-    public ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, N columnName) {
+    public ColumnValueQuery<K, T, N, V> createColumnQuery(KeyspaceManager keyspaceManager, K key, N columnName) {
         return createColumnQuery(keyspaceManager, key, columnRange, columnName);
     }
 
-    public SliceQuery<K, N, V> createSliceQuery(KeyspaceManager keyspaceManager, K key,
+    public VariableValueTypedSliceQuery<K, T, N> createSliceQuery(KeyspaceManager keyspaceManager, K key,
             N start, N finish, boolean reversed, int count) {
         return createSliceQuery(keyspaceManager, key, columnRange, start, finish, reversed, count);
     }
 
-    public MultigetSliceQuery<K, N, V> createMultigetSliceQuery(KeyspaceManager keyspaceManager,
+    public VariableValueTypedMultigetSliceQuery<K, T, N> createMultigetSliceQuery(KeyspaceManager keyspaceManager,
             N start, N finish, boolean reversed, int count) {
-        return createMultigetSliceQuery(keyspaceManager, columnRange, start, finish, reversed, count);
+        return createVariableValueTypedMultigetSliceQuery(keyspaceManager, columnRange, start, finish, reversed, count);
     }
 
-    public RangeSlicesQuery<K, N, V> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
+    public VariableValueTypedRangeSlicesQuery<K, T, N> createRangeSlicesQuery(KeyspaceManager keyspaceManager,
             N start, N finish, boolean reversed, int count) {
-        return createRangeSlicesQuery(keyspaceManager, columnRange, start, finish, reversed, count);
+        return createVariableValueTypedRangeSlicesQuery(keyspaceManager, columnRange, start, finish, reversed, count);
     }
 }

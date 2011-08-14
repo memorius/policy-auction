@@ -2,6 +2,7 @@ package net.retakethe.policyauction.data.impl.query.impl;
 
 import java.util.List;
 
+import net.retakethe.policyauction.data.impl.schema.column.Column;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.SupercolumnFamily;
@@ -35,6 +36,14 @@ public final class QueryUtils {
             });
 
         return toArray(columnNames);
+    }
+
+    protected static <K, T extends Timestamp, N> void checkColumnBelongsToColumnFamily(ColumnFamily<K, T, N> cf,
+            Column<K, T, N, ?> column) {
+        if (column.getColumnFamily() != cf) {
+            throw new IllegalArgumentException("Column is from column family '"
+                    + column.getColumnFamily().getName() + "', expected column family '" + cf.getName() + "'");
+        }
     }
 
     /**

@@ -11,6 +11,7 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedOrderedRows;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
@@ -32,6 +33,16 @@ public class VariableValueTypedRangeSlicesQueryImpl<K, T extends Timestamp, N>
                     cf.getColumnNameSerializer(), DummySerializer.get())
                 .setColumnFamily(cf.getName())
                 .setColumnNames(columnNames);
+    }
+
+    public VariableValueTypedRangeSlicesQueryImpl(Keyspace ks, ColumnFamily<K, T, N> cf,
+            ColumnRange<K, T, N, ?> columnRange, N start, N finish, boolean reversed, int count) {
+        QueryUtils.checkColumnBelongsToColumnFamily(cf, columnRange);
+
+        wrappedQuery = HFactory.createRangeSlicesQuery(ks, cf.getKeySerializer(),
+                    cf.getColumnNameSerializer(), DummySerializer.get())
+                .setColumnFamily(cf.getName())
+                .setRange(start, finish, reversed, count);
     }
 
     @Override

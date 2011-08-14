@@ -7,6 +7,7 @@ import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.manager.DAOManagerImpl;
+import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
 import net.retakethe.policyauction.data.impl.schema.Schema;
@@ -89,8 +90,8 @@ public abstract class DAOManagerTestBase {
             // Use of the common-to-all-CFs "EXISTS" column allows us to omit tombstone rows:
             // they will be present in the result but will lack this column.
 
-            RangeSlicesQuery<K, N, Object> query = cf.createRangeSlicesQuery(keyspaceManager, DummySerializer.get(),
-                    null, null, false, 1);
+            RangeSlicesQuery<K, N, Object> query = QueryFactory.createRangeSlicesQuery(
+                    keyspaceManager, cf, DummySerializer.get(), null, null, false, 1);
 
             query.setRowCount(100000);
             QueryResult<OrderedRows<K, N, Object>> result = query.execute();

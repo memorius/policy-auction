@@ -11,6 +11,7 @@ import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedMultigetSliceQuery;
 import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRows;
+import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
@@ -34,6 +35,16 @@ public class VariableValueTypedMultigetSliceQueryImpl<K, T extends Timestamp, N>
                 .setColumnNames(columnNames);
     }
 
+    public VariableValueTypedMultigetSliceQueryImpl(Keyspace ks, ColumnFamily<K, T, N> cf,
+            ColumnRange<K, T, N, ?> columnRange, N start, N finish, boolean reversed, int count) {
+        QueryUtils.checkColumnBelongsToColumnFamily(cf, columnRange);
+        
+        wrappedQuery = HFactory.createMultigetSliceQuery(ks, cf.getKeySerializer(),
+                cf.getColumnNameSerializer(), DummySerializer.get())
+                .setColumnFamily(cf.getName())
+                .setRange(start, finish, reversed, count);
+    }
+    
     @Override
     public VariableValueTypedMultigetSliceQuery<K, T, N> setKeys(Iterable<K> keys) {
         wrappedQuery.setKeys(keys);

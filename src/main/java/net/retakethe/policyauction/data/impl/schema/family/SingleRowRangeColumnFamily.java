@@ -1,9 +1,9 @@
 package net.retakethe.policyauction.data.impl.schema.family;
 
-import me.prettyprint.hector.api.query.ColumnQuery;
-import me.prettyprint.hector.api.query.SliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.ColumnValueQuery;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
+import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
 import net.retakethe.policyauction.data.impl.schema.Type;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
@@ -47,11 +47,11 @@ public class SingleRowRangeColumnFamily<K, T extends Timestamp, N, V> extends Ra
         addColumnDeletion(m, key, name, timestamp);
     }
     
-    public ColumnQuery<K, N, V> createColumnQuery(KeyspaceManager keyspaceManager, N columnName) {
+    public ColumnValueQuery<K, T, N, V> createColumnQuery(KeyspaceManager keyspaceManager, N columnName) {
         return createColumnQuery(keyspaceManager, key, columnName);
     }
 
-    public SliceQuery<K, N, V> createSliceQuery(KeyspaceManager keyspaceManager,
+    public VariableValueTypedSliceQuery<K, T, N> createSliceQuery(KeyspaceManager keyspaceManager,
             N start, N finish, boolean reversed, int count) {
         return createSliceQuery(keyspaceManager, key, start, finish, reversed, count);
     }
