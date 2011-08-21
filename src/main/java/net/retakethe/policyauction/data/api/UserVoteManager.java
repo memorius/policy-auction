@@ -21,5 +21,10 @@ public interface UserVoteManager {
 
     void setVoteWithdrawalPenaltyPercentage(byte newValue);
 
+    long getVoteCostToCreatePolicy();
+
+    void setVoteCostToCreatePolicy(long voteCost);
+
     void save(CurrentUserVotesDAO currentUserVotes);
+
 }

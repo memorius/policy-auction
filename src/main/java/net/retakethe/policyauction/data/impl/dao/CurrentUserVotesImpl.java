@@ -22,7 +22,9 @@ public class CurrentUserVotesImpl implements CurrentUserVotesDAO {
     private final VoteRecordID previousVoteID;
     private final Map<PolicyID, PolicyVoteRecord> policyVotes;
     private long unallocatedVotes;
+    private PolicyID createdPolicyID;
     private final byte voteWithdrawalPenaltyPercentage;
+    private final long voteCostToCreatePolicy;
     private boolean isDirty;
 
     /**
@@ -33,19 +35,24 @@ public class CurrentUserVotesImpl implements CurrentUserVotesDAO {
             VoteRecordID previousVoteID,
             Map<PolicyID, PolicyVoteRecord> policyVotes,
             long unallocatedVotes,
-            byte voteWithdrawalPenaltyPercentage) {
+            byte voteWithdrawalPenaltyPercentage,
+            long voteCostToCreatePolicy) {
         AssertArgument.notNull(userID, "userID");
         AssertArgument.notNull(previousVoteID, "previousVoteID");
         AssertArgument.notNull(policyVotes, "policyVotes");
         AssertArgument.isTrue(unallocatedVotes >= 0, "Unallocated votes must be >= 0", unallocatedVotes);
         AssertArgument.isTrue(voteWithdrawalPenaltyPercentage >= 0 && voteWithdrawalPenaltyPercentage <= 100,
                     "voteWithdrawalPenaltyPercentage out of range", voteWithdrawalPenaltyPercentage);
+        AssertArgument.isTrue(voteCostToCreatePolicy >= 0, "voteCostToCreatePolicy must be positive",
+                voteCostToCreatePolicy);
 
         this.userID = userID;
         this.previousVoteID = previousVoteID;
         this.unallocatedVotes = unallocatedVotes;
+        this.createdPolicyID = null;
         this.policyVotes = policyVotes;
         this.voteWithdrawalPenaltyPercentage = voteWithdrawalPenaltyPercentage;
+        this.voteCostToCreatePolicy = voteCostToCreatePolicy;
         this.isDirty = false;
     }
 
@@ -66,6 +73,10 @@ public class CurrentUserVotesImpl implements CurrentUserVotesDAO {
 
     public boolean isDirty() {
         return isDirty;
+    }
+
+    public PolicyID getCreatedPolicyID() {
+        return createdPolicyID;
     }
 
     @Override
@@ -153,6 +164,25 @@ public class CurrentUserVotesImpl implements CurrentUserVotesDAO {
         }
 
         return unallocatedVotesChange;
+    }
+    
+    @Override
+    public void recordPolicyCreation(PolicyID policyID) {
+        if (policyID == null) {
+            throw new IllegalArgumentException("policyID must not be null");
+        }
+        if (createdPolicyID != null) {
+            throw new IllegalStateException("createdPolicyID already set. Save record and re-retrieve first.");
+        }
+        if (unallocatedVotes < voteCostToCreatePolicy) {
+            throw new InsufficientVotesException("User doesn't have enough unallocated votes to create a policy. "
+                    + "Mandatory vote allocation on creation is " + voteCostToCreatePolicy + ", only have "
+                    + unallocatedVotes);
+        }
+
+        setVotesAllocated(policyID, voteCostToCreatePolicy);
+        createdPolicyID = policyID;
+        isDirty = true;
     }
 
     private long calculatePenaltyForVoteWithdrawal(long unallocatedVotesChange) {

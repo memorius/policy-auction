@@ -46,6 +46,17 @@ public interface CurrentUserVotesDAO extends Serializable {
     void setVotesAllocated(PolicyID policyID, long newVotes);
 
     /**
+     * Record creation of a policy.
+     * This will also set the mandatory initial vote allocation; the user must have sufficient unallocated votes
+     * to do this. 
+     *
+     * @param policyID must not be null
+     * @throws InsufficientVotesException if there aren't enough unallocated votes to create a policy
+     * @see CurrentUserVotesDAO#getUnallocatedVotes()
+     */
+    void recordPolicyCreation(PolicyID policyID);
+
+    /**
      * Calculate how much it would cost or how many votes would be refunded if we actually called
      * {@link #setVotesAllocated(PolicyID, long)} with these values, without actually making the change.
      *

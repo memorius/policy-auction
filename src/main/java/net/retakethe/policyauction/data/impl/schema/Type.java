@@ -6,6 +6,7 @@ import java.util.UUID;
 import me.prettyprint.cassandra.serializers.BooleanSerializer;
 import me.prettyprint.cassandra.serializers.DateSerializer;
 import me.prettyprint.cassandra.serializers.IntegerSerializer;
+import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.ShortSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
@@ -76,6 +77,11 @@ public final class Type<T> {
     public static final Type<Integer> INT = new Type<Integer>(Integer.class, IntegerSerializer.get());
 
     /**
+     * Long, stored as eight bytes (LongType).
+     */
+    public static final Type<Long> LONG = new Type<Long>(Long.class, LongSerializer.get());
+
+    /**
      * Boolean, stored in cassandra as a 1 or 0 byte (BytesType).
      */
     public static final Type<Boolean> BOOLEAN   = new Type<Boolean>(Boolean.class, BooleanSerializer.get());
@@ -114,6 +120,7 @@ public final class Type<T> {
      * Values are ignored when storing, an empty byte array is stored instead. Queries always return null values.
      */
     public static final Type<Object> NULL = new Type<Object>(Object.class, NullSerializer.get());
+
 
 
     private final Class<T> type;

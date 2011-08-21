@@ -181,6 +181,7 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         // TODO: Load user votes row, return empty allocation record with all-zeros version UUIDs if not found.
 
         final byte voteWithdrawalPenaltyPercentage = getVoteWithdrawalPenaltyPercentage();
+        final long voteCostToCreatePolicy = getVoteCostToCreatePolicy();
         final long totalVoteSalary = getTotalUserVoteSalary(userID); 
 
         // TODO: keep "conflicts resolved from <version> onwards" and use this to set column range
@@ -202,14 +203,15 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
                 });
         if (voteRecords.isEmpty()) {
             // First time this user has done anything. Write an empty record and return it.
-            return createInitialEmptyVoteAllocation(userID, totalVoteSalary, voteWithdrawalPenaltyPercentage);
+            return createInitialEmptyVoteAllocation(userID, totalVoteSalary, voteWithdrawalPenaltyPercentage,
+                    voteCostToCreatePolicy);
         }
 
         List<VoteRecord> resolvedRecords = resolveCollisions(userID, voteRecords);
 
         // Get the most recent record, convert to CurrentUserVotesDAO and return.
         return toCurrentUserVotesDAO(userID, resolvedRecords.get(resolvedRecords.size() - 1),
-                totalVoteSalary, voteWithdrawalPenaltyPercentage);
+                totalVoteSalary, voteWithdrawalPenaltyPercentage, voteCostToCreatePolicy);
     }
 
     private long getTotalUserVoteSalary(UserID userID) {
@@ -325,7 +327,7 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
     }
 
     private CurrentUserVotesDAO toCurrentUserVotesDAO(UserID userID, VoteRecord mostRecentVoteRecord,
-            long totalVoteSalary, byte voteWithdrawalPenaltyPercentage) {
+            long totalVoteSalary, byte voteWithdrawalPenaltyPercentage, long voteCostToCreatePolicy) {
         // Votes remaining to spend is historic salary total minus everything spent so far
         long unallocatedVotes = totalVoteSalary;
 
@@ -340,7 +342,7 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         }
 
         return new CurrentUserVotesImpl(userID, mostRecentVoteRecord.getVoteID(), policyVotes, unallocatedVotes,
-                voteWithdrawalPenaltyPercentage);
+                voteWithdrawalPenaltyPercentage, voteCostToCreatePolicy);
     }
 
     private boolean isActivePolicy(PolicyID policyID) {
@@ -366,13 +368,14 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
     }
 
     private CurrentUserVotesDAO createInitialEmptyVoteAllocation(UserID userID, long totalVoteSalary,
-            byte voteWithdrawalPenaltyPercentage) {
+            byte voteWithdrawalPenaltyPercentage, long voteCostToCreatePolicy) {
         // Initial record has zero ID and zero parent
         VoteRecord voteRecord = new VoteRecord(ZERO_VOTE_RECORD_ID, ZERO_VOTE_RECORD_ID,
                 Schema.USER_VOTES.createCurrentTimestamp(), (PolicyID) null);
         writeUserVotesRecord(userID, voteRecord, Schema.USER_VOTES);
 
-        return toCurrentUserVotesDAO(userID, voteRecord, totalVoteSalary, voteWithdrawalPenaltyPercentage);
+        return toCurrentUserVotesDAO(userID, voteRecord, totalVoteSalary, voteWithdrawalPenaltyPercentage,
+                voteCostToCreatePolicy);
     }
 
     private void writeUserVotesRecord(UserID userID, VoteRecord record, UserVotesCF cf) {
@@ -387,9 +390,25 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         // TODO: maybe cache in memory for a few minutes
         return readVoteWithdrawalPenaltyPercentage();
     }
+    
+    @Override
+    public long getVoteCostToCreatePolicy() {
+        // TODO: maybe cache in memory for a few minutes
+        return readVoteCostToCreatePolicy();
+    }
 
     private byte readVoteWithdrawalPenaltyPercentage() {
         return Schema.VOTING_CONFIG.VOTE_WITHDRAWAL_PENALTY_PERCENTAGE.getColumnValueOrSetDefault(keyspaceManager);
+    }
+    
+    private long readVoteCostToCreatePolicy() {
+        return Schema.VOTING_CONFIG.VOTE_COST_TO_CREATE_POLICY.getColumnValueOrSetDefault(keyspaceManager);
+    }
+
+    @Override
+    public void setVoteCostToCreatePolicy(long voteCost) {
+        AssertArgument.isTrue(voteCost >= 0, "voteCost must be positive", voteCost);
+        Schema.VOTING_CONFIG.VOTE_COST_TO_CREATE_POLICY.setColumnValue(keyspaceManager, voteCost);
     }
 
     @Override
@@ -406,9 +425,8 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         }
         CurrentUserVotesImpl internal = (CurrentUserVotesImpl) currentUserVotes;
 
-        // TODO: handle created policy IDs
         VoteRecord record = new VoteRecord(new VoteRecordIDImpl(), internal.getPreviousVoteID(),
-                Schema.USER_VOTES.createCurrentTimestamp(), null, internal.getPolicyVotes());
+                Schema.USER_VOTES.createCurrentTimestamp(), internal.getCreatedPolicyID(), internal.getPolicyVotes());
 
         UserID userID = internal.getUserID();
         writeUserVotesRecord(userID, record, Schema.USER_VOTES_PENDING);

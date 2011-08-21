@@ -69,12 +69,15 @@ public final class Schema {
 
     public static final class VotingConfigRow extends SingleRowNamedColumnFamily<String, MillisTimestamp, String> {
         public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Byte> VOTE_WITHDRAWAL_PENALTY_PERCENTAGE;
+        public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Long> VOTE_COST_TO_CREATE_POLICY;
 
         private VotingConfigRow() {
             super(SchemaKeyspace.MAIN, "memcache_string", "voting config", Type.UTF8, MillisTimestampFactory.get(),
                     Type.UTF8);
             VOTE_WITHDRAWAL_PENALTY_PERCENTAGE = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Byte>(
                     "vote_withdrawal_penalty_percentage", this, Type.BYTE, (byte) 50); 
+            VOTE_COST_TO_CREATE_POLICY = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Long>(
+                    "vote_cost_to_create_policy", this, Type.LONG, 100L);
         }
     }
 
