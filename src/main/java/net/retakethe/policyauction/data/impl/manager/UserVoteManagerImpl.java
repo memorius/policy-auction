@@ -1,11 +1,18 @@
 package net.retakethe.policyauction.data.impl.manager;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.UserVoteManager;
@@ -40,7 +47,7 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
      * JSON format:
      * <pre>
      * {
-     *     parent|version: &lt;voteRecordID>
+     *     parent: &lt;voteRecordID>
      *     [votes: {
      *         &lt;policyID> ... : {
      *             vote: int
@@ -54,7 +61,6 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
      * </pre>
      */
     private static final class VoteRecord {
-        protected static final String VERSION = "version";
         protected static final String PARENT = "parent";
         private static final String CREATED_POLICY = "createdPolicy";
         private static final String VOTES = "votes";
@@ -79,9 +85,8 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
             this.policyVotes = policyVotes;
         }
         
-        protected VoteRecord(VoteRecordID voteID, VoteRecordID parentVoteID, UniqueTimestamp timestamp,
-                JSONObject json) {
-            this(voteID, parentVoteID, timestamp,
+        public VoteRecord(VoteRecordID voteID, UniqueTimestamp timestamp, JSONObject json) {
+            this(voteID, new VoteRecordIDImpl(json.getString(PARENT)), timestamp,
                     (json.has(CREATED_POLICY) ? new PolicyIDImpl(json.getString(CREATED_POLICY)) : null));
 
             if (json.has(VOTES)) {
@@ -96,16 +101,9 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
             policyVotes.put(policyID, policyVote);
         }
 
-        public JSONObject toSelfVersionedJSON() {
+        public JSONObject toJSON() {
             JSONObject o = new JSONObject();
             o.put(PARENT, parentVoteID.asString());
-            addVotes(o);
-            return o;
-        }
-
-        public JSONObject toParentVersionedJSON() {
-            JSONObject o = new JSONObject();
-            o.put(VERSION, voteID.asString());
             addVotes(o);
             return o;
         }
@@ -145,32 +143,23 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
                 o.put(CREATED_POLICY, createdPolicyID.asString());
             }
         }
-
-        /**
-         * Records whose column name is their own unique ID - designed never to collide.
-         */
-        public static VoteRecord createSelfVersioned(VoteRecordID columnName, UniqueTimestamp timestamp,
-                JSONObject json) {
-            return new VoteRecord(columnName, new VoteRecordIDImpl(json.getString(PARENT)), timestamp, json);
-        }
-
-        /**
-         * Records whose column name is the parent ID - designed to collide if two different records are written.
-         */
-        public static VoteRecord createParentVersioned(VoteRecordID columnName, UniqueTimestamp timestamp,
-                JSONObject json) {
-            return new VoteRecord(new VoteRecordIDImpl(json.getString(VERSION)), columnName, timestamp, json);
-        }
     }
 
     private static final VoteRecordID ZERO_VOTE_RECORD_ID = new VoteRecordIDImpl(UUIDUtils.getZeroTimeUUID());
 
-    private static final Comparator<VoteRecord> VOTE_RECORD_COMPARATOR = new Comparator<VoteRecord>() {
+    private static final Comparator<VoteRecordID> VOTE_RECORD_ID_COMPARATOR = new Comparator<VoteRecordID>() {
             @Override
-            public int compare(VoteRecord o1, VoteRecord o2) {
-                return ((VoteRecordIDImpl) o1.getVoteID()).compareTo((VoteRecordIDImpl) o2.getVoteID());
+            public int compare(VoteRecordID o1, VoteRecordID o2) {
+                return ((VoteRecordIDImpl) o1).compareTo((VoteRecordIDImpl) o2);
             }
         };
+
+    private static final Comparator<VoteRecord> VOTE_RECORD_COMPARATOR = new Comparator<VoteRecord>() {
+        @Override
+        public int compare(VoteRecord o1, VoteRecord o2) {
+            return VOTE_RECORD_ID_COMPARATOR.compare(o1.getVoteID(), o2.getVoteID());
+        }
+    };
 
     private final KeyspaceManager keyspaceManager;
 
@@ -194,7 +183,7 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         final byte voteWithdrawalPenaltyPercentage = getVoteWithdrawalPenaltyPercentage();
         final long totalVoteSalary = getTotalUserVoteSalary(userID); 
 
-        // TODO: keep "conflicts resolved from <version> onwards" and use this to limit column count
+        // TODO: keep "conflicts resolved from <version> onwards" and use this to set column range
         UserVotesCF cf = Schema.USER_VOTES;
         QueryResult<ColumnSlice<UniqueTimestamp, VoteRecordID>> qr =
                 cf.createSliceQuery(keyspaceManager, userID, null, null, false, Integer.MAX_VALUE).execute();
@@ -208,7 +197,7 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
                         UniqueTimestamp ts = v.getTimestamp();
                         JSONObject json = v.getValue();
 
-                        return VoteRecord.createParentVersioned(recordID, ts, json);
+                        return new VoteRecord(recordID, ts, json);
                     }
                 });
         if (voteRecords.isEmpty()) {
@@ -228,41 +217,111 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         return 100L;
     }
 
+    /**
+     * Find the chain with the newest child, propagate deletions for the rest and for any with missing parents.
+     * Results are returned in order from oldest to newest.
+     *
+     * @param voteRecords in time order
+     */
     private List<VoteRecord> resolveCollisions(UserID userID, List<VoteRecord> voteRecords) {
-        Map<VoteRecordID, VoteRecord> recordsByID = new HashMap<VoteRecordID, VoteRecord>(voteRecords.size());
+        Map<VoteRecordID, VoteRecord> allRecords = new LinkedHashMap<VoteRecordID, VoteRecord>(voteRecords.size());
         for (VoteRecord voteRecord : voteRecords) {
-            recordsByID.put(voteRecord.getVoteID(), voteRecord);
+            allRecords.put(voteRecord.getVoteID(), voteRecord);
         }
 
-        // Note that collisions will be rare: this looping will usually only go through once.
-        boolean anythingRemoved;
-        do {
-            anythingRemoved = false;
-            Iterator<VoteRecord> i = voteRecords.iterator();
-            while (i.hasNext()) {
-                VoteRecord voteRecord = i.next();
+        // Child (leaf) nodes mapped to all their ancestors
+        SortedMap<VoteRecordID, Set<VoteRecordID>> leafToAncestors =
+                    new TreeMap<VoteRecordID, Set<VoteRecordID>>(VOTE_RECORD_ID_COMPARATOR);
+        // Start with just the magic first record which will always be present
+        leafToAncestors.put(ZERO_VOTE_RECORD_ID, new HashSet<VoteRecordID>());
 
-                VoteRecordID parentVoteID = voteRecord.getParentVoteID();
-                // If it has the magic ID it's the first vote record, otherwise its parent must exist
-                if (!ZERO_VOTE_RECORD_ID.equals(parentVoteID)) {
-                    if (!recordsByID.containsKey(parentVoteID)) {
-                        // The parent record got overwritten by a duplicate vote submit, so this one loses too
-                        deleteCollidedVoteRecord(userID, voteRecord);
-                        recordsByID.remove(voteRecord.getVoteID());
-                        i.remove();
-                        anythingRemoved = true;
+        List<VoteRecord> toDelete = new LinkedList<VoteRecord>();
+        Set<VoteRecordID> processed = new HashSet<VoteRecordID>(voteRecords.size());
+
+        // Process in newest...oldest order, more efficient
+        ListIterator<VoteRecord> i = voteRecords.listIterator(voteRecords.size());
+        while (i.hasPrevious()) {
+            VoteRecord record = i.previous();
+            VoteRecordID id = record.getVoteID();
+
+            if (processed.contains(id)) {
+                // I'm in one of the existing meAndMyAncestors sets, so I can't be the leaf of the longest chain.
+                continue;
+            }
+            if (ZERO_VOTE_RECORD_ID.equals(id)) {
+                // Magic first record already handled
+                continue;
+            }
+
+            Set<VoteRecordID> meAndMyAncestors = new HashSet<VoteRecordID>(allRecords.size());
+            meAndMyAncestors.add(id);
+
+            boolean foundChain = false;
+            boolean missingParent = false;
+            VoteRecord next = record;
+            while (true) {
+                VoteRecordID parentID = next.getParentVoteID();
+                if (ZERO_VOTE_RECORD_ID.equals(parentID)) {
+                    // End of chain
+                    break;
+                }
+                meAndMyAncestors.add(parentID);
+
+                Set<VoteRecordID> family = leafToAncestors.remove(parentID);
+                if (family != null) {
+                    // One of my ancestors is the end of one of the chains we're tracking. I extend that chain.
+                    family.addAll(meAndMyAncestors);
+                    leafToAncestors.put(id, family);
+                    foundChain = true;
+                    break; // Remaining ancestors must already be in family
+                }
+
+                next = allRecords.get(parentID);
+                if (next == null) {
+                    // Probably due to concurrent execution of this resolve process
+                    // logger.info("Missing parent '" + parentID + "' for record '" + id + "'");
+                    missingParent = true;
+                    for (VoteRecordID idToDelete : meAndMyAncestors) {
+                        VoteRecord recordToDelete = allRecords.remove(idToDelete);
+                        if (recordToDelete != null) {
+                            toDelete.add(recordToDelete);
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!foundChain && !missingParent) {
+                // New chain
+                leafToAncestors.put(id, meAndMyAncestors);
+            }
+            processed.addAll(meAndMyAncestors);
+        }
+
+        // Keep the chain with the youngest leaf. Any other chains lose.
+        if (leafToAncestors.size() > 1) {
+            VoteRecordID youngestLeafID = leafToAncestors.lastKey();
+            for (Map.Entry<VoteRecordID, Set<VoteRecordID>> entry : leafToAncestors.entrySet()) {
+                if (!youngestLeafID.equals(entry.getKey())) {
+                    // Delete all children. They're in order.
+                    for (VoteRecordID idToDelete : entry.getValue()) {
+                        VoteRecord recordToDelete = allRecords.remove(idToDelete);
+                        if (recordToDelete != null) {
+                            toDelete.add(recordToDelete);
+                        }
                     }
                 }
             }
-        } while (anythingRemoved);
+        }
 
-        // TODO: arrange the remaining records into chains by child -> parent,
-        //       find the chain whose child has the newest timestamp, delete all the others,
-        //       then return in order with oldest record first
+        if (!toDelete.isEmpty()) {
+            // Delete children first to minimize interaction with concurrent executions
+            Collections.sort(toDelete, Collections.reverseOrder(VOTE_RECORD_COMPARATOR));
+            for (VoteRecord voteRecord : toDelete) {
+                deleteCollidedVoteRecord(userID, voteRecord);
+            }
+        }
 
-        Collections.sort(voteRecords, VOTE_RECORD_COMPARATOR);
-
-        return voteRecords;
+        return new ArrayList<VoteRecord>(allRecords.values());
     }
 
     private CurrentUserVotesDAO toCurrentUserVotesDAO(UserID userID, VoteRecord mostRecentVoteRecord,
@@ -290,42 +349,36 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
     }
 
     private void deleteCollidedVoteRecord(UserID userID, VoteRecord voteRecord) {
-        // TODO: write zero-vote records to ALL active policies for POLICY_VOTES
+        /* TODO: write zero-vote records to ALL active policies for POLICY_VOTES
+         * - Write zero-increment vote records to policy_new_votes,
+         *   with timestamp and version set newer than the conflict losing record,
+         *   (can we use the newest child item which WON the conflict?),
+         *   for each policy in the item which LOST the conflict which has a non-zero vote record.
+         *   This late write is an optimisation and is needed to make the cross-policy conflict resolution work correctly.
+         */
 
         if (voteRecord.getCreatedPolicyID() != null) {
             // TODO: policy creation has to be rolled back! Obliterate this policy.
         }
 
-        deleteUserVotesRecord(userID, voteRecord);
+        // The above writes have succeeded: delete the conflicted item from user_policy_votes.
+        deleteUserVotesRecord(userID, voteRecord.getVoteID(), Schema.USER_VOTES);
     }
 
     private CurrentUserVotesDAO createInitialEmptyVoteAllocation(UserID userID, long totalVoteSalary,
             byte voteWithdrawalPenaltyPercentage) {
-        VoteRecordID initialVoteID = new VoteRecordIDImpl();
-
-        // Initial record has zero parent
-        VoteRecord voteRecord = new VoteRecord(initialVoteID, ZERO_VOTE_RECORD_ID,
+        // Initial record has zero ID and zero parent
+        VoteRecord voteRecord = new VoteRecord(ZERO_VOTE_RECORD_ID, ZERO_VOTE_RECORD_ID,
                 Schema.USER_VOTES.createCurrentTimestamp(), (PolicyID) null);
-        writeUserVotesRecord(userID, voteRecord);
+        writeUserVotesRecord(userID, voteRecord, Schema.USER_VOTES);
 
         return toCurrentUserVotesDAO(userID, voteRecord, totalVoteSalary, voteWithdrawalPenaltyPercentage);
     }
 
-    private void writeUserVotesRecord(UserID userID, VoteRecord record) {
-        // Column name is parent vote ID so duplicate submits collide
-        UserVotesCF cf = Schema.USER_VOTES;
-        Mutator<UserID, UniqueTimestamp> m = cf.createMutator(keyspaceManager);
-        cf.addColumnInsertion(m, userID, record.getParentVoteID(),
-                cf.createValue(record.toParentVersionedJSON(), record.getTimestamp()));
-        m.execute();
-    }
-
-    private void writeUserVotesPendingRecord(UserID userID, VoteRecord record) {
-        // Column name is vote ID so records never collide
-        UserVotesCF cf = Schema.USER_VOTES_PENDING;
+    private void writeUserVotesRecord(UserID userID, VoteRecord record, UserVotesCF cf) {
         Mutator<UserID, UniqueTimestamp> m = cf.createMutator(keyspaceManager);
         cf.addColumnInsertion(m, userID, record.getVoteID(),
-                cf.createValue(record.toSelfVersionedJSON(), record.getTimestamp()));
+                cf.createValue(record.toJSON(), record.getTimestamp()));
         m.execute();
     }
 
@@ -358,7 +411,7 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
                 Schema.USER_VOTES.createCurrentTimestamp(), null, internal.getPolicyVotes());
 
         UserID userID = internal.getUserID();
-        writeUserVotesPendingRecord(userID, record);
+        writeUserVotesRecord(userID, record, Schema.USER_VOTES_PENDING);
 
         propagateUserVotesPending(userID, record);
     }
@@ -367,26 +420,16 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         // TODO: propagate to policies_current_votes record first
 
         // Propagate to where it participates in conflict resolution and current count for this user
-        writeUserVotesRecord(userID, record);
+        writeUserVotesRecord(userID, record, Schema.USER_VOTES);
 
         // Delete from pending now we've successfully committed to policies, triggered recalc etc.
         // Must be last action.
-        deleteUserVotesPendingRecord(userID, record);
+        deleteUserVotesRecord(userID, record.getVoteID(), Schema.USER_VOTES_PENDING);
     }
 
-    private void deleteUserVotesPendingRecord(UserID userID, VoteRecord record) {
-        // Column name is vote ID so records never collide
-        UserVotesCF cf = Schema.USER_VOTES_PENDING;
+    private void deleteUserVotesRecord(UserID userID, VoteRecordID voteRecordID, UserVotesCF cf) {
         Mutator<UserID, UniqueTimestamp> m = cf.createMutator(keyspaceManager);
-        cf.addColumnDeletion(m, userID, record.getVoteID());
-        m.execute();
-    }
-
-    private void deleteUserVotesRecord(UserID userID, VoteRecord record) {
-        // Column name is parent vote ID so duplicate submits collide
-        UserVotesCF cf = Schema.USER_VOTES;
-        Mutator<UserID, UniqueTimestamp> m = cf.createMutator(keyspaceManager);
-        cf.addColumnDeletion(m, userID, record.getParentVoteID());
+        cf.addColumnDeletion(m, userID, voteRecordID);
         m.execute();
     }
 }

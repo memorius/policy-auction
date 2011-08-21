@@ -37,6 +37,7 @@ tag_ranking_current[<int>"-day"] {
 - Figure out how/when we update policy_ranking_history.
 
 
+
 Background on Cassandra data model:
 -----------------------------------
 Cassandra's structure is "column families" - tables with rows looked up by a unique key, with each row containing any number of "columns", which are name->value pairs storing a single value - i.e. each row is a Map<ColumnName, Value>. Very large numbers of columns per row (e.g. millions) are OK.
@@ -238,7 +239,7 @@ policy_replaces: (key = <policyID>) {
 }
 
 user_policy_votes_pending: (key = <userID>) {
-    version : <voteRecordID> ... :
+    version: <voteRecordID> ... :
         JSON : { // Due to consistency requirements, and variable subcolumn list: atomic record updates with single timestamp
             parent: <voteRecordID>
             votes: {
@@ -255,9 +256,9 @@ user_policy_votes_pending: (key = <userID>) {
 }
 
 user_policy_votes: (key = <userID> : timeUUID) {
-    parent: <voteRecordID> ... :
+    version: <voteRecordID> ... :
         JSON : { // Due to consistency requirements, and variable subcolumn list: atomic record updates with single timestamp
-            version: <voteRecordID>
+            parent: <voteRecordID>
             votes: {
                 <policyID> ... : {
                     increment: int
@@ -509,28 +510,27 @@ policies:
 
 user_policy_votes:
   Each row is the user vote history for a single user across all policies. Change in votes and new total votes per policy for this user is in policyid-named columns in each record. The structure is designed to cope - in the absence of a locking mechanism - with multiple vote submits by the same user, by detecting conflicting writes and garbage-collecting any child updates whose parent writes lost the conflict resolution.
-  - New user accounts receive a single votes_000000 entry with zero vote allocations.
+  - When their vote allocation is first accessed, new user accounts receive a single user_policy_votes entry with zero ID and zero vote allocations, to act as the root entry in the history.
   - When reading data for user to edit vote allocations, it includes "parent" - this is used to chain the records together.
   - When user saves their new allocation, we write a pending_votes entry, with "version" set to a new timeUUID, and "parent" set to the basis data we previously read. Then we propagate this information to policy_new_votes for all the policies that have non-zero votes*, so it can be efficiently used to calculate total_votes and go into the aggregate history. That's a distributed write, so could fail at any step; a background process will clean this up, and pending_votes entries stay there until one or other process successfully completes all those writes and the following total_votes recalc.
     * Important: the exclusion of zero-increment votes is an optimization: the zero votes are only needed (to resolve the conflicts in policy_new_votes across all policies submits two conflicting vote allocations to different policies) if there is actually a conflict to resolve in policy_new_votes, but there may be a lot of them so we avoid writing them unless we have to. We handle this by writing them later if a conflict is actually found when reading back user_policy_votes.
-  - When there are conflicting updates in user_policy_votes.votes_ and in policy_new_votes, the last update for the earliest starting point will eventually win, which is probably what the user will expect.
-  - Once written to policy_new_votes, the pending entry is written as a user_policy_votes.votes_<parent> supercolumn, with timestamp set the same as the pending item, then the pending supercolumn is deleted.
-  - Note the 'version' and 'prev' items are deliberately inverted between pending and non-pending: the pending ones are intended to NOT collide until propagated to policy_new_votes, so that the conflict resolution can occur there when the vote counting happens; the non-pending ones collide here and the newest one wins.
+  - When there are conflicting updates in user_policy_votes and in policy_new_votes, the last update will eventually win, which is probably what the user will expect.
+  - Once written to policy_new_votes, the pending entry is written as a user_policy_votes column, with timestamp set the same as the pending item, then the user_policy_votes_pending column is deleted.
   - "Penalty" votes: when withdrawing votes from a policy, you only get back a percentage (say 50% - see voting config "vote_withdrawal_penalty_percentage") of the votes. This must participate in conflict resolution so is stored in the vote records.
     - Withdrawals are represented as a negative vote against the policy (conceptually, decrement of policy total), and a negative "penalty" value associated with that vote decrement (conceptually, decrement of the user's balance) - e.g. if you withdraw 100 votes, you record -100 vote increment, and -50 penalty.
     - Each user vote record also tracks the cumulative total of penalty votes per policy for this user, so we don't have to go all the way back through the chain to calculate it. We track it per policy so we can ignore it for deleted policies.
   - When user creates a policy, the records include the created policyID and the initial mandatory vote allocation to  the new policy.
   - To determine the list of entries which add up to make the user's current vote allocation, taking into account conflict resolution:
-    - First propagate any pending_votes_ records.
-    - Read all the user_policy_votes.votes_ supercolumns, organize by version -> parent, and find the newest version that has an unbroken chain of extant parent links.
-    - If there's a conflict, the chain will be broken for the newer ones whose basis lost the conflict resolution, because they collide since they write the same votes_<parent> item.
-      - When we find such items whose parent doesn't exist, then we:
-        - Write zero-increment vote records to policy_new_votes, with timestamp and version for the item which WON the conflict, for each policy in the item which LOST the conflict which has a non-zero vote record. This late write is an optimisation and is needed to make the cross-policy conflict resolution work correctly.
+    - First propagate any user_policy_votes_pending records.
+    - Read all the user_policy_votes columns, organize by version -> parent, and find the newest version that has an unbroken chain of extant parent links.
+    - If there's a conflict, there will be multiple chains or a branched chain.
+      - When we find branched chains, the chain that has the child with the newest timestamp is the winner, and for each of the losing records in the other chains, we:
+        - Write zero-increment vote records to policy_new_votes, with timestamp and version for the newest child item which WON the conflict, for each policy in the item which LOST the conflict which has a non-zero vote record. This late write is an optimisation and is needed to make the cross-policy conflict resolution work correctly.
       - If they include policy creations, then we delete the policy. This eventually cleans up (albeit after temporary exposure to other users) if someone manages to double-create, which would double-spend their votes.
       - When those writes have succeeded, delete the conflicted item from user_policy_votes.
     - We could keep a timestamp of parent up to which we have resolved everything. Need to go back at least GC_GRACE_SECONDS each time though.
   - Ignore allocations to any policies that have since been marked deleted, replaced or retired.
-  - To calculate unallocated votes, add up all the vote salary entries; then take the last conflict-resolved votes_ entry, subtract from the salary the sum of its newtotal values for all policies, then subtract from this the sum of the penaltytotal values.
+  - To calculate unallocated votes, add up all the vote salary entries; then take the last conflict-resolved user_policy_votes entry, subtract from the salary the sum of its newtotal values for all policies, then subtract from this the sum of the penaltytotal values.
   - Propagating to policy_new_votes: see below.
 
 policy_new_votes:
