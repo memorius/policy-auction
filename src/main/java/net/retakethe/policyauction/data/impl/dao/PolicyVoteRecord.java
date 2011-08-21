@@ -44,16 +44,21 @@ public final class PolicyVoteRecord implements Serializable {
         return o;
     }
 
+    /**
+     * Get the change in votes since loaded.
+     */
     public long getVoteIncrement() {
         return this.voteIncrement;
     }
 
-    public void setVoteIncrement(long voteIncrement) {
-        this.voteTotal -= this.voteIncrement;
-        this.voteIncrement = voteIncrement;
-        this.voteTotal += voteIncrement;
+    /**
+     * Add to or subtract from the change in votes since loaded, and update total votes accordingly.
+     */
+    public void addVoteIncrement(long increment) {
+        this.voteIncrement += increment;
+        this.voteTotal += increment;
     }
-    
+
     public long getVoteTotal() {
         return this.voteTotal;
     }
@@ -62,10 +67,12 @@ public final class PolicyVoteRecord implements Serializable {
         return this.penalty;
     }
 
-    public void setVotePenalty(long penalty) {
-        this.penaltyTotal -= this.penalty;
-        this.penalty = penalty;
-        this.penaltyTotal += penalty;
+    /**
+     * Add to or subtract from the change in penalty votes since loaded, and update total penalty votes accordingly.
+     */
+    public void addVotePenalty(long penaltyIncrement) {
+        this.penalty += penaltyIncrement;
+        this.penaltyTotal += penaltyIncrement;
     }
 
     public long getPenaltyTotal() {

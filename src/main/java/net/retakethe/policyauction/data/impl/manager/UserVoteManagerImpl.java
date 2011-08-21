@@ -424,6 +424,9 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
             throw new IllegalArgumentException("currentUserVotes must not be null");
         }
         CurrentUserVotesImpl internal = (CurrentUserVotesImpl) currentUserVotes;
+        if (!internal.isDirty()) {
+            return;
+        }
 
         VoteRecord record = new VoteRecord(new VoteRecordIDImpl(), internal.getPreviousVoteID(),
                 Schema.USER_VOTES.createCurrentTimestamp(), internal.getCreatedPolicyID(), internal.getPolicyVotes());

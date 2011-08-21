@@ -79,6 +79,10 @@ public abstract class DAOManagerTestBase {
         KeyspaceManager keyspaceManager = daoManager.getKeyspaceManager();
 
         cleanColumnFamily(keyspaceManager, Schema.POLICIES);
+        cleanColumnFamily(keyspaceManager, Schema.USER_VOTES);
+        cleanColumnFamily(keyspaceManager, Schema.USER_VOTES_PENDING);
+        cleanColumnFamily(keyspaceManager, Schema.VOTING_CONFIG);
+
         logger.info("DAOManagerTestBase.cleanCassandraDB finished");
     }
 
@@ -87,8 +91,6 @@ public abstract class DAOManagerTestBase {
         while (true) {
             logger.info("DAOManagerTestBase.cleanCassandraDB starting cycle for " + cf.getName());
             // Query a batch of keys in this column family.
-            // Use of the common-to-all-CFs "EXISTS" column allows us to omit tombstone rows:
-            // they will be present in the result but will lack this column.
 
             RangeSlicesQuery<K, N, Object> query = QueryFactory.createHectorRangeSlicesQuery(
                     keyspaceManager, cf, DummySerializer.get(), null, null, false, 1);
@@ -107,6 +109,9 @@ public abstract class DAOManagerTestBase {
             for (Row<K, N, Object> row : rows) {
                 logger.info("DAOManagerTestBase.cleanCassandraDB: key: " + row.getKey());
                 if (row.getColumnSlice().getColumns().isEmpty()) {
+                    // This is a previously-deleted row.
+                    // They reappear (with empty contents) in range slices query results until garbage-collected.
+                    // See Cassandra FAQ: http://wiki.apache.org/cassandra/FAQ#range_ghosts
                     logger.info("DAOManagerTestBase.cleanCassandraDB: tombstone row");
                     continue;
                 }

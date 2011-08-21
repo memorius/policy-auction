@@ -124,12 +124,12 @@ public class CurrentUserVotesImpl implements CurrentUserVotesDAO {
 
         if (unallocatedVotesChange > 0) {
             long voteWithdrawalPenalty = calculatePenaltyForVoteWithdrawal(unallocatedVotesChange);
-            votes.setVotePenalty(voteWithdrawalPenalty);
+            votes.addVotePenalty(voteWithdrawalPenalty);
             unallocatedVotesChange -= voteWithdrawalPenalty;
         }
 
         unallocatedVotes += unallocatedVotesChange;
-        votes.setVoteIncrement(policyVoteIncrement);
+        votes.addVoteIncrement(policyVoteIncrement);
         if (isNew) {
             policyVotes.put(policyID, votes);
         }
