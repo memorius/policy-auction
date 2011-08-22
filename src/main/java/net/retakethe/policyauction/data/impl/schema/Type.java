@@ -19,6 +19,7 @@ import net.retakethe.policyauction.data.impl.serializers.ByteSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 import net.retakethe.policyauction.data.impl.serializers.JSONSerializer;
+import net.retakethe.policyauction.data.impl.serializers.LocalDateSerializer;
 import net.retakethe.policyauction.data.impl.serializers.LogMessageIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.NullSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
@@ -27,6 +28,7 @@ import net.retakethe.policyauction.data.impl.serializers.VoteRecordIDSerializer;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
 
 import org.apache.tapestry5.json.JSONObject;
+import org.joda.time.LocalDate;
 
 /**
  * Enum-like class representing datatypes for Cassandra keys,
@@ -56,10 +58,20 @@ public final class Type<T> {
     public static final Type<Date>    DATE      = new Type<Date>(Date.class, DateSerializer.get());
 
     /**
-     * Date+hour, stored in cassandra as UTF8Type.
+     * Date+hour, stored in cassandra as string representation in GMT timezone, as UTF8Type.
+     * <p>
+     * This is intended for instant-in-time buckets which shouldn't be affected by timezone or daylight savings,
+     * e.g. for logging.
      */
     public static final Type<DateAndHour> DATE_AND_HOUR = new Type<DateAndHour>(DateAndHour.class,
             DateAndHourSerializer.get());
+
+    /**
+     * Year-month-day without timezone, stored in cassandra as string ISO8601 format (yyyy-MM-dd), as UTF8Type.
+     * <p>
+     * This is intended for logical days in the system.
+     */
+    public static final Type<LocalDate> DAY = new Type<LocalDate>(LocalDate.class, LocalDateSerializer.get());
 
     /**
      * Byte, stored as a single byte.
