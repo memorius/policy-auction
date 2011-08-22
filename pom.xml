@@ -176,21 +176,24 @@
     <repositories>
 
         <!-- This repository is only needed when the tapestry-release-version is a snapshot release. -->
+        <!--
         <repository>
             <id>apache-snapshots</id>
             <url>http://repository.apache.org/snapshots/</url>
         </repository>
+        -->
     </repositories>
 
     <pluginRepositories>
 
         <!-- As above, this can be commented out when access to the snapshot version
 of a Tapestry Maven plugin is not required.   -->
+        <!--
         <pluginRepository>
             <id>apache-snapshots</id>
             <url>http://repository.apache.org/snapshots/</url>
         </pluginRepository>
-
+        -->
     </pluginRepositories>
 
     <properties>
