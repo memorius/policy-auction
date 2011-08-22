@@ -40,6 +40,13 @@
             <version>${tapestry-release-version}</version>
         </dependency>
 
+        <!-- Used for date/time formatting -->
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.4</version>
+        </dependency>
+
         <dependency>
             <groupId>me.prettyprint</groupId>
             <artifactId>hector-core</artifactId>
