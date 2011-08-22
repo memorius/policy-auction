@@ -6,18 +6,16 @@ import java.util.List;
 
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.UserManager;
-import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
-import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.dao.UserDAOImpl;
+import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
-import net.retakethe.policyauction.data.impl.query.api.MutatorWrapper;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedColumnSlice;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedOrderedRows;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRangeSlicesQuery;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedRow;
-import net.retakethe.policyauction.data.impl.query.api.VariableValueTypedSliceQuery;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
+import net.retakethe.policyauction.data.impl.query.api.OrderedRows;
+import net.retakethe.policyauction.data.impl.query.api.RangeSlicesQuery;
+import net.retakethe.policyauction.data.impl.query.api.Row;
+import net.retakethe.policyauction.data.impl.query.api.SliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.UsersCF;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
@@ -52,35 +50,62 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     public UserDAO getUser(UserID userID) throws NoSuchUserException {
         List<NamedColumn<UserID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USERNAME,
-                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_HASH,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.EMAIL,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_HASH,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.FIRST_NAME,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.LAST_NAME,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.SHOW_REAL_NAME,
-                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.CREATED_TIMESTAMP);
-        VariableValueTypedSliceQuery<UserID, MillisTimestamp, String> query =
-                Schema.USERS.createVariableValueTypedSliceQuery(keyspaceManager, userID, list);
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.CREATED_TIMESTAMP,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_DATE,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USER_ROLE);
+        SliceQuery<UserID, MillisTimestamp, String> query =
+                Schema.USERS.createSliceQuery(keyspaceManager, userID, list);
 
-        QueryResult<VariableValueTypedColumnSlice<MillisTimestamp, String>> queryResult = query.execute();
+        QueryResult<ColumnSlice<MillisTimestamp, String>> queryResult = query.execute();
 
-        VariableValueTypedColumnSlice<MillisTimestamp, String> cs = queryResult.get();
+        ColumnSlice<MillisTimestamp, String> cs = queryResult.get();
 
-        String shortName;
-        String description;
-        Date lastEdited;
+        String username;
+        String email;
+        String passwordHash;
+        Date passwordExpiryTimestamp;
+        
+        String firstName;
+        String lastName;
+        Boolean showRealName = false;
+        Date createdTimestamp;
+        Date voteSalaryLastPaidTimestamp;
+        Date voteSalaryDate;
+        
+        String userRole;
+        
+        // FIXME - Using userid as username, will need another call to build this field.
+        username = userID.asString();
         try {
-            shortName = getNonNullColumn(cs, Schema.USERS.SHORT_NAME);
+            email = getNonNullColumn(cs, Schema.USERS.EMAIL);
         } catch (NoSuchColumnException e) {
             throw new NoSuchUserException(userID);
         }
         try {
-            description = getNonNullColumn(cs, Schema.USERS.DESCRIPTION);
-            lastEdited = getNonNullColumn(cs, Schema.USERS.LAST_EDITED);
+            passwordHash = getNonNullColumn(cs, Schema.USERS.PASSWORD_HASH);
+            passwordExpiryTimestamp = getNonNullColumn(cs, Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP);
+            
+            createdTimestamp = getNonNullColumn(cs, Schema.USERS.CREATED_TIMESTAMP);
         } catch (NoSuchColumnException e) {
             throw new RuntimeException("Invalid user record for key " + userID, e);
         }
+        firstName = getColumnOrNull(cs, Schema.USERS.FIRST_NAME);
+        lastName = getColumnOrNull(cs, Schema.USERS.LAST_NAME);
+        showRealName = getColumnOrNull(cs, Schema.USERS.SHOW_REAL_NAME);
 
-        return new UserDAOImpl(userID, shortName, description, description, description, description, null, lastEdited, lastEdited, lastEdited, null);
+        voteSalaryLastPaidTimestamp = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP);
+        voteSalaryDate = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_DATE);
+
+        userRole = getColumnOrNull(cs, Schema.USERS.USER_ROLE);
+        
+        return new UserDAOImpl(userID, username, email, passwordHash, passwordExpiryTimestamp, firstName, lastName, showRealName, createdTimestamp, voteSalaryLastPaidTimestamp, voteSalaryDate, userRole);
     }
 
     @Override
@@ -91,12 +116,19 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     @Override
     public List<UserDAO> getAllUsers() {
         List<NamedColumn<UserID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.USERS.SHORT_NAME,
-                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.USERS.DESCRIPTION,
-                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.USERS.LAST_EDITED);
-        VariableValueTypedRangeSlicesQuery<UserID, MillisTimestamp, String> query =
-                Schema.USERS.createVariableValueTypedRangeSlicesQuery(keyspaceManager,
-                        list);
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USERNAME,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.EMAIL,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_HASH,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.FIRST_NAME,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.LAST_NAME,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.SHOW_REAL_NAME,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.CREATED_TIMESTAMP,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_DATE,
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USER_ROLE);
+        RangeSlicesQuery<UserID, MillisTimestamp, String> query =
+                Schema.USERS.createRangeSlicesQuery(keyspaceManager, list);
 
         // TODO: may need paging of data once we have more than a few hundred.
         //       This may need some sort of indexing since we're using RandomPartitioner,
@@ -105,59 +137,84 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         // TODO: needed?
         // query.setKeys("fake_key_0", "fake_key_4");
 
-        QueryResult<VariableValueTypedOrderedRows<UserID, MillisTimestamp, String>> result = query.execute();
+        QueryResult<OrderedRows<UserID, MillisTimestamp, String>> result = query.execute();
 
-        VariableValueTypedOrderedRows<UserID, MillisTimestamp, String> orderedRows = result.get();
+        OrderedRows<UserID, MillisTimestamp, String> orderedRows = result.get();
         if (orderedRows == null) {
             return Collections.emptyList();
         }
 
         return Functional.filter(orderedRows.getList(),
-                new Filter<VariableValueTypedRow<PolicyID, MillisTimestamp, String>, PolicyDAO>() {
+                new Filter<Row<UserID, MillisTimestamp, String>, UserDAO>() {
                     @Override
-                    public PolicyDAO filter(VariableValueTypedRow<PolicyID, MillisTimestamp, String> row)
+                    public UserDAO filter(Row<UserID, MillisTimestamp, String> row)
                             throws SkippedElementException {
-                        VariableValueTypedColumnSlice<MillisTimestamp, String> cs = row.getColumnSlice();
+                        ColumnSlice<MillisTimestamp, String> cs = row.getColumnSlice();
                         if (cs == null) {
                             throw new SkippedElementException();
                         }
 
-                        String shortName;
+                        String username;
+                        String email;
+                        String passwordHash;
+                        Date passwordExpiryTimestamp;
+                        
+                        String firstName;
+                        String lastName;
+                        Boolean showRealName = false;
+                        Date createdTimestamp;
+                        Date voteSalaryLastPaidTimestamp;
+                        Date voteSalaryDate;
+                        
+                        String userRole;
+                        
+                        // FIXME - Using userid as username, will need another call to build this field.
+                        username = row.getKey().asString();
                         try {
-                            shortName = getNonNullColumn(cs, Schema.POLICIES.SHORT_NAME);
-                        } catch (NoSuchColumnException e) {
-                            // Tombstone row
-                            throw new SkippedElementException();
-                        }
-
-                        String description;
-                        Date lastEdited;
-                        try {
-                            description = getNonNullColumn(cs, Schema.POLICIES.DESCRIPTION);
-                            lastEdited = getNonNullColumn(cs, Schema.POLICIES.LAST_EDITED);
+                            email = getNonNullColumn(cs, Schema.USERS.EMAIL);
+                            
+                            passwordHash = getNonNullColumn(cs, Schema.USERS.PASSWORD_HASH);
+                            passwordExpiryTimestamp = getNonNullColumn(cs, Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP);
+                            
+                            createdTimestamp = getNonNullColumn(cs, Schema.USERS.CREATED_TIMESTAMP);
                         } catch (NoSuchColumnException e) {
                             throw new RuntimeException("Invalid user record for key " + row.getKey(), e);
                         }
+                        firstName = getColumnOrNull(cs, Schema.USERS.FIRST_NAME);
+                        lastName = getColumnOrNull(cs, Schema.USERS.LAST_NAME);
+                        showRealName = getColumnOrNull(cs, Schema.USERS.SHOW_REAL_NAME);
 
-                        return new UserDAOImpl(row.getKey(), shortName, description,
-                                lastEdited);
+                        voteSalaryLastPaidTimestamp = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP);
+                        voteSalaryDate = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_DATE);
+
+                        userRole = getColumnOrNull(cs, Schema.USERS.USER_ROLE);
+                        
+                        return new UserDAOImpl(row.getKey(), username, email, passwordHash, passwordExpiryTimestamp, firstName, lastName, showRealName, createdTimestamp, voteSalaryLastPaidTimestamp, voteSalaryDate, userRole);
                     }
                 });
     }
 
     @Override
     public void persist(UserDAO user) {
-        PolicyID policyID = user.getPolicyID();
+        UserID userID = user.getUserID();
 
         UsersCF cf = Schema.USERS;
         MillisTimestamp ts = cf.createCurrentTimestamp();
-        MutatorWrapper<UserID, MillisTimestamp> m = cf.createMutator(keyspaceManager);
+        Mutator<UserID, MillisTimestamp> m = cf.createMutator(keyspaceManager);
 
-        cf.SHORT_NAME.addColumnInsertion(m, policyID, cf.createValue(user.getShortName(), ts));
-        cf.DESCRIPTION.addColumnInsertion(m, policyID, cf.createValue(user.getDescription(), ts));
+        //cf.USERNAME.addColumnInsertion(m, userID, cf.createValue(user.getShortName(), ts));
+        cf.EMAIL.addColumnInsertion(m, userID, cf.createValue(user.getEmail(), ts));
+        cf.PASSWORD_HASH.addColumnInsertion(m, userID, cf.createValue(user.getPasswordHash(), ts));
+        cf.PASSWORD_EXPIRY_TIMESTAMP.addColumnInsertion(m, userID, cf.createValue(user.getPasswordExpiryTimestamp(), ts));
+        cf.FIRST_NAME.addColumnInsertion(m, userID, cf.createValue(user.getFirstName(), ts));
+        cf.LAST_NAME.addColumnInsertion(m, userID, cf.createValue(user.getLastName(), ts));
+        
+        cf.SHOW_REAL_NAME.addColumnInsertion(m, userID, cf.createValue(user.isShowRealName(), ts));
+        cf.CREATED_TIMESTAMP.addColumnInsertion(m, userID, cf.createValue(user.getCreatedTimestamp(), ts));
+        cf.VOTE_SALARY_LAST_PAID_TIMESTAMP.addColumnInsertion(m, userID, cf.createValue(user.getVoteSalaryLastPaidTimestamp(), ts));
+        cf.VOTE_SALARY_DATE.addColumnInsertion(m, userID, cf.createValue(user.getVoteSalaryDate(), ts));
+        cf.USER_ROLE.addColumnInsertion(m, userID, cf.createValue(user.getUserRole().toString(), ts));
 
-        // We're saving changes, so update the edit time
-        cf.LAST_EDITED.addColumnInsertion(m, policyID, cf.createValue(new Date(), ts));
 
         // TODO: error handling? Throws HectorException.
         m.execute();
@@ -167,7 +224,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     public void deleteUser(UserDAO user) {
         UserID userID = user.getUserID();
 
-        MutatorWrapper<UserID, MillisTimestamp> m = Schema.USERS.createMutator(keyspaceManager);
+        Mutator<UserID, MillisTimestamp> m = Schema.USERS.createMutator(keyspaceManager);
 
         Schema.USERS.addRowDeletion(m, userID);
 

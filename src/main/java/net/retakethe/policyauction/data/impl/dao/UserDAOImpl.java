@@ -14,8 +14,9 @@ public class UserDAOImpl implements UserDAO {
 	private final UserID userID;
 	
 	private String username;
-	private String passwordHash;
 	private String email;
+	private String passwordHash;
+    private Date passwordExpiryTimestamp;
 	
 	private String firstName;
 	private String lastName;
@@ -35,11 +36,13 @@ public class UserDAOImpl implements UserDAO {
 		this.userID = userID;
 	}
 	
-	public UserDAOImpl(final UserID userID, final String username, final String passwordHash, final String email, final String firstName, final String lastName, final Boolean showRealName, final Date createdTimestamp, final Date voteSalaryLastPaidTimestamp, final Date voteSalaryDate, final UserRole userRole) {
+	public UserDAOImpl(final UserID userID, final String username, final String email, final String passwordHash, final Date passwordExpiryTimestamp, final String firstName, final String lastName, final Boolean showRealName, final Date createdTimestamp, final Date voteSalaryLastPaidTimestamp, final Date voteSalaryDate, final String userRole) {
 		this.userID = userID;
 		this.username = username;
-		this.passwordHash = passwordHash;
 		this.email = email;
+
+		this.passwordHash = passwordHash;
+		this.passwordExpiryTimestamp = passwordExpiryTimestamp;
 		
 		this.firstName = firstName;
 		this.lastName = lastName;
@@ -50,7 +53,7 @@ public class UserDAOImpl implements UserDAO {
 		this.voteSalaryLastPaidTimestamp = voteSalaryLastPaidTimestamp;
 		this.voteSalaryDate = voteSalaryDate;
 		
-		this.userRole = userRole;
+		setUserRole(userRole);
 	}
 
 	@Override
@@ -67,6 +70,16 @@ public class UserDAOImpl implements UserDAO {
 	public void setUsername(String username) {
 		this.username = username;
 	}
+	
+	@Override
+	public String getEmail() {
+		return email;
+	}
+	
+	@Override
+	public void setEmail(String email) {
+		this.email = email;
+	}
 
 	@Override
 	public String getPasswordHash() {
@@ -77,15 +90,15 @@ public class UserDAOImpl implements UserDAO {
 	public void setPasswordHash(String passwordHash) {
 		this.passwordHash = passwordHash;
 	}
-
+	
 	@Override
-	public String getEmail() {
-		return email;
+	public Date getPasswordExpiryTimestamp() {
+		return passwordExpiryTimestamp;
 	}
-
+	
 	@Override
-	public void setEmail(String email) {
-		this.email = email;
+	public void setPasswordExpiryTimestamp(Date passwordExpiryTimestamp) {
+		this.passwordExpiryTimestamp = passwordExpiryTimestamp;
 	}
 
 	@Override
@@ -157,5 +170,13 @@ public class UserDAOImpl implements UserDAO {
 	public void setUserRole(UserRole userRole) {
 		this.userRole = userRole;
 	}
-
+	
+	public void setUserRole(String userRole) {
+		for (UserRole role : UserRole.values()) {
+			if (role.toString().equalsIgnoreCase(userRole)) {
+				this.userRole = role;
+				break;
+			}
+		}
+	}
 }

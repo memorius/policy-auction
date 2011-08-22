@@ -12,10 +12,12 @@ public interface UserDAO extends Serializable {
 	
 	String getUsername();
 	void setUsername(String username);
-	String getPasswordHash();
-	void setPasswordHash(String passwordHash);
 	String getEmail();
 	void setEmail(String email);
+	String getPasswordHash();
+	void setPasswordHash(String passwordHash);
+	Date getPasswordExpiryTimestamp();
+	void setPasswordExpiryTimestamp(Date passwordExpiryTimestamp);
 	
 	String getFirstName();
 	void setFirstName(String firstName);
