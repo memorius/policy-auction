@@ -38,6 +38,16 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
         manager = getDAOManager().getUserVoteManager();
     }
 
+    private void assertEmptyVoteAllocation(CurrentUserVotesImpl dao, UserID userID) {
+        assertNull(dao.getCreatedPolicyID());
+        assertEquals(dao.getPreviousVoteID(), ZERO_VOTE_RECORD_ID);
+        assertEquals(dao.getUserID(), userID);
+        assertEquals(dao.getUnallocatedVotes(), DEFAULT_VOTE_SALARY);
+        assertFalse(dao.isDirty());
+        assertEquals(dao.getPolicyIDsVotedOn().size(), 0);
+        assertEquals(dao.getPolicyVotes().size(), 0);
+    }
+
     @Test(groups = {"dao"})
     public void testVoteAllocation() {
         // Set values convenient to our test
@@ -46,19 +56,14 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
         final byte voteWithdrawalPenaltyPercentage = (byte) 40;
         manager.setVoteWithdrawalPenaltyPercentage(voteWithdrawalPenaltyPercentage);
 
-        UserID userID = new UserIDImpl();
-        CurrentUserVotesImpl dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
-        assertNull(dao.getCreatedPolicyID());
-        assertEquals(dao.getPreviousVoteID(), ZERO_VOTE_RECORD_ID);
-        assertEquals(dao.getUserID(), userID);
-        assertEquals(dao.getUnallocatedVotes(), DEFAULT_VOTE_SALARY);
-        assertFalse(dao.isDirty());
         PolicyID policyID1 = new PolicyIDImpl();
         PolicyID policyID2 = new PolicyIDImpl();
+
+        UserID userID1 = new UserIDImpl();
+        CurrentUserVotesImpl dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID1);
+        assertEmptyVoteAllocation(dao, userID1);
         assertEquals(dao.getVotesAllocated(policyID1), 0);
         assertEquals(dao.getVotesAllocated(policyID2), 0);
-        assertEquals(dao.getPolicyIDsVotedOn().size(), 0);
-        assertEquals(dao.getPolicyVotes().size(), 0);
 
         // Setting to current value does nothing
         dao.setVotesAllocated(policyID1, 0);
@@ -68,7 +73,7 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
 
         // Save is a no op when not modified
         manager.save(dao);
-        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID1);
         assertEquals(dao.getPreviousVoteID(), ZERO_VOTE_RECORD_ID);
         long votesUnallocated = dao.getUnallocatedVotes();
         assertEquals(votesUnallocated, DEFAULT_VOTE_SALARY);
@@ -91,16 +96,20 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
 
         // Save changes and re-read
         manager.save(dao);
-        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID1);
         assertEquals(dao.getVotesAllocated(policyID1), policy1Votes);
         assertEquals(dao.getVotesAllocated(policyID2), policy2Votes);
         assertEquals(dao.getPolicyIDsVotedOn().size(), 2);
         assertEquals(dao.getUnallocatedVotes(), votesUnallocated);
         assertNull(dao.getCreatedPolicyID());
-        assertEquals(dao.getUserID(), userID);
+        assertEquals(dao.getUserID(), userID1);
         assertFalse(dao.isDirty());
         // New ID was written and will be the parent of this one if saved again
         assertNotEquals(dao.getPreviousVoteID(), ZERO_VOTE_RECORD_ID);
+
+        // Other user has empty allocation
+        UserID userID2 = new UserIDImpl();
+        assertEmptyVoteAllocation((CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID2), userID2);
 
         // Policy creation
         PolicyID policyID3 = new PolicyIDImpl();
@@ -116,7 +125,7 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
         manager.save(dao);
 
         // Trying to allocate more votes than we have will fail
-        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID1);
         assertEquals(dao.getUnallocatedVotes(), votesUnallocated);
         // Allowed
         assertEquals(dao.getVotesAllocated(policyID2), policy2Votes);
@@ -125,7 +134,7 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
         assertEquals(dao.getVotesAllocated(policyID2), policy2MaxVotes);
         assertTrue(dao.isDirty());
 
-        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID1);
         assertEquals(dao.getUnallocatedVotes(), votesUnallocated);
         // Not allowed
         assertEquals(dao.getVotesAllocated(policyID2), policy2Votes);
@@ -153,7 +162,7 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
         assertEquals(dao.getVotesAllocated(policyID1), policy1Votes);
         manager.save(dao);
 
-        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID1);
         assertEquals(dao.getUnallocatedVotes(), votesUnallocated);
         assertEquals(dao.getVotesAllocated(policyID1), policy1Votes);
         assertEquals(dao.getVotesAllocated(policyID2), policy2Votes);
@@ -196,5 +205,86 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
 
         manager.setVoteWithdrawalPenaltyPercentage((byte) (DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE - 5));
         assertEquals(DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE - 5, manager.getVoteWithdrawalPenaltyPercentage());
+    }
+
+    @Test(groups = {"dao"})
+    public void testCollisionResolution() {
+        PolicyID policyID1 = new PolicyIDImpl();
+        PolicyID policyID2 = new PolicyIDImpl();
+
+        UserID userID = new UserIDImpl();
+        CurrentUserVotesImpl sharedBranch = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEmptyVoteAllocation(sharedBranch, userID);
+        final long initialUnallocated = sharedBranch.getUnallocatedVotes();
+        long branch1Unallocated = initialUnallocated;
+
+        // Assign and save 2 vote records to 1
+        sharedBranch.setVotesAllocated(policyID1, 2);
+        sharedBranch.setVotesAllocated(policyID2, 1);
+        branch1Unallocated -= (2 + 1);
+        manager.save(sharedBranch);
+        sharedBranch = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEquals(sharedBranch.getUnallocatedVotes(), initialUnallocated - (2 + 1));
+        assertEquals(sharedBranch.getVotesAllocated(policyID1), 2);
+        assertEquals(sharedBranch.getVotesAllocated(policyID2), 1);
+
+        sharedBranch.setVotesAllocated(policyID1, 4);
+        sharedBranch.setVotesAllocated(policyID2, 2);
+        branch1Unallocated -= (2 + 1);
+        manager.save(sharedBranch);
+        // This will be the last common parent after which the two branches diverge
+        sharedBranch = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEquals(sharedBranch.getUnallocatedVotes(), initialUnallocated - (4 + 2));
+        assertEquals(sharedBranch.getVotesAllocated(policyID1), 4);
+        assertEquals(sharedBranch.getVotesAllocated(policyID2), 2);
+
+        // Use split point as basis for 2nd "branch" of vote saves
+        CurrentUserVotesImpl branch1 = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        branch1.setVotesAllocated(policyID1, 16);
+        branch1.setVotesAllocated(policyID2, 13);
+        manager.save(branch1);
+        branch1 = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEquals(branch1.getUnallocatedVotes(), initialUnallocated - (16 + 13));
+        assertEquals(branch1.getVotesAllocated(policyID1), 16);
+        assertEquals(branch1.getVotesAllocated(policyID2), 13);
+
+        branch1.setVotesAllocated(policyID1, 18);
+        branch1.setVotesAllocated(policyID2, 14);
+        manager.save(branch1);
+        branch1 = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEquals(branch1.getUnallocatedVotes(), initialUnallocated - (18 + 14));
+        assertEquals(branch1.getVotesAllocated(policyID1), 18);
+        assertEquals(branch1.getVotesAllocated(policyID2), 14);
+
+        // Save on branch2 from the common ancestor, confirm retrievable
+        CurrentUserVotesImpl branch2 = sharedBranch;
+        branch2.setVotesAllocated(policyID1, 6);
+        branch2.setVotesAllocated(policyID2, 3);
+        manager.save(branch2);
+        branch2 = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEquals(branch2.getUnallocatedVotes(), initialUnallocated - (6 + 3));
+        assertEquals(branch2.getVotesAllocated(policyID1), 6);
+        assertEquals(branch2.getVotesAllocated(policyID2), 3);
+        
+        branch2.setVotesAllocated(policyID1, 8);
+        branch2.setVotesAllocated(policyID2, 4);
+        manager.save(branch2);
+        branch2 = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEquals(branch2.getUnallocatedVotes(), initialUnallocated - (8 + 4));
+        assertEquals(branch2.getVotesAllocated(policyID1), 8);
+        assertEquals(branch2.getVotesAllocated(policyID2), 4);
+        VoteRecordID branch2Parent = branch2.getPreviousVoteID();
+
+        // Try saving on branch1 head again; retrieve; it should be lost and we should get the head of branch2 instead.
+        // This is because branch1 already lost the conflict resolution when we first re-retrieved branch2:
+        // - the nodes only on branch1 were already deleted.
+        branch1.setVotesAllocated(policyID1, 20);
+        branch1.setVotesAllocated(policyID2, 16);
+        manager.save(branch1);
+        CurrentUserVotesImpl conflicted = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEquals(conflicted.getUnallocatedVotes(), initialUnallocated - (8 + 4));
+        assertEquals(conflicted.getVotesAllocated(policyID1), 8);
+        assertEquals(conflicted.getVotesAllocated(policyID2), 4);
+        assertEquals(conflicted.getPreviousVoteID(), branch2Parent);
     }
 }

@@ -45,6 +45,18 @@ public final class PolicyVoteRecord implements Serializable {
     }
 
     /**
+     * Create human-readable string for debugging
+     */
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("PolicyVoteRecord [voteIncrement=").append(this.voteIncrement).append(", voteTotal=")
+                .append(this.voteTotal).append(", penalty=").append(this.penalty).append(", penaltyTotal=")
+                .append(this.penaltyTotal).append("]");
+        return builder.toString();
+    }
+
+    /**
      * Get the change in votes since loaded.
      */
     public long getVoteIncrement() {

@@ -131,6 +131,15 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
             return policyVotes;
         }
 
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("VoteRecord [voteID=").append(this.voteID).append(", parentVoteID=")
+                    .append(this.parentVoteID).append(", createdPolicyID=").append(this.createdPolicyID)
+                    .append(",\n            policyVotes=").append(this.policyVotes).append("]");
+            return builder.toString();
+        }
+
         private void addVotes(JSONObject o) {
             if (!policyVotes.isEmpty()) {
                 JSONObject votes = new JSONObject();
@@ -302,10 +311,13 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         // Keep the chain with the youngest leaf. Any other chains lose.
         if (leafToAncestors.size() > 1) {
             VoteRecordID youngestLeafID = leafToAncestors.lastKey();
+            Set<VoteRecordID> winningChain = leafToAncestors.get(youngestLeafID);
             for (Map.Entry<VoteRecordID, Set<VoteRecordID>> entry : leafToAncestors.entrySet()) {
                 if (!youngestLeafID.equals(entry.getKey())) {
-                    // Delete all children. They're in order.
-                    for (VoteRecordID idToDelete : entry.getValue()) {
+                    // Delete all children that are not in the winning chain.
+                    Set<VoteRecordID> conflictedItems = entry.getValue();
+                    conflictedItems.removeAll(winningChain);
+                    for (VoteRecordID idToDelete : conflictedItems) {
                         VoteRecord recordToDelete = allRecords.remove(idToDelete);
                         if (recordToDelete != null) {
                             toDelete.add(recordToDelete);
