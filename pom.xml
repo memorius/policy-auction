@@ -33,6 +33,13 @@
             <version>${tapestry-release-version}</version>
         </dependency>
 
+        <!-- We use this directly for input and output of JSON-format cassandra column values -->
+        <dependency>
+            <groupId>org.apache.tapestry</groupId>
+            <artifactId>tapestry-json</artifactId>
+            <version>${tapestry-release-version}</version>
+        </dependency>
+
         <dependency>
             <groupId>me.prettyprint</groupId>
             <artifactId>hector-core</artifactId>
