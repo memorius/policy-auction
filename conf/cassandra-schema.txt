@@ -31,7 +31,7 @@ create column family users
     ];
 
 create column family users_by_name
-    with comment = 'Lookup of userID from user name'
+    with comment = 'Lookup of userID by user name'
     and comparator = UTF8Type
     and column_metadata = [{
             column_name: user_id,

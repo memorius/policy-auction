@@ -82,7 +82,9 @@ public abstract class DAOManagerTestBase {
         cleanColumnFamily(keyspaceManager, Schema.POLICIES);
         cleanColumnFamily(keyspaceManager, Schema.USER_VOTES);
         cleanColumnFamily(keyspaceManager, Schema.USER_VOTES_PENDING);
+        cleanColumnFamily(keyspaceManager, Schema.VOTE_SALARY);
         cleanColumnFamily(keyspaceManager, Schema.VOTING_CONFIG);
+        cleanColumnFamily(keyspaceManager, Schema.SYSTEM_INFO);
 
         logger.info("DAOManagerTestBase.cleanCassandraDB finished");
     }

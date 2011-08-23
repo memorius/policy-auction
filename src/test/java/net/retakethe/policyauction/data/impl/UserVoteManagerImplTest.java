@@ -8,6 +8,8 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import net.retakethe.policyauction.data.api.exceptions.InsufficientVotesException;
+import net.retakethe.policyauction.data.api.exceptions.NoSuchUserException;
+import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.dao.CurrentUserVotesImpl;
@@ -23,13 +25,19 @@ import org.testng.annotations.Test;
 
 import _fixtures.CleanDbEveryMethodDAOManagerTestBase;
 
+/**
+ * @author Nick Clarke
+ */
 public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase {
 
     private static final long DEFAULT_VOTE_SALARY = 100L;
     private static final long DEFAULT_VOTE_COST_TO_CREATE_POLICY = 100L;
     private static final byte DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE = 40;
+    private static final long DEFAULT_USER_VOTE_SALARY_INCREMENT = 100L;
+    private static final short DEFAULT_USER_VOTE_SALARY_FREQUENCY_DAYS = 7;
 
     private static final VoteRecordID ZERO_VOTE_RECORD_ID = new VoteRecordIDImpl(UUIDUtils.getZeroTimeUUID());
+    private static final DayOfWeek DEFAULT_USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK = DayOfWeek.MONDAY;
 
     private UserVoteManagerImpl manager;
 
@@ -49,7 +57,7 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
     }
 
     @Test(groups = {"dao"})
-    public void testVoteAllocation() {
+    public void testVoteAllocation() throws NoSuchUserException {
         // Set values convenient to our test
         final long voteCostToCreatePolicy = 20L;
         manager.setVoteCostToCreatePolicy(voteCostToCreatePolicy);
@@ -199,16 +207,25 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
     public void testVotingConfig() {
         assertEquals(DEFAULT_VOTE_COST_TO_CREATE_POLICY, manager.getVoteCostToCreatePolicy());
         assertEquals(DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE, manager.getVoteWithdrawalPenaltyPercentage());
+        assertEquals(DEFAULT_USER_VOTE_SALARY_INCREMENT, manager.getUserVoteSalaryIncrement());
+        assertEquals(DEFAULT_USER_VOTE_SALARY_FREQUENCY_DAYS, manager.getUserVoteSalaryFrequencyDays());
+        assertEquals(DEFAULT_USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK, manager.getUserVoteSalaryWeeklyDayOfWeek());
 
         manager.setVoteCostToCreatePolicy(DEFAULT_VOTE_COST_TO_CREATE_POLICY + 10);
-        assertEquals(DEFAULT_VOTE_COST_TO_CREATE_POLICY + 10, manager.getVoteCostToCreatePolicy());
-
         manager.setVoteWithdrawalPenaltyPercentage((byte) (DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE - 5));
+        manager.setUserVoteSalaryIncrement(DEFAULT_USER_VOTE_SALARY_INCREMENT + 20);
+        manager.setUserVoteSalaryFrequencyDays((short) (DEFAULT_USER_VOTE_SALARY_FREQUENCY_DAYS + 25));
+        manager.setUserVoteSalaryWeeklyDayOfWeek(DayOfWeek.THURSDAY);
+
+        assertEquals(DEFAULT_VOTE_COST_TO_CREATE_POLICY + 10, manager.getVoteCostToCreatePolicy());
         assertEquals(DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE - 5, manager.getVoteWithdrawalPenaltyPercentage());
+        assertEquals(DEFAULT_USER_VOTE_SALARY_INCREMENT + 20 , manager.getUserVoteSalaryIncrement());
+        assertEquals(DEFAULT_USER_VOTE_SALARY_FREQUENCY_DAYS + 25, manager.getUserVoteSalaryFrequencyDays());
+        assertEquals(DayOfWeek.THURSDAY, manager.getUserVoteSalaryWeeklyDayOfWeek());
     }
 
     @Test(groups = {"dao"})
-    public void testCollisionResolution() {
+    public void testCollisionResolution() throws NoSuchUserException {
         PolicyID policyID1 = new PolicyIDImpl();
         PolicyID policyID2 = new PolicyIDImpl();
 
@@ -287,4 +304,6 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
         assertEquals(conflicted.getVotesAllocated(policyID2), 4);
         assertEquals(conflicted.getPreviousVoteID(), branch2Parent);
     }
+
+    // TODO: test NoSuchUserException once manager is actually using the user registration records
 }

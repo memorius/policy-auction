@@ -28,6 +28,7 @@ public class DAOManagerImpl implements DAOManager {
     private final LogManagerImpl logManager;
     private final PolicyManagerImpl policyManager;
     private final UserVoteManagerImpl userVoteManager;
+    private final SystemInfoManagerImpl systemInfoManager;
 
     /**
      * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
@@ -50,11 +51,13 @@ public class DAOManagerImpl implements DAOManager {
         }
         keyspaceManager = new KeyspaceManagerImpl(address + ':' + String.valueOf(port));
 
+        systemInfoManager = new SystemInfoManagerImpl(keyspaceManager);
+
         logManager = new LogManagerImpl(keyspaceManager);
         initializeCassandraLogAppender();
 
         policyManager = new PolicyManagerImpl(keyspaceManager);
-        userVoteManager = new UserVoteManagerImpl(keyspaceManager);
+        userVoteManager = new UserVoteManagerImpl(keyspaceManager, systemInfoManager);
     }
 
     private void initializeCassandraLogAppender() {
@@ -93,5 +96,10 @@ public class DAOManagerImpl implements DAOManager {
     @Override
     public UserVoteManagerImpl getUserVoteManager() {
         return userVoteManager;
+    }
+
+    @Override
+    public SystemInfoManagerImpl getSystemInfoManager() {
+        return systemInfoManager;
     }
 }

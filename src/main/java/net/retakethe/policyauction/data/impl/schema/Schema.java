@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.impl.schema;
 import java.util.Date;
 
 import net.retakethe.policyauction.data.api.types.DateAndHour;
+import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.UserID;
@@ -25,6 +26,7 @@ import net.retakethe.policyauction.data.impl.schema.timestamp.UniqueTimestampFac
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
 
 import org.apache.tapestry5.json.JSONObject;
+import org.joda.time.LocalDate;
 
 /**
  * Cassandra schema elements as in cassandra-schema.txt.
@@ -39,7 +41,11 @@ public final class Schema {
 
     public static final UserVotesCF USER_VOTES = new UserVotesCF("user_policy_votes");
 
+    public static final VoteSalaryRow VOTE_SALARY = new VoteSalaryRow();
+
     public static final VotingConfigRow VOTING_CONFIG = new VotingConfigRow();
+
+    public static final SystemInfoRow SYSTEM_INFO = new SystemInfoRow();
 
     public static final LogHoursRow LOG_HOURS = new LogHoursRow();
 
@@ -67,23 +73,60 @@ public final class Schema {
         }
     }
 
+    public static final class VoteSalaryRow extends SingleRowRangeColumnFamily<String, MillisTimestamp, LocalDate, Long> {
+        private VoteSalaryRow() {
+            super(SchemaKeyspace.MAIN, "memcache_string", "vote-salary", Type.UTF8, MillisTimestampFactory.get(),
+                    Type.DAY);
+            setColumnRange(new ColumnRange<String, MillisTimestamp, LocalDate, Long>(this, Type.LONG));
+        }
+    }
+
     public static final class VotingConfigRow extends SingleRowNamedColumnFamily<String, MillisTimestamp, String> {
         public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Byte> VOTE_WITHDRAWAL_PENALTY_PERCENTAGE;
         public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Long> VOTE_COST_TO_CREATE_POLICY;
+        public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Long> USER_VOTE_SALARY_INCREMENT;
+        public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Short> USER_VOTE_SALARY_FREQUENCY_DAYS;
+        public final DefaultValuedNamedColumn<String, MillisTimestamp, String, DayOfWeek> USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK;
 
         private VotingConfigRow() {
-            super(SchemaKeyspace.MAIN, "memcache_string", "voting config", Type.UTF8, MillisTimestampFactory.get(),
+            super(SchemaKeyspace.MAIN, "memcache_string", "voting-config", Type.UTF8, MillisTimestampFactory.get(),
                     Type.UTF8);
             VOTE_WITHDRAWAL_PENALTY_PERCENTAGE = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Byte>(
                     "vote_withdrawal_penalty_percentage", this, Type.BYTE, (byte) 40); 
             VOTE_COST_TO_CREATE_POLICY = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Long>(
                     "vote_cost_to_create_policy", this, Type.LONG, 100L);
+            USER_VOTE_SALARY_INCREMENT = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Long>(
+                    "user_vote_salary_increment", this, Type.LONG, 100L);
+            USER_VOTE_SALARY_FREQUENCY_DAYS = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Short>(
+                    "user_vote_salary_frequency_days", this, Type.SHORT, (short) 7);
+            USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK = new DefaultValuedNamedColumn<String, MillisTimestamp, String, DayOfWeek>(
+                    "user_vote_salary_weekly_day_of_week", this, Type.DAY_OF_WEEK, DayOfWeek.MONDAY);
+        }
+    }
+
+    public static final class SystemInfoRow extends SingleRowNamedColumnFamily<String, MillisTimestamp, String> {
+        public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Date> FIRST_STARTUP;
+        public final NamedColumn<String, MillisTimestamp, String, LocalDate> VOTE_SALARY_LAST_PAID;
+
+        private SystemInfoRow() {
+            super(SchemaKeyspace.MAIN, "memcache_string", "system-info", Type.UTF8, MillisTimestampFactory.get(),
+                    Type.UTF8);
+            FIRST_STARTUP = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Date>(
+                    "first_startup_time", this, Type.DATE) {
+                @Override
+                protected Date getDefaultValue() {
+                    // Set current date when it's first read
+                    return new Date();
+                }
+            };
+            VOTE_SALARY_LAST_PAID = new NamedColumn<String, MillisTimestamp, String, LocalDate>(
+                    "vote_salary_last_paid", this, Type.DAY);
         }
     }
 
     public static final class LogHoursRow extends SingleRowRangeColumnFamily<String, MillisTimestamp, DateAndHour, Object> {
         private LogHoursRow() {
-            super(SchemaKeyspace.MAIN, "misc_string", "log hours", Type.UTF8, MillisTimestampFactory.get(),
+            super(SchemaKeyspace.MAIN, "misc_string", "log-hours", Type.UTF8, MillisTimestampFactory.get(),
                     Type.DATE_AND_HOUR);
             setColumnRange(new ColumnRange<String, MillisTimestamp, DateAndHour, Object>(this, Type.NULL));
         }

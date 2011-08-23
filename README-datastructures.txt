@@ -384,6 +384,10 @@ moderation["login"] {
     }
 }
 
+memcache_string["vote-salary"]: {
+    <LocalDate> : long
+}
+
 memcache_string["active-policies"]: {
     <policyName> ...: <policyID>
 }
@@ -618,6 +622,9 @@ moderation:
 memcache:
   Contains various single-row stuff for quick-lookups to avoid the need to iterate all keys on every request, and provide things in sorted order; runtime and config data.
   This is for small-ish rows so in-memory row cache can be enabled.
+
+  memcache["vote-salary"]:
+    - Vote salary, same for all users. Balance per user calculated from this based on their registration date.
 
   memcache["active-policies"]:
   - list of all active policy IDs, updated whenever they're added/disabled.

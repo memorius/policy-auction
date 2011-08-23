@@ -19,4 +19,6 @@ public interface DAOManager {
 
     UserVoteManager getUserVoteManager();
 
+    SystemInfoManager getSystemInfoManager();
+
 }

@@ -14,11 +14,29 @@ public class DefaultValuedNamedColumn<K, T extends Timestamp, N, V> extends Name
     private final V defaultValue;
     private final SingleRowNamedColumnFamily<K, T, N> columnFamily;
 
+    /**
+     * Construct with fixed default value
+     *
+     * @param defaultValue must not be null
+     */
     public DefaultValuedNamedColumn(N name, SingleRowNamedColumnFamily<K, T, N> columnFamily, Type<V> valueType,
             V defaultValue) {
         super(name, columnFamily, valueType);
+        if (defaultValue == null) {
+            throw new IllegalArgumentException("defaultValue must not be null");
+        }
         this.columnFamily = columnFamily;
         this.defaultValue = defaultValue;
+    }
+
+    /**
+     * Constructor for use where {@link #getDefaultValue()} is overridden instead of using a value fixed at consstruction
+     */
+    protected DefaultValuedNamedColumn(N name, SingleRowNamedColumnFamily<K, T, N> columnFamily, Type<V> valueType) {
+        super(name, columnFamily, valueType);
+        this.columnFamily = columnFamily;
+        // We expect getDefaultValue() to be overridden
+        this.defaultValue = null;
     }
 
     public V getColumnValueOrSetDefault(KeyspaceManager keyspaceManager) {
@@ -30,9 +48,19 @@ public class DefaultValuedNamedColumn<K, T extends Timestamp, N, V> extends Name
         }
 
         // Not set - insert default value
-        setColumnValue(keyspaceManager, defaultValue);
+        setColumnValue(keyspaceManager, getDefaultValue());
 
         return getColumnValueOrSetDefault(keyspaceManager);
+    }
+
+    /**
+     * Internal use only - can be overridden where a dynamically-generated initial value is required
+     */
+    protected V getDefaultValue() {
+        if (defaultValue == null) {
+            throw new UnsupportedOperationException("getDefaultValue must be overridden if no value is set at construction");
+        }
+        return defaultValue;
     }
 
     public void setColumnValue(KeyspaceManager keyspaceManager, V value) {

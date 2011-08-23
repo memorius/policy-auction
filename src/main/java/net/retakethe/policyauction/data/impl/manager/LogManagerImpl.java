@@ -39,12 +39,10 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
      */
     private static final String HOSTNAME = getLocalHostName();
 
-    private final KeyspaceManager keyspaceManager;
-
     private Set<String> hourBucketsWrittenThisSession;
 
     public LogManagerImpl(KeyspaceManager keyspaceManager) {
-        this.keyspaceManager = keyspaceManager;
+        super(keyspaceManager);
         this.hourBucketsWrittenThisSession = Collections.synchronizedSet(new HashSet<String>());
     }
 
@@ -59,7 +57,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
             return;
         }
 
-        Mutator<DateAndHour, MillisTimestamp> m = Schema.LOG.createMutator(keyspaceManager);
+        Mutator<DateAndHour, MillisTimestamp> m = Schema.LOG.createMutator(getKeyspaceManager());
 
         for (OutboundLogMessage message : messages) {
             addMessage(m, message);
@@ -118,7 +116,7 @@ public class LogManagerImpl extends AbstractDAOManagerImpl
 
     private void createHourBucket(DateAndHour bucket) {
         LogHoursRow cf = Schema.LOG_HOURS;
-        Mutator<String, MillisTimestamp> m = cf.createMutator(keyspaceManager);
+        Mutator<String, MillisTimestamp> m = cf.createMutator(getKeyspaceManager());
         cf.addColumnInsertion(m, bucket, cf.createValue(DUMMY_VALUE));
         m.execute();
     }

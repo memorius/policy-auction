@@ -10,9 +10,9 @@ import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.dao.PolicyDAOImpl;
+import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.Mutator;
-import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.OrderedRows;
 import net.retakethe.policyauction.data.impl.query.api.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.Row;
@@ -32,14 +32,8 @@ import net.retakethe.policyauction.util.Functional.SkippedElementException;
  */
 public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyManager {
 
-    private final KeyspaceManager keyspaceManager;
-
     public PolicyManagerImpl(KeyspaceManager keyspaceManager) {
-        super();
-        if (keyspaceManager == null) {
-            throw new IllegalArgumentException("keyspace must not be null");
-        }
-        this.keyspaceManager = keyspaceManager;
+        super(keyspaceManager);
     }
 
     @Override
@@ -54,7 +48,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.DESCRIPTION,
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.LAST_EDITED);
         SliceQuery<PolicyID, MillisTimestamp, String> query =
-                Schema.POLICIES.createSliceQuery(keyspaceManager, policyID, list);
+                Schema.POLICIES.createSliceQuery(getKeyspaceManager(), policyID, list);
 
         QueryResult<ColumnSlice<MillisTimestamp, String>> queryResult = query.execute();
 
@@ -90,7 +84,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.DESCRIPTION,
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.LAST_EDITED);
         RangeSlicesQuery<PolicyID, MillisTimestamp, String> query =
-                Schema.POLICIES.createRangeSlicesQuery(keyspaceManager,
+                Schema.POLICIES.createRangeSlicesQuery(getKeyspaceManager(),
                         list);
 
         // TODO: may need paging of data once we have more than a few hundred.
@@ -146,7 +140,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
 
         PoliciesCF cf = Schema.POLICIES;
         MillisTimestamp ts = cf.createCurrentTimestamp();
-        Mutator<PolicyID, MillisTimestamp> m = cf.createMutator(keyspaceManager);
+        Mutator<PolicyID, MillisTimestamp> m = cf.createMutator(getKeyspaceManager());
 
         cf.SHORT_NAME.addColumnInsertion(m, policyID, cf.createValue(policy.getShortName(), ts));
         cf.DESCRIPTION.addColumnInsertion(m, policyID, cf.createValue(policy.getDescription(), ts));
@@ -162,7 +156,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
     public void deletePolicy(PolicyDAO policy) {
         PolicyID policyID = policy.getPolicyID();
 
-        Mutator<PolicyID, MillisTimestamp> m = Schema.POLICIES.createMutator(keyspaceManager);
+        Mutator<PolicyID, MillisTimestamp> m = Schema.POLICIES.createMutator(getKeyspaceManager());
 
         Schema.POLICIES.addRowDeletion(m, policyID);
 

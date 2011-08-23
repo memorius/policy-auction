@@ -12,11 +12,13 @@ import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Serializer;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
+import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.serializers.ByteSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
+import net.retakethe.policyauction.data.impl.serializers.DayOfWeekSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 import net.retakethe.policyauction.data.impl.serializers.JSONSerializer;
 import net.retakethe.policyauction.data.impl.serializers.LocalDateSerializer;
@@ -72,6 +74,11 @@ public final class Type<T> {
      * This is intended for logical days in the system.
      */
     public static final Type<LocalDate> DAY = new Type<LocalDate>(LocalDate.class, LocalDateSerializer.get());
+
+    /**
+     * Day of week, stored in cassandra as string Monday-Sunday, as UTF8Type.
+     */
+    public static final Type<DayOfWeek> DAY_OF_WEEK = new Type<DayOfWeek>(DayOfWeek.class, DayOfWeekSerializer.get());
 
     /**
      * Byte, stored as a single byte.

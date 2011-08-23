@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.impl.manager;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.query.api.ColumnResult;
 import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
+import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
@@ -10,7 +11,7 @@ import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
 /**
  * @author Nick Clarke
  */
-public class AbstractDAOManagerImpl {
+public abstract class AbstractDAOManagerImpl {
 
     protected static final Object DUMMY_VALUE = new Object();
 
@@ -20,6 +21,19 @@ public class AbstractDAOManagerImpl {
         public NoSuchColumnException(String columnName) {
             super("NamedColumn '" + columnName + "' not found");
         }
+    }
+
+    private final KeyspaceManager keyspaceManager;
+
+    protected AbstractDAOManagerImpl(KeyspaceManager keyspaceManager) {
+        if (keyspaceManager == null) {
+            throw new IllegalArgumentException("keyspace must not be null");
+        }
+        this.keyspaceManager = keyspaceManager;
+    }
+
+    protected KeyspaceManager getKeyspaceManager() {
+        return keyspaceManager;
     }
 
     protected <T extends Timestamp, N, V> V getColumnOrNull(ColumnSlice<T, N> cs,
