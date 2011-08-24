@@ -24,8 +24,8 @@ public interface UserDAO extends Serializable {
 	String getLastName();
 	void setLastName(String lastName);
 	
-	Boolean isShowRealName();
-	void setShowRealName(Boolean showRealName);
+	boolean isShowRealName();
+	void setShowRealName(boolean showRealName);
 	
 	Date getCreatedTimestamp();
 	void setCreatedTimestamp(Date createdTimestamp);

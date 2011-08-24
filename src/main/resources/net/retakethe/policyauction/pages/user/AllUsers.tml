@@ -1,0 +1,13 @@
+<html t:type="layout" title="Policy Auction - All Users"
+      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
+      xmlns:p="tapestry:parameter">
+        <!-- Most of the page content, including <head>, <body>, etc. tags, comes from Layout.tml -->
+
+    <p>All Users</p>
+
+    <t:grid source="allUsers"/>
+
+    <p>
+        <t:actionlink t:id="add">Add user</t:actionlink>
+    </p>
+</html>

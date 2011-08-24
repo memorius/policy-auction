@@ -10,32 +10,32 @@ public class UserDAOImpl implements UserDAO {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -1186674628028659343L;
-	
+
 	private final UserID userID;
-	
+
 	private String username;
 	private String email;
 	private String passwordHash;
-    private Date passwordExpiryTimestamp;
-	
+	private Date passwordExpiryTimestamp;
+
 	private String firstName;
 	private String lastName;
-	
-	private Boolean showRealName;
+
+	private boolean showRealName;
 
 	private Date createdTimestamp;
 	private Date voteSalaryLastPaidTimestamp;
 	private Date voteSalaryDate;
-	
+
 	private UserRole userRole;
 
-	public UserDAOImpl(UserID userID) {
+	public UserDAOImpl(final UserID userID) {
 		if (userID == null ){
 			throw new IllegalArgumentException("userID must not be null");
 		}
 		this.userID = userID;
 	}
-	
+
 	public UserDAOImpl(final UserID userID, final String username, final String email, final String passwordHash, final Date passwordExpiryTimestamp, final String firstName, final String lastName, final Boolean showRealName, final Date createdTimestamp, final Date voteSalaryLastPaidTimestamp, final Date voteSalaryDate, final String userRole) {
 		this.userID = userID;
 		this.username = username;
@@ -43,16 +43,16 @@ public class UserDAOImpl implements UserDAO {
 
 		this.passwordHash = passwordHash;
 		this.passwordExpiryTimestamp = passwordExpiryTimestamp;
-		
+
 		this.firstName = firstName;
 		this.lastName = lastName;
-		
+
 		this.showRealName = showRealName;
-		
+
 		this.createdTimestamp = createdTimestamp;
 		this.voteSalaryLastPaidTimestamp = voteSalaryLastPaidTimestamp;
 		this.voteSalaryDate = voteSalaryDate;
-		
+
 		setUserRole(userRole);
 	}
 
@@ -67,17 +67,17 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public void setUsername(String username) {
+	public void setUsername(final String username) {
 		this.username = username;
 	}
-	
+
 	@Override
 	public String getEmail() {
 		return email;
 	}
-	
+
 	@Override
-	public void setEmail(String email) {
+	public void setEmail(final String email) {
 		this.email = email;
 	}
 
@@ -87,17 +87,17 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public void setPasswordHash(String passwordHash) {
+	public void setPasswordHash(final String passwordHash) {
 		this.passwordHash = passwordHash;
 	}
-	
+
 	@Override
 	public Date getPasswordExpiryTimestamp() {
 		return passwordExpiryTimestamp;
 	}
-	
+
 	@Override
-	public void setPasswordExpiryTimestamp(Date passwordExpiryTimestamp) {
+	public void setPasswordExpiryTimestamp(final Date passwordExpiryTimestamp) {
 		this.passwordExpiryTimestamp = passwordExpiryTimestamp;
 	}
 
@@ -107,7 +107,7 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public void setFirstName(String firstName) {
+	public void setFirstName(final String firstName) {
 		this.firstName = firstName;
 	}
 
@@ -117,17 +117,17 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public void setLastName(String lastName) {
+	public void setLastName(final String lastName) {
 		this.lastName = lastName;
 	}
 
 	@Override
-	public Boolean isShowRealName() {
+	public boolean isShowRealName() {
 		return showRealName;
 	}
 
 	@Override
-	public void setShowRealName(Boolean showRealName) {
+	public void setShowRealName(final boolean showRealName) {
 		this.showRealName = showRealName;
 	}
 
@@ -137,7 +137,7 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public void setCreatedTimestamp(Date createdTimestamp) {
+	public void setCreatedTimestamp(final Date createdTimestamp) {
 		this.createdTimestamp = createdTimestamp;
 	}
 
@@ -147,7 +147,7 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public void setVoteSalaryLastPaidTimestamp(Date voteSalaryLastPaidTimestamp) {
+	public void setVoteSalaryLastPaidTimestamp(final Date voteSalaryLastPaidTimestamp) {
 		this.voteSalaryLastPaidTimestamp = voteSalaryLastPaidTimestamp;
 	}
 
@@ -157,7 +157,7 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public void setVoteSalaryDate(Date voteSalaryDate) {
+	public void setVoteSalaryDate(final Date voteSalaryDate) {
 		this.voteSalaryDate = voteSalaryDate;
 	}
 
@@ -167,11 +167,11 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public void setUserRole(UserRole userRole) {
+	public void setUserRole(final UserRole userRole) {
 		this.userRole = userRole;
 	}
-	
-	public void setUserRole(String userRole) {
+
+	public void setUserRole(final String userRole) {
 		for (UserRole role : UserRole.values()) {
 			if (role.toString().equalsIgnoreCase(userRole)) {
 				this.userRole = role;

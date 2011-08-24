@@ -48,7 +48,6 @@ public final class Schema {
     }
     
     public static final class UsersCF extends ColumnFamily<UserID, MillisTimestamp, String> {
-    	public final NamedColumn<UserID, MillisTimestamp, String, String> USERNAME;
     	public final NamedColumn<UserID, MillisTimestamp, String, String> EMAIL;
     	public final NamedColumn<UserID, MillisTimestamp, String, String> PASSWORD_HASH;
     	
@@ -66,7 +65,6 @@ public final class Schema {
     	
     	private UsersCF() {
 			super(SchemaKeyspace.MAIN, "users", Type.USER_ID, MillisTimestampFactory.get(), Type.UTF8);
-			USERNAME = new StringStringColumn<UserID, MillisTimestamp>("username", this);
 			EMAIL = new StringStringColumn<UserID, MillisTimestamp>("email", this);
 			PASSWORD_HASH = new StringStringColumn<UserID, MillisTimestamp>("password_hash", this);
 			

@@ -22,10 +22,34 @@ create column family users
     with comment = 'Users by userID'
     and comparator = UTF8Type
     and column_metadata = [{
-            column_name: password,
+            column_name: email,
             validation_class: UTF8Type
         }, {
-            column_name: name,
+            column_name: password_hash,
+            validation_class: UTF8Type
+        }, {
+            column_name: first_name,
+            validation_class: UTF8Type
+        }, {
+            column_name: last_name,
+            validation_class: UTF8Type
+        }, {
+            column_name: show_real_name,
+            validation_class: BytesType
+        }, {
+            column_name: created_timestamp,
+            validation_class: LongType
+        }, {
+            column_name: password_expiry_timestamp,
+            validation_class: LongType
+        }, {
+            column_name: vote_salary_last_paid_timestamp,
+            validation_class: LongType
+        }, {
+            column_name: vote_salary_date,
+            validation_class: LongType
+        }, {
+            column_name: user_role,
             validation_class: UTF8Type
         }
     ];

@@ -3,6 +3,7 @@ package net.retakethe.policyauction.entities;
 import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.util.Functional;
 import net.retakethe.policyauction.util.Functional.Converter;
 
@@ -28,5 +29,22 @@ public final class EntityFactory {
 
     public static PolicyDAO getPolicyDAO(Policy policy) {
         return policy.getPolicyDAO();
+    }
+    
+    public static List<User> makeUsers(List<UserDAO> allUsers) {
+        return Functional.map(allUsers, new Converter<UserDAO, User>() {
+            @Override
+            public User convert(UserDAO a) {
+                return makeUser(a);
+            }
+        });
+    }
+
+    public static User makeUser(UserDAO userDAO) {
+        return new User(userDAO);
+    }
+
+    public static UserDAO getUserDAO(User user) {
+        return user.getUserDAO();
     }
 }

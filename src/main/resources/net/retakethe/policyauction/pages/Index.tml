@@ -9,6 +9,9 @@
     <p>
         <t:pagelink page="policy/PolicyIndex">Policies</t:pagelink>
     </p>
+    <p>
+        <t:pagelink page="user/UserIndex">Users</t:pagelink>
+    </p>
 
     <p:sidebar>
 

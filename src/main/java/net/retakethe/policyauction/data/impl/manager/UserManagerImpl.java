@@ -49,7 +49,6 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     @Override
     public UserDAO getUser(UserID userID) throws NoSuchUserException {
         List<NamedColumn<UserID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USERNAME,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.EMAIL,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_HASH,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP,
@@ -116,7 +115,6 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     @Override
     public List<UserDAO> getAllUsers() {
         List<NamedColumn<UserID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USERNAME,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.EMAIL,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_HASH,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP,

@@ -9,6 +9,6 @@ public interface DAOManager {
 
     PolicyManager getPolicyManager();
 
-    // UserManager getUserManager();
+    UserManager getUserManager();
 
 }
