@@ -15,42 +15,36 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import me.prettyprint.hector.api.query.QueryResult;
-import net.retakethe.policyauction.data.api.SystemInfoManager;
-import net.retakethe.policyauction.data.api.UserVoteManager;
+import net.retakethe.policyauction.data.api.UserVoteAllocationManager;
+import net.retakethe.policyauction.data.api.VoteSalaryManager;
+import net.retakethe.policyauction.data.api.VotingConfigManager;
 import net.retakethe.policyauction.data.api.dao.CurrentUserVotesDAO;
 import net.retakethe.policyauction.data.api.dao.VoteSalaryPayment;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchUserException;
-import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.dao.CurrentUserVotesImpl;
 import net.retakethe.policyauction.data.impl.dao.PolicyVoteRecord;
-import net.retakethe.policyauction.data.impl.dao.VoteSalaryPaymentImpl;
 import net.retakethe.policyauction.data.impl.query.api.ColumnResult;
 import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.Mutator;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.UserVotesCF;
-import net.retakethe.policyauction.data.impl.schema.Schema.VoteSalaryRow;
-import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
-import net.retakethe.policyauction.data.impl.schema.timestamp.MillisTimestamp;
 import net.retakethe.policyauction.data.impl.schema.timestamp.UniqueTimestamp;
 import net.retakethe.policyauction.data.impl.schema.value.Value;
 import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordIDImpl;
 import net.retakethe.policyauction.data.impl.util.UUIDUtils;
-import net.retakethe.policyauction.util.AssertArgument;
 import net.retakethe.policyauction.util.Functional;
 
 import org.apache.tapestry5.json.JSONObject;
-import org.joda.time.LocalDate;
 
 /**
  * @author Nick Clarke
  */
-public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserVoteManager {
+public class UserVoteAllocationManagerImpl extends AbstractDAOManagerImpl implements UserVoteAllocationManager {
 
     /**
      * Internal class representing the column values in the UserVotesCF tables.
@@ -190,11 +184,15 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         }
     };
 
-    private final SystemInfoManager systemInfoManager;
+    private final VoteSalaryManager voteSalaryManager;
+    private final VotingConfigManager votingConfigManager;
 
-    public UserVoteManagerImpl(KeyspaceManager keyspaceManager, SystemInfoManager systemInfoManager) {
+    public UserVoteAllocationManagerImpl(KeyspaceManager keyspaceManager,
+            VotingConfigManager votingConfigManager,
+            VoteSalaryManager voteSalaryManager) {
         super(keyspaceManager);
-        this.systemInfoManager = systemInfoManager;
+        this.votingConfigManager = votingConfigManager;
+        this.voteSalaryManager = voteSalaryManager;
     }
 
     @Override
@@ -207,8 +205,8 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
 
         final long totalVoteSalary = getTotalUserVoteSalary(userID);
 
-        final byte voteWithdrawalPenaltyPercentage = getVoteWithdrawalPenaltyPercentage();
-        final long voteCostToCreatePolicy = getVoteCostToCreatePolicy();
+        final byte voteWithdrawalPenaltyPercentage = votingConfigManager.getVoteWithdrawalPenaltyPercentage();
+        final long voteCostToCreatePolicy = votingConfigManager.getVoteCostToCreatePolicy();
 
         List<VoteRecord> voteRecords = readUserVoteRecords(userID);
 
@@ -225,14 +223,19 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
                 totalVoteSalary, voteWithdrawalPenaltyPercentage, voteCostToCreatePolicy);
     }
 
-    @Override
-    public List<VoteSalaryPayment> getUserVoteSalaryHistory(UserID userID) throws NoSuchUserException {
-        return getSalaryRecordsSince(getUserRegistrationDate(userID));
-    }
+    /**
+     * Read all vote salary records, sum and return total
+     *
+     * @param userID
+     * @return
+     */
+    private long getTotalUserVoteSalary(UserID userID) throws NoSuchUserException {
+        long total = 0L;
+        for (VoteSalaryPayment salaryInfo : voteSalaryManager.getUserVoteSalaryHistory(userID)) {
+            total += salaryInfo.getVotes();
+        }
 
-    @Override
-    public List<VoteSalaryPayment> getSystemWideVoteSalaryHistory() {
-        return getSalaryRecordsSince(new LocalDate(systemInfoManager.getFirstStartupTime()));
+        return total;
     }
 
     private List<VoteRecord> readUserVoteRecords(UserID userID) {
@@ -254,151 +257,6 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
                         return new VoteRecord(recordID, ts, json);
                     }
                 });
-    }
-
-    /**
-     * Read all vote salary records, sum and return total
-     *
-     * @param userID
-     * @return
-     */
-    private long getTotalUserVoteSalary(UserID userID) throws NoSuchUserException {
-        long total = 0L;
-        for (VoteSalaryPayment salaryInfo : getUserVoteSalaryHistory(userID)) {
-            total += salaryInfo.getVotes();
-        }
-
-        return total;
-    }
-
-    private LocalDate getUserRegistrationDate(UserID userID) throws NoSuchUserException {
-        // FIXME: temporary hack until I have Matt's user reg manager: all users get all votes regardless of reg date.
-        //        Need to read real reg date from user CF, throw NoSuchUserException if not found. 
-        return new LocalDate(systemInfoManager.getFirstStartupTime());
-    }
-
-    private List<VoteSalaryPayment> getSalaryRecordsSince(LocalDate startDate) {
-        LocalDate today = LocalDate.now();
-
-        createSalaryRecordsIfNeeded(today);
-
-        return readVoteSalary(startDate, today);
-    }
-
-    private void createSalaryRecordsIfNeeded(LocalDate today) {
-        LocalDate lastPay = systemInfoManager.getVoteSalaryLastPaid();
-        if (lastPay != null && !lastPay.isBefore(today)) {
-            // Already updated today (or, well, in the future, like)
-            return;
-        }
-
-        LocalDate nextPay = getNextPay(lastPay, today);
-        if (nextPay == null) {
-            // Not due yet
-            return;
-        }
-
-        // Write any missing records
-        do {
-            writeVoteSalaryColumn(nextPay, getUserVoteSalaryIncrement());
-            systemInfoManager.setVoteSalaryLastPaid(nextPay);
-            lastPay = nextPay;
-            nextPay = getNextPay(lastPay, today);
-        } while (nextPay != null);
-    }
-
-    private LocalDate getNextPay(LocalDate lastPay, LocalDate today) {
-        if (lastPay == null) {
-            // First payment is always on first startup day, even if weekly/specific-day frequency is set and it's
-            // out of phase, because it simplifies range retrievals. The next payment will be on the specified day.
-            return new LocalDate(systemInfoManager.getFirstStartupTime());
-        }
-
-        LocalDate nextPay;
-        final short frequencyDays = getUserVoteSalaryFrequencyDays();
-        if (7 == frequencyDays) {
-            // Weekly frequency is handled differently so that all payments except the first-startup one occur on
-            // the specified day of the week, regardless of first-startup day-of-week or day of frequency change.
-            // If we're out of phase (e.g. changed the pay-day-of-week since last pay, or changed to weekly from 
-            // some other frequency), step back so we have a short week this week, rather than a long week.
-            DayOfWeek dayOfWeek = getUserVoteSalaryWeeklyDayOfWeek();
-            while (DayOfWeek.fromLocalDate(lastPay) != dayOfWeek) {
-                lastPay = lastPay.minusDays(1);
-            }
-            nextPay = lastPay.plusDays(frequencyDays);
-        } else {
-            // Non-weekly frequency
-            nextPay = lastPay.plusDays(frequencyDays);
-        }
-
-        // Return only if it's actually due yet
-        return nextPay.isAfter(today) ? null : nextPay;
-    }
-
-    /**
-     * @param startDate inclusive
-     * @param endDate inclusive
-     */
-    private List<VoteSalaryPayment> readVoteSalary(LocalDate startDate, LocalDate endDate) {
-        VoteSalaryRow cf = Schema.VOTE_SALARY;
-        ColumnRange<String, MillisTimestamp, LocalDate, Long> columnRange = cf.getColumnRange();
-
-        QueryResult<ColumnSlice<MillisTimestamp, LocalDate>> result =
-                cf.createSliceQuery(getKeyspaceManager(), startDate, endDate, false, Integer.MAX_VALUE).execute();
-        List<ColumnResult<MillisTimestamp, LocalDate, Long>> columns = result.get().getColumns(columnRange);
-
-        List<VoteSalaryPayment> salary = toSalaryRecords(columns);
-
-        // Find one more record backwards from the start date, if there are any.
-        // This is so that if you start ON a salary day, you receive that day's salary;
-        // if you start between days, you receive salary from the previous cycle.
-        // To avoid reading ALL records every time, we have to do a second read (or in the worst case, several)
-        // since we don't know what the salary frequency or phase was at the startDate.
-
-        endDate = startDate.minusDays(1);
-        startDate = startDate.minusMonths(1);
-
-        // Oldest possible salary payment date.
-        final LocalDate earliest = new LocalDate(systemInfoManager.getFirstStartupTime());
-
-        while (earliest.isBefore(endDate)) {
-            result = cf.createSliceQuery(getKeyspaceManager(), startDate, endDate, true, Integer.MAX_VALUE).execute();
-            columns = result.get().getColumns(columnRange);
-
-            if (columns.isEmpty()) {
-                // No records in this interval - fetch another chunk
-                endDate = startDate.minusDays(1);
-                startDate = startDate.minusMonths(1);
-                continue;
-            }
-
-            // Results in reversed order - this is the most recent
-            salary.add(0, makeSalaryRecord(columns.get(0)));
-            break;
-        }
-
-        return salary;
-    }
-
-    private VoteSalaryPayment makeSalaryRecord(ColumnResult<MillisTimestamp, LocalDate, Long> columnResult) {
-        return new VoteSalaryPaymentImpl(columnResult.getName(), columnResult.getValue().getValue());
-    }
-
-    private List<VoteSalaryPayment> toSalaryRecords(List<ColumnResult<MillisTimestamp, LocalDate, Long>> columns) {
-        return Functional.map(columns,
-                new Functional.Converter<ColumnResult<MillisTimestamp, LocalDate, Long>, VoteSalaryPayment>() {
-                    @Override
-                    public VoteSalaryPayment convert(ColumnResult<MillisTimestamp, LocalDate, Long> columnResult) {
-                        return makeSalaryRecord(columnResult);
-                    }
-                });
-    }
-
-    private void writeVoteSalaryColumn(LocalDate date, long salaryIncrement) {
-        VoteSalaryRow cf = Schema.VOTE_SALARY;
-        Mutator<String, MillisTimestamp> m = cf.createMutator(getKeyspaceManager());
-        cf.addColumnInsertion(m, date, cf.createValue(salaryIncrement));
-        m.execute();
     }
 
     /**
@@ -568,88 +426,6 @@ public class UserVoteManagerImpl extends AbstractDAOManagerImpl implements UserV
         cf.addColumnInsertion(m, userID, record.getVoteID(),
                 cf.createValue(record.toJSON(), record.getTimestamp()));
         m.execute();
-    }
-
-    @Override
-    public byte getVoteWithdrawalPenaltyPercentage() {
-        // TODO: maybe cache in memory for a few minutes
-        return readVoteWithdrawalPenaltyPercentage();
-    }
-    
-    @Override
-    public long getVoteCostToCreatePolicy() {
-        // TODO: maybe cache in memory for a few minutes
-        return readVoteCostToCreatePolicy();
-    }
-
-    @Override
-    public long getUserVoteSalaryIncrement() {
-        // TODO: maybe cache in memory for a few minutes
-        return readUserVoteSalaryIncrement();
-    }
-
-    @Override
-    public short getUserVoteSalaryFrequencyDays() {
-        // TODO: maybe cache in memory for a few minutes
-        return readUserVoteSalaryFrequencyDays();
-    }
-    
-    @Override
-    public DayOfWeek getUserVoteSalaryWeeklyDayOfWeek() {
-        // TODO: maybe cache in memory for a few minutes
-        return readUserVoteSalaryWeeklyDayOfWeek();
-    }
-
-    private byte readVoteWithdrawalPenaltyPercentage() {
-        return Schema.VOTING_CONFIG.VOTE_WITHDRAWAL_PENALTY_PERCENTAGE.getColumnValueOrSetDefault(getKeyspaceManager());
-    }
-    
-    private long readVoteCostToCreatePolicy() {
-        return Schema.VOTING_CONFIG.VOTE_COST_TO_CREATE_POLICY.getColumnValueOrSetDefault(getKeyspaceManager());
-    }
-
-    private long readUserVoteSalaryIncrement() {
-        return Schema.VOTING_CONFIG.USER_VOTE_SALARY_INCREMENT.getColumnValueOrSetDefault(getKeyspaceManager());
-    }
-
-    private short readUserVoteSalaryFrequencyDays() {
-        return Schema.VOTING_CONFIG.USER_VOTE_SALARY_FREQUENCY_DAYS.getColumnValueOrSetDefault(getKeyspaceManager());
-    }
-
-    private DayOfWeek readUserVoteSalaryWeeklyDayOfWeek() {
-        return Schema.VOTING_CONFIG.USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK.getColumnValueOrSetDefault(getKeyspaceManager());
-    }
-
-    @Override
-    public void setVoteCostToCreatePolicy(long voteCost) {
-        AssertArgument.isTrue(voteCost >= 0, "voteCost must be positive", voteCost);
-        Schema.VOTING_CONFIG.VOTE_COST_TO_CREATE_POLICY.setColumnValue(getKeyspaceManager(), voteCost);
-    }
-
-    @Override
-    public void setVoteWithdrawalPenaltyPercentage(byte percentage) {
-        AssertArgument.isTrue(0 <= percentage && percentage <= 100, "percentage must be between 0 and 100 (inclusive)",
-                percentage);
-        Schema.VOTING_CONFIG.VOTE_WITHDRAWAL_PENALTY_PERCENTAGE.setColumnValue(getKeyspaceManager(), percentage);
-    }
-
-    @Override
-    public void setUserVoteSalaryIncrement(long voteSalaryIncrement) {
-        AssertArgument.isTrue(voteSalaryIncrement >= 0, "voteSalaryIncrement must be positive", voteSalaryIncrement);
-        Schema.VOTING_CONFIG.USER_VOTE_SALARY_INCREMENT.setColumnValue(getKeyspaceManager(), voteSalaryIncrement);
-    }
-
-    @Override
-    public void setUserVoteSalaryFrequencyDays(short voteSalaryFrequencyDays) {
-        AssertArgument.isTrue(voteSalaryFrequencyDays > 0, "voteSalaryIncrement must be greater than zero",
-                voteSalaryFrequencyDays);
-        Schema.VOTING_CONFIG.USER_VOTE_SALARY_FREQUENCY_DAYS.setColumnValue(getKeyspaceManager(), voteSalaryFrequencyDays);
-    }
-
-    @Override
-    public void setUserVoteSalaryWeeklyDayOfWeek(DayOfWeek voteSalaryDayOfWeek) {
-        AssertArgument.notNull(voteSalaryDayOfWeek, "voteSalaryDayOfWeek");
-        Schema.VOTING_CONFIG.USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK.setColumnValue(getKeyspaceManager(), voteSalaryDayOfWeek);
     }
 
     @Override

@@ -9,11 +9,11 @@ import static org.testng.Assert.fail;
 
 import net.retakethe.policyauction.data.api.exceptions.InsufficientVotesException;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchUserException;
-import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.dao.CurrentUserVotesImpl;
-import net.retakethe.policyauction.data.impl.manager.UserVoteManagerImpl;
+import net.retakethe.policyauction.data.impl.manager.UserVoteAllocationManagerImpl;
+import net.retakethe.policyauction.data.impl.manager.VotingConfigManagerImpl;
 import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
 import net.retakethe.policyauction.data.impl.types.UserIDImpl;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
@@ -28,29 +28,26 @@ import _fixtures.CleanDbEveryMethodDAOManagerTestBase;
 /**
  * @author Nick Clarke
  */
-public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase {
+public class UserVoteAllocationManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase {
 
-    private static final long DEFAULT_VOTE_SALARY = 100L;
-    private static final long DEFAULT_VOTE_COST_TO_CREATE_POLICY = 100L;
-    private static final byte DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE = 40;
-    private static final long DEFAULT_USER_VOTE_SALARY_INCREMENT = 100L;
-    private static final short DEFAULT_USER_VOTE_SALARY_FREQUENCY_DAYS = 7;
+    private static final long EXPECTED_INITIAL_VOTE_SALARY = 100L;
 
     private static final VoteRecordID ZERO_VOTE_RECORD_ID = new VoteRecordIDImpl(UUIDUtils.getZeroTimeUUID());
-    private static final DayOfWeek DEFAULT_USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK = DayOfWeek.MONDAY;
 
-    private UserVoteManagerImpl manager;
+    private UserVoteAllocationManagerImpl manager;
+    private VotingConfigManagerImpl votingConfigManager;
 
     @BeforeMethod(groups = {"dao"})
     public void setupManager() {
-        manager = getDAOManager().getUserVoteManager();
+        manager = getDAOManager().getUserVoteAllocationManager();
+        votingConfigManager = getDAOManager().getVotingConfigManager();
     }
 
     private void assertEmptyVoteAllocation(CurrentUserVotesImpl dao, UserID userID) {
         assertNull(dao.getCreatedPolicyID());
         assertEquals(dao.getPreviousVoteID(), ZERO_VOTE_RECORD_ID);
         assertEquals(dao.getUserID(), userID);
-        assertEquals(dao.getUnallocatedVotes(), DEFAULT_VOTE_SALARY);
+        assertEquals(dao.getUnallocatedVotes(), EXPECTED_INITIAL_VOTE_SALARY);
         assertFalse(dao.isDirty());
         assertEquals(dao.getPolicyIDsVotedOn().size(), 0);
         assertEquals(dao.getPolicyVotes().size(), 0);
@@ -60,9 +57,9 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
     public void testVoteAllocation() throws NoSuchUserException {
         // Set values convenient to our test
         final long voteCostToCreatePolicy = 20L;
-        manager.setVoteCostToCreatePolicy(voteCostToCreatePolicy);
+        votingConfigManager.setVoteCostToCreatePolicy(voteCostToCreatePolicy);
         final byte voteWithdrawalPenaltyPercentage = (byte) 40;
-        manager.setVoteWithdrawalPenaltyPercentage(voteWithdrawalPenaltyPercentage);
+        votingConfigManager.setVoteWithdrawalPenaltyPercentage(voteWithdrawalPenaltyPercentage);
 
         PolicyID policyID1 = new PolicyIDImpl();
         PolicyID policyID2 = new PolicyIDImpl();
@@ -84,7 +81,7 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
         dao = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID1);
         assertEquals(dao.getPreviousVoteID(), ZERO_VOTE_RECORD_ID);
         long votesUnallocated = dao.getUnallocatedVotes();
-        assertEquals(votesUnallocated, DEFAULT_VOTE_SALARY);
+        assertEquals(votesUnallocated, EXPECTED_INITIAL_VOTE_SALARY);
         assertEquals(dao.getPolicyVotes().size(), 0);
 
         // Allocate votes
@@ -204,27 +201,6 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
     }
 
     @Test(groups = {"dao"})
-    public void testVotingConfig() {
-        assertEquals(DEFAULT_VOTE_COST_TO_CREATE_POLICY, manager.getVoteCostToCreatePolicy());
-        assertEquals(DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE, manager.getVoteWithdrawalPenaltyPercentage());
-        assertEquals(DEFAULT_USER_VOTE_SALARY_INCREMENT, manager.getUserVoteSalaryIncrement());
-        assertEquals(DEFAULT_USER_VOTE_SALARY_FREQUENCY_DAYS, manager.getUserVoteSalaryFrequencyDays());
-        assertEquals(DEFAULT_USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK, manager.getUserVoteSalaryWeeklyDayOfWeek());
-
-        manager.setVoteCostToCreatePolicy(DEFAULT_VOTE_COST_TO_CREATE_POLICY + 10);
-        manager.setVoteWithdrawalPenaltyPercentage((byte) (DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE - 5));
-        manager.setUserVoteSalaryIncrement(DEFAULT_USER_VOTE_SALARY_INCREMENT + 20);
-        manager.setUserVoteSalaryFrequencyDays((short) (DEFAULT_USER_VOTE_SALARY_FREQUENCY_DAYS + 25));
-        manager.setUserVoteSalaryWeeklyDayOfWeek(DayOfWeek.THURSDAY);
-
-        assertEquals(DEFAULT_VOTE_COST_TO_CREATE_POLICY + 10, manager.getVoteCostToCreatePolicy());
-        assertEquals(DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE - 5, manager.getVoteWithdrawalPenaltyPercentage());
-        assertEquals(DEFAULT_USER_VOTE_SALARY_INCREMENT + 20 , manager.getUserVoteSalaryIncrement());
-        assertEquals(DEFAULT_USER_VOTE_SALARY_FREQUENCY_DAYS + 25, manager.getUserVoteSalaryFrequencyDays());
-        assertEquals(DayOfWeek.THURSDAY, manager.getUserVoteSalaryWeeklyDayOfWeek());
-    }
-
-    @Test(groups = {"dao"})
     public void testCollisionResolution() throws NoSuchUserException {
         PolicyID policyID1 = new PolicyIDImpl();
         PolicyID policyID2 = new PolicyIDImpl();
@@ -305,5 +281,5 @@ public class UserVoteManagerImplTest extends CleanDbEveryMethodDAOManagerTestBas
         assertEquals(conflicted.getPreviousVoteID(), branch2Parent);
     }
 
-    // TODO: test NoSuchUserException once manager is actually using the user registration records
+    // TODO: test getCurrentUserVoteAllocation NoSuchUserException once manager is actually using the user registration records
 }

@@ -2,8 +2,6 @@ package net.retakethe.policyauction.data.api;
 
 import java.util.Date;
 
-import org.joda.time.LocalDate;
-
 /**
  * Various runtime values for the whole system.
  *
@@ -17,16 +15,5 @@ public interface SystemInfoManager {
      * @return non-null value
      */
     Date getFirstStartupTime();
-
-    /**
-     * 
-     * @return null if no pay run yet
-     */
-    LocalDate getVoteSalaryLastPaid();
-
-    /**
-     * @param lastPaid must not be null
-     */
-    void setVoteSalaryLastPaid(LocalDate lastPaid);
 
 }

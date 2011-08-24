@@ -27,7 +27,9 @@ public class DAOManagerImpl implements DAOManager {
 
     private final LogManagerImpl logManager;
     private final PolicyManagerImpl policyManager;
-    private final UserVoteManagerImpl userVoteManager;
+    private final UserVoteAllocationManagerImpl userVoteManager;
+    private final VoteSalaryManagerImpl voteSalaryManager;
+    private final VotingConfigManagerImpl votingConfigManager;
     private final SystemInfoManagerImpl systemInfoManager;
 
     /**
@@ -57,7 +59,10 @@ public class DAOManagerImpl implements DAOManager {
         initializeCassandraLogAppender();
 
         policyManager = new PolicyManagerImpl(keyspaceManager);
-        userVoteManager = new UserVoteManagerImpl(keyspaceManager, systemInfoManager);
+        votingConfigManager = new VotingConfigManagerImpl(keyspaceManager);
+        voteSalaryManager = new VoteSalaryManagerImpl(keyspaceManager, systemInfoManager, votingConfigManager);
+        userVoteManager = new UserVoteAllocationManagerImpl(keyspaceManager, votingConfigManager,
+                voteSalaryManager);
     }
 
     private void initializeCassandraLogAppender() {
@@ -94,8 +99,18 @@ public class DAOManagerImpl implements DAOManager {
     }
 
     @Override
-    public UserVoteManagerImpl getUserVoteManager() {
+    public UserVoteAllocationManagerImpl getUserVoteAllocationManager() {
         return userVoteManager;
+    }
+
+    @Override
+    public VotingConfigManagerImpl getVotingConfigManager() {
+        return this.votingConfigManager;
+    }
+
+    @Override
+    public VoteSalaryManagerImpl getVoteSalaryManager() {
+        return voteSalaryManager;
     }
 
     @Override

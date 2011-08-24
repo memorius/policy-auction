@@ -17,7 +17,11 @@ public interface DAOManager {
 
     // UserManager getUserManager();
 
-    UserVoteManager getUserVoteManager();
+    UserVoteAllocationManager getUserVoteAllocationManager();
+
+    VotingConfigManager getVotingConfigManager();
+
+    VoteSalaryManager getVoteSalaryManager();
 
     SystemInfoManager getSystemInfoManager();
 
