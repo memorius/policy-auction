@@ -15,7 +15,8 @@ import net.retakethe.policyauction.data.impl.schema.value.Value;
  *
  * @author Nick Clarke
  */
-public class SingleRowRangeColumnFamily<K, T extends Timestamp, N, V> extends RangeColumnFamily<K, T, N, V> {
+public class SingleRowRangeColumnFamily<K, T extends Timestamp, N, V> extends RangeColumnFamily<K, T, N, V>
+        implements SingleRowColumnFamily<K> {
 
     private final K key;
 
@@ -25,6 +26,7 @@ public class SingleRowRangeColumnFamily<K, T extends Timestamp, N, V> extends Ra
         this.key = key;
     }
 
+    @Override
     public K getKey() {
         return key;
     }

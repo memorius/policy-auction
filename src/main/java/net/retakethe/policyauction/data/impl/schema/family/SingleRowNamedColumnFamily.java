@@ -15,7 +15,8 @@ import net.retakethe.policyauction.data.impl.schema.value.Value;
  *
  * @author Nick Clarke
  */
-public class SingleRowNamedColumnFamily<K, T extends Timestamp, N> extends ColumnFamily<K, T, N> {
+public class SingleRowNamedColumnFamily<K, T extends Timestamp, N> extends ColumnFamily<K, T, N>
+        implements SingleRowColumnFamily<K> {
 
     private final K key;
 
@@ -25,6 +26,7 @@ public class SingleRowNamedColumnFamily<K, T extends Timestamp, N> extends Colum
         this.key = key;
     }
 
+    @Override
     public K getKey() {
         return key;
     }

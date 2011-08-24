@@ -12,6 +12,7 @@ import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.Mutator;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.SingleRowColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
@@ -88,6 +89,21 @@ public abstract class DAOManagerTestBase {
 
     private <K, T extends Timestamp, N> void cleanColumnFamily(KeyspaceManager keyspaceManager,
             ColumnFamily<K, T, N> cf) {
+
+        // If our schema uses single rows in this CF, the other rows in the 'real' CF may have different data types,
+        // so must be handled separately - if we retrieve them all we'll get errors on column name deserialization,
+        // and also we'll duplicate a lot of work. Just explicitly delete the single row.
+        if (cf instanceof SingleRowColumnFamily<?>) {
+            @SuppressWarnings("unchecked")
+            SingleRowColumnFamily<K> srcf = (SingleRowColumnFamily<K>) cf;
+            K key = srcf.getKey();
+            Mutator<K, T> m = cf.createMutator(keyspaceManager);
+            cf.addRowDeletion(m, key);
+            m.execute();
+            return;
+        }
+
+        // Multiple rows - query to get the keys for any existing rows, then delete them.
         while (true) {
             logger.info("DAOManagerTestBase.cleanCassandraDB starting cycle for " + cf.getName());
             // Query a batch of keys in this column family.
