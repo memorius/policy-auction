@@ -31,14 +31,8 @@ import net.retakethe.policyauction.util.Functional.SkippedElementException;
  */
 public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManager {
 
-    private final KeyspaceManager keyspaceManager;
-
     public UserManagerImpl(KeyspaceManager keyspaceManager) {
-        super();
-        if (keyspaceManager == null) {
-            throw new IllegalArgumentException("keyspace must not be null");
-        }
-        this.keyspaceManager = keyspaceManager;
+        super(keyspaceManager);
     }
 
     @Override
@@ -60,7 +54,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_DATE,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USER_ROLE);
         SliceQuery<UserID, MillisTimestamp, String> query =
-                Schema.USERS.createSliceQuery(keyspaceManager, userID, list);
+                Schema.USERS.createSliceQuery(getKeyspaceManager(), userID, list);
 
         QueryResult<ColumnSlice<MillisTimestamp, String>> queryResult = query.execute();
 
@@ -126,7 +120,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_DATE,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USER_ROLE);
         RangeSlicesQuery<UserID, MillisTimestamp, String> query =
-                Schema.USERS.createRangeSlicesQuery(keyspaceManager, list);
+                Schema.USERS.createRangeSlicesQuery(getKeyspaceManager(), list);
 
         // TODO: may need paging of data once we have more than a few hundred.
         //       This may need some sort of indexing since we're using RandomPartitioner,
@@ -198,7 +192,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
 
         UsersCF cf = Schema.USERS;
         MillisTimestamp ts = cf.createCurrentTimestamp();
-        Mutator<UserID, MillisTimestamp> m = cf.createMutator(keyspaceManager);
+        Mutator<UserID, MillisTimestamp> m = cf.createMutator(getKeyspaceManager());
 
         //cf.USERNAME.addColumnInsertion(m, userID, cf.createValue(user.getShortName(), ts));
         cf.EMAIL.addColumnInsertion(m, userID, cf.createValue(user.getEmail(), ts));
@@ -222,7 +216,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     public void deleteUser(UserDAO user) {
         UserID userID = user.getUserID();
 
-        Mutator<UserID, MillisTimestamp> m = Schema.USERS.createMutator(keyspaceManager);
+        Mutator<UserID, MillisTimestamp> m = Schema.USERS.createMutator(getKeyspaceManager());
 
         Schema.USERS.addRowDeletion(m, userID);
 
