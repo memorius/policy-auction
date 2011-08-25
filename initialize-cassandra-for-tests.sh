@@ -27,7 +27,7 @@ trap trap_err ERR && set -o errexit
 . conf/cassandra-dev-dirs.sh
 
 # Copy templates and replace "%%cassandra_log_dir%%" and "%%cassandra_data_dir%%" placeholders
-full_data_dir="$(greadlink -mnq "${cassandra_unittest_data}")"
+full_data_dir="$(platform_readlink "${cassandra_unittest_data}")"
 
 # Set absolute paths in the config file - TestCassandra reads them programmatically after parsing the file
 replace_data_dir_placeholders "${full_data_dir}" \

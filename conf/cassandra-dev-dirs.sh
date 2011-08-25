@@ -24,6 +24,15 @@ replace_data_dir_placeholders () {
     done
 }
 
+platform_readlink () {
+    local readlink_bin="$(which greadlink || which readlink)"
+    if [ -z "$readlink_bin" ]; then
+        exit_with_error "Cannot execute 'readlink' or 'greadlink'"
+    fi
+
+    "$readlink_bin" -mnq "$@"
+}
+
 # Relative to repos root dir
 cassandra_bin='cassandra/cassandra-bin'
 cassandra_log='cassandra/cassandra-log'
