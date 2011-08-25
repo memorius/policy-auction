@@ -131,4 +131,8 @@ Activity: moderation functions for admin users:
 
 Activity: user administration.
 
+Activity: administer voting config - vote salary amount, frequency etc.
+
+Activity: log viewer.
+
 Activity: user viewing their history of vote allocations, comments, etc.
