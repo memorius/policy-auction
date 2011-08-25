@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -9,7 +9,6 @@ import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
-import net.retakethe.policyauction.data.impl.manager.PolicyManagerImpl;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;

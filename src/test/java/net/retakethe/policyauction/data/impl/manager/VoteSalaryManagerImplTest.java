@@ -1,6 +1,4 @@
-package net.retakethe.policyauction.data.impl;
-
-import net.retakethe.policyauction.data.impl.manager.VoteSalaryManagerImpl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import org.testng.annotations.BeforeMethod;
 

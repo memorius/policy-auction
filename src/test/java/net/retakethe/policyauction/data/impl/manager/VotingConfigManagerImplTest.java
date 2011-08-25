@@ -1,9 +1,8 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import static org.testng.Assert.assertEquals;
 
 import net.retakethe.policyauction.data.api.types.DayOfWeek;
-import net.retakethe.policyauction.data.impl.manager.VotingConfigManagerImpl;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

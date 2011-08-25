@@ -1,12 +1,10 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
 import java.util.Date;
-
-import net.retakethe.policyauction.data.impl.manager.SystemInfoManagerImpl;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

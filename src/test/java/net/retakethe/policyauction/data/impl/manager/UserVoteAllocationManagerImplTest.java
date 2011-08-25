@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -12,8 +12,6 @@ import net.retakethe.policyauction.data.api.exceptions.NoSuchUserException;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.dao.CurrentUserVotesImpl;
-import net.retakethe.policyauction.data.impl.manager.UserVoteAllocationManagerImpl;
-import net.retakethe.policyauction.data.impl.manager.VotingConfigManagerImpl;
 import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
 import net.retakethe.policyauction.data.impl.types.UserIDImpl;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
