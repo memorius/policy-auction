@@ -16,7 +16,7 @@ public class VotingConfigManagerImplTest extends CleanDbEveryMethodDAOManagerTes
 
     private static final long DEFAULT_VOTE_COST_TO_CREATE_POLICY = 100L;
     private static final byte DEFAULT_VOTE_WITHDRAWAL_PENALTY_PERCENTAGE = 40;
-    private static final long DEFAULT_USER_VOTE_SALARY_INCREMENT = 100L;
+    static final long DEFAULT_USER_VOTE_SALARY_INCREMENT = 100L;
     private static final short DEFAULT_USER_VOTE_SALARY_FREQUENCY_DAYS = 7;
     private static final DayOfWeek DEFAULT_USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK = DayOfWeek.MONDAY;
 
