@@ -80,6 +80,7 @@ public abstract class DAOManagerTestBase {
         KeyspaceManager keyspaceManager = daoManager.getKeyspaceManager();
 
         cleanColumnFamily(keyspaceManager, Schema.POLICIES);
+        cleanColumnFamily(keyspaceManager, Schema.USERS);
         cleanColumnFamily(keyspaceManager, Schema.USER_VOTES);
         cleanColumnFamily(keyspaceManager, Schema.USER_VOTES_PENDING);
         cleanColumnFamily(keyspaceManager, Schema.VOTE_SALARY);
