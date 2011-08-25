@@ -14,6 +14,8 @@ public final class TimestampUtils {
             HFactory.createClockResolution(ClockResolution.MICROSECONDS);
     private static final ClockResolution MICROSECONDS_SYNC_CLOCK =
             HFactory.createClockResolution(ClockResolution.MICROSECONDS_SYNC);
+    private static final ClockResolution MONOTONIC_MILLIS_PLUS_RANDOM_CLOCK_RESOLUTION =
+            new MonotonicMillisPlusRandomClockResolution();
 
     private TimestampUtils() {}
 
@@ -50,5 +52,19 @@ public final class TimestampUtils {
      */
     public static long createMillisecondsTimestamp() {
         return MILLISECONDS_CLOCK.createClock();
+    }
+
+    /**
+     * Get current timestamp with a time-based, counter and random component.
+     * <p>
+     * This is monotonically increasing, has a time component so it is comparable between machines,
+     * has a counter component to prevent collisions on the current JVM,
+     * and a random component to minimize collisions between machines.
+     *
+     * @return probably-unique monotonically increasing timestamp in unspecified units
+     *         (in particular, it is NOT in seconds / milliseconds / microseconds).
+     */
+    public static long createUniqueTimePlusCounterPlusRandomTimestamp() {
+        return MONOTONIC_MILLIS_PLUS_RANDOM_CLOCK_RESOLUTION.createClock();
     }
 }

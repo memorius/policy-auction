@@ -37,6 +37,7 @@ tag_ranking_current[<int>"-day"] {
 - Figure out how/when we update policy_ranking_history.
 
 
+
 Background on Cassandra data model:
 -----------------------------------
 Cassandra's structure is "column families" - tables with rows looked up by a unique key, with each row containing any number of "columns", which are name->value pairs storing a single value - i.e. each row is a Map<ColumnName, Value>. Very large numbers of columns per row (e.g. millions) are OK.
@@ -237,52 +238,52 @@ policy_replaces: (key = <policyID>) {
     <policyID> ...: nothing (or timestamp maybe, or userID)
 }
 
-user_pending_votes: (key = <userID>) {
-    <version> ... :
+user_policy_votes_pending: (key = <userID>) {
+    version: <voteRecordID> ... :
         JSON : { // Due to consistency requirements, and variable subcolumn list: atomic record updates with single timestamp
-            prev_version: timeUUID
-            votes: [
+            parent: <voteRecordID>
+            votes: {
                 <policyID> ... : {
                     increment: int
                     penaltyincrement: int
                     newtotal: int
                     penaltytotal: int
                 }
-            ]
+            }
             [policy_created: <policyID>]
         }
         cassandra timestamp = time of submitting vote, so newest wins
 }
 
 user_policy_votes: (key = <userID> : timeUUID) {
-    <prev_version> ... :
+    version: <voteRecordID> ... :
         JSON : { // Due to consistency requirements, and variable subcolumn list: atomic record updates with single timestamp
-            version: timeUUID
-            votes: [
+            parent: <voteRecordID>
+            votes: {
                 <policyID> ... : {
                     increment: int
                     penaltyincrement: int
                     newtotal: int
                     penaltytotal: int
                 }
-            ]
+            }
             [policy_created: <policyID>]
         }
         cassandra timestamp copied from pending_votes.
 }
 
 policy_new_votes: (key = <policyID> : timeUUID) {
-    <prev_version> ... :
+    parent: <voteRecordID> ... :
         JSON : { // Due to consistency requirements: atomic record updates with single timestamp
             vote_increment: int (can be -/0/+)
             user_id: <userID>
-            version: timeUUID
+            version: <voteRecordID>
         }
         cassandra timestamp: from user_policy_votes.pending_votes
 }
 
 policy_vote_history: (key = <policyID>_<date>) {
-    timeUUID ...: {
+    <voteRecordID> ...: {
         user_id: <userID>
         vote_increment: int (can be -/+, never 0)
         new_vote_total: int
@@ -383,27 +384,31 @@ moderation["login"] {
     }
 }
 
-memcache["active-policies"]: {
+memcache_string["vote-salary"]: {
+    <LocalDate> : long
+}
+
+memcache_string["active-policies"]: {
     <policyName> ...: <policyID>
 }
 
-memcache["active-parties"]: {
+memcache_string["active-parties"]: {
     <partyName> ...: <partyID>
 }
 
-memcache["active-categories"]: {
+memcache_string["active-categories"]: {
     <categoryName> ...: <categoryID>
 }
 
-memcache["tags-by-name"]: {
+memcache_string["tags-by-name"]: {
     <tagName> ...: <tagID>
 }
 
-memcache["webapp-instances"]: {
+memcache_string["webapp-instances"]: {
     <ipaddr> ...: (nothing), TTL say 5 mins
 }
 
-memcache["voting-config"]: {
+memcache_string["voting config"]: {
     vote_finalize_delay_seconds: int
     ranking_window_days: int (3)
     user_vote_salary_frequency_days: int (7)
@@ -412,23 +417,23 @@ memcache["voting-config"]: {
     vote_withdrawal_penalty_percentage: int (50)
 }
 
-memcache["email-config"] {
+memcache_string["email-config"] {
     default_email_frequency: "daily"
 }
 
-memcache["featured-policies"]: {
+memcache_timeuuid["featured-policies"]: {
     <policyID> ... : (nothing)
 }
 
-memcache["message-types"]: {
+memcache_timeuuid["message-types"]: {
     <messageID> ... : formatstring
 }
 
-misc["vote-history-dates"]: {
+misc_string["vote-history-dates"]: {
     <date> : (nothing)
 }
 
-misc["log-hours"]: {
+misc_string["log hours"]: {
     <DateAndHour> : (nothing)
 }
 
@@ -509,28 +514,27 @@ policies:
 
 user_policy_votes:
   Each row is the user vote history for a single user across all policies. Change in votes and new total votes per policy for this user is in policyid-named columns in each record. The structure is designed to cope - in the absence of a locking mechanism - with multiple vote submits by the same user, by detecting conflicting writes and garbage-collecting any child updates whose parent writes lost the conflict resolution.
-  - New user accounts receive a single votes_000000 entry with zero vote allocations.
-  - When reading data for user to edit vote allocations, it includes "prev_version" - this is used to chain the records together.
-  - When user saves their new allocation, we write a pending_votes entry, with "version" set to a new timeUUID, and "prev_version" set to the basis data we previously read. Then we propagate this information to policy_new_votes for all the policies that have non-zero votes*, so it can be efficiently used to calculate total_votes and go into the aggregate history. That's a distributed write, so could fail at any step; a background process will clean this up, and pending_votes entries stay there until one or other process successfully completes all those writes and the following total_votes recalc.
+  - When their vote allocation is first accessed, new user accounts receive a single user_policy_votes entry with zero ID and zero vote allocations, to act as the root entry in the history.
+  - When reading data for user to edit vote allocations, it includes "parent" - this is used to chain the records together.
+  - When user saves their new allocation, we write a pending_votes entry, with "version" set to a new timeUUID, and "parent" set to the basis data we previously read. Then we propagate this information to policy_new_votes for all the policies that have non-zero votes*, so it can be efficiently used to calculate total_votes and go into the aggregate history. That's a distributed write, so could fail at any step; a background process will clean this up, and pending_votes entries stay there until one or other process successfully completes all those writes and the following total_votes recalc.
     * Important: the exclusion of zero-increment votes is an optimization: the zero votes are only needed (to resolve the conflicts in policy_new_votes across all policies submits two conflicting vote allocations to different policies) if there is actually a conflict to resolve in policy_new_votes, but there may be a lot of them so we avoid writing them unless we have to. We handle this by writing them later if a conflict is actually found when reading back user_policy_votes.
-  - When there are conflicting updates in user_policy_votes.votes_ and in policy_new_votes, the last update for the earliest starting point will eventually win, which is probably what the user will expect.
-  - Once written to policy_new_votes, the pending entry is written as a user_policy_votes.votes_<prev_version> supercolumn, with timestamp set the same as the pending item, then the pending supercolumn is deleted.
-  - Note the 'version' and 'prev' items are deliberately inverted between pending and non-pending: the pending ones are intended to NOT collide until propagated to policy_new_votes, so that the conflict resolution can occur there when the vote counting happens; the non-pending ones collide here and the oldest one wins.
+  - When there are conflicting updates in user_policy_votes and in policy_new_votes, the last update will eventually win, which is probably what the user will expect.
+  - Once written to policy_new_votes, the pending entry is written as a user_policy_votes column, with timestamp set the same as the pending item, then the user_policy_votes_pending column is deleted.
   - "Penalty" votes: when withdrawing votes from a policy, you only get back a percentage (say 50% - see voting config "vote_withdrawal_penalty_percentage") of the votes. This must participate in conflict resolution so is stored in the vote records.
     - Withdrawals are represented as a negative vote against the policy (conceptually, decrement of policy total), and a negative "penalty" value associated with that vote decrement (conceptually, decrement of the user's balance) - e.g. if you withdraw 100 votes, you record -100 vote increment, and -50 penalty.
-    - Each user vote record also tracks the cumulative total of penalty votes per policy per for this user, so we don't have to go all the way back through the chain to calculate it. We track it per policy so we can ignore it for deleted policies.
+    - Each user vote record also tracks the cumulative total of penalty votes per policy for this user, so we don't have to go all the way back through the chain to calculate it. We track it per policy so we can ignore it for deleted policies.
   - When user creates a policy, the records include the created policyID and the initial mandatory vote allocation to  the new policy.
   - To determine the list of entries which add up to make the user's current vote allocation, taking into account conflict resolution:
-    - First propagate any pending_votes_ records.
-    - Read all the user_policy_votes.votes_ supercolumns, organize by version -> prev_version, and find the newest version that has an unbroken chain of extant prev_version links.
-    - If there's a conflict, the chain will be broken for the newer ones whose basis lost the conflict resolution, because they collide since they write the same votes_<prev_version> item.
-      - When we find such items whose parent doesn't exist, then we:
-        - Write zero-increment vote records to policy_new_votes, with timestamp and version for the item which WON the conflict, for each policy in the item which LOST the conflict which has a non-zero vote record. This late write is an optimisation and is needed to make the cross-policy conflict resolution work correctly.
+    - First propagate any user_policy_votes_pending records.
+    - Read all the user_policy_votes columns, organize by version -> parent, and find the newest version that has an unbroken chain of extant parent links.
+    - If there's a conflict, there will be multiple chains or a branched chain.
+      - When we find branched chains, the chain that has the child with the newest timestamp is the winner, and for each of the losing records in the other chains, we:
+        - Write zero-increment vote records to policy_new_votes, with timestamp and version for the newest child item which WON the conflict, for each policy in the item which LOST the conflict which has a non-zero vote record. This late write is an optimisation and is needed to make the cross-policy conflict resolution work correctly.
       - If they include policy creations, then we delete the policy. This eventually cleans up (albeit after temporary exposure to other users) if someone manages to double-create, which would double-spend their votes.
       - When those writes have succeeded, delete the conflicted item from user_policy_votes.
-    - We could keep a timestamp of prev_version up to which we have resolved everything. Need to go back at least GC_GRACE_SECONDS each time though.
+    - We could keep a timestamp of parent up to which we have resolved everything. Need to go back at least GC_GRACE_SECONDS each time though.
   - Ignore allocations to any policies that have since been marked deleted, replaced or retired.
-  - To calculate unallocated votes, add up all the vote salary entries; then take the last conflict-resolved votes_ entry, subtract from the salary the sum of its newtotal values for all policies, then subtract from this the sum of the penaltytotal values.
+  - To calculate unallocated votes, add up all the vote salary entries; then take the last conflict-resolved user_policy_votes entry, subtract from the salary the sum of its newtotal values for all policies, then subtract from this the sum of the penaltytotal values.
   - Propagating to policy_new_votes: see below.
 
 policy_new_votes:
@@ -545,11 +549,11 @@ policy_new_votes:
     - Iterate, discarding any items whose "version" column is older than boundary timeUUID: these are already counted
       and will shortly get archived. Put the rest into a map by "version" column.
     - Iterate the map:
-      - if the "prev_version" value (column name) is older than the boundary timeUUID, item passes conflict resolution,
+      - if the "parent" value (column name) is older than the boundary timeUUID, item passes conflict resolution,
         because its parent has been finalized. Add the increment to the total vote count and the appropriate daily count.
-      - else look up the "prev_version" value in the map and follow the chain back repeatedly:
-        - If we reach an entry whose "prev_version" value is not in the map but is older than the boundary timeUUID, the whole chain is consistent; add the increment for the child value we started with to the total and the appropriate daily count.
-        - If we reach an entry whose "prev_version" value is not in the map but is NOT older than the boundary timeUUID, then the whole chain has been superseded - one of the parents failed conflict resolution. Don't add the value for the child value we started with to the total. Additionally, issue a delete for it.
+      - else look up the "parent" value in the map and follow the chain back repeatedly:
+        - If we reach an entry whose "parent" value is not in the map but is older than the boundary timeUUID, the whole chain is consistent; add the increment for the child value we started with to the total and the appropriate daily count.
+        - If we reach an entry whose "parent" value is not in the map but is NOT older than the boundary timeUUID, then the whole chain has been superseded - one of the parents failed conflict resolution. Don't add the value for the child value we started with to the total. Additionally, issue a delete for it.
     All this is not as bad as it sounds; mostly there will be very short chains or single items, and we only have to do all this recalculation when we save vote changes.
     - Write result to policies.total_votes, with the write timestamp set to the time we started the read.
     - Write a column to policy_ranking_current["total-votes"], with the write timestamp set to the time we started the read.
@@ -558,12 +562,12 @@ policy_new_votes:
 
 policy_vote_history:
   History of "finalized" votes. Grouped into a row per date for convenient retrieval.
-  Every so often, records from policy_new_votes whose "version" (not "prev_version") is old enough (memcache["voting-config"].vote_finalize_delay_seconds) are:
+  Every so often, records from policy_new_votes whose "version" (not "parent") is old enough (memcache["voting-config"].vote_finalize_delay_seconds) are:
   - copied to the appropriate row of policy_vote_history
     We discard any zero values, and we follow the same duplicate-history rules as described under policy_new_votes, except that we actually discard (by not copying them) the duplicate records.
   - misc["vote-history-dates"] is updated
   - updated again in policy_votes_daily and policy_vote_daily_change
-  - added to policies.finalized_votes plus its timestamp is updated to that of the newest "version" (not "prev_version") that we copied
+  - added to policies.finalized_votes plus its timestamp is updated to that of the newest "version" (not "parent") that we copied
   - deleted from policy_new_votes
   - then redo the usual calcs for policy_new_votes? Or separate process for this.
   Provided the write to "finalized_votes" is done before the deletes, this is safe if it happens to get run by multiple threads in parallel.
@@ -618,6 +622,9 @@ moderation:
 memcache:
   Contains various single-row stuff for quick-lookups to avoid the need to iterate all keys on every request, and provide things in sorted order; runtime and config data.
   This is for small-ish rows so in-memory row cache can be enabled.
+
+  memcache["vote-salary"]:
+    - Vote salary, same for all users. Balance per user calculated from this based on their registration date.
 
   memcache["active-policies"]:
   - list of all active policy IDs, updated whenever they're added/disabled.

@@ -1,4 +1,4 @@
-package net.retakethe.policyauction.data.impl;
+package net.retakethe.policyauction.data.impl.manager;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -7,9 +7,8 @@ import static org.testng.Assert.fail;
 import java.util.Date;
 import java.util.List;
 
-import net.retakethe.policyauction.data.api.PolicyManager.NoSuchPolicyException;
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
-import net.retakethe.policyauction.data.impl.manager.PolicyManagerImpl;
+import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -34,7 +33,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
 
         Date editedAfter = new Date();
 
-        manager.persist(p);
+        manager.save(p);
 
         PolicyDAO retrieved = manager.getPolicy(p.getPolicyID());
         assertEquals(retrieved.getPolicyID(), p.getPolicyID());
@@ -58,7 +57,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
 
         p.setDescription("blah");
         p.setShortName("blah");
-        manager.persist(p);
+        manager.save(p);
 
         PolicyDAO retrieved = manager.getPolicy(p.getPolicyID());
         Assert.assertNotNull(retrieved);
@@ -76,12 +75,12 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
         PolicyDAO p1 = manager.createPolicy();
         p1.setDescription("My policy 1");
         p1.setShortName("My short name 1");
-        manager.persist(p1);
+        manager.save(p1);
 
         PolicyDAO p2 = manager.createPolicy();
         p2.setDescription("My policy 2");
         p2.setShortName("My short name 2");
-        manager.persist(p2);
+        manager.save(p2);
 
         List<PolicyDAO> policies = manager.getAllPolicies();
         assertEquals(policies.size(), 2);

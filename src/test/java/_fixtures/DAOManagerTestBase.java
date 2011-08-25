@@ -12,6 +12,7 @@ import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.Mutator;
 import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.family.SingleRowColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.serializers.DummySerializer;
 
@@ -79,16 +80,35 @@ public abstract class DAOManagerTestBase {
         KeyspaceManager keyspaceManager = daoManager.getKeyspaceManager();
 
         cleanColumnFamily(keyspaceManager, Schema.POLICIES);
+        cleanColumnFamily(keyspaceManager, Schema.USER_VOTES);
+        cleanColumnFamily(keyspaceManager, Schema.USER_VOTES_PENDING);
+        cleanColumnFamily(keyspaceManager, Schema.VOTE_SALARY);
+        cleanColumnFamily(keyspaceManager, Schema.VOTING_CONFIG);
+        cleanColumnFamily(keyspaceManager, Schema.SYSTEM_INFO);
+
         logger.info("DAOManagerTestBase.cleanCassandraDB finished");
     }
 
     private <K, T extends Timestamp, N> void cleanColumnFamily(KeyspaceManager keyspaceManager,
             ColumnFamily<K, T, N> cf) {
+
+        // If our schema uses single rows in this CF, the other rows in the 'real' CF may have different data types,
+        // so must be handled separately - if we retrieve them all we'll get errors on column name deserialization,
+        // and also we'll duplicate a lot of work. Just explicitly delete the single row.
+        if (cf instanceof SingleRowColumnFamily<?>) {
+            @SuppressWarnings("unchecked")
+            SingleRowColumnFamily<K> srcf = (SingleRowColumnFamily<K>) cf;
+            K key = srcf.getKey();
+            Mutator<K, T> m = cf.createMutator(keyspaceManager);
+            cf.addRowDeletion(m, key);
+            m.execute();
+            return;
+        }
+
+        // Multiple rows - query to get the keys for any existing rows, then delete them.
         while (true) {
             logger.info("DAOManagerTestBase.cleanCassandraDB starting cycle for " + cf.getName());
             // Query a batch of keys in this column family.
-            // Use of the common-to-all-CFs "EXISTS" column allows us to omit tombstone rows:
-            // they will be present in the result but will lack this column.
 
             RangeSlicesQuery<K, N, Object> query = QueryFactory.createHectorRangeSlicesQuery(
                     keyspaceManager, cf, DummySerializer.get(), null, null, false, 1);
@@ -107,6 +127,9 @@ public abstract class DAOManagerTestBase {
             for (Row<K, N, Object> row : rows) {
                 logger.info("DAOManagerTestBase.cleanCassandraDB: key: " + row.getKey());
                 if (row.getColumnSlice().getColumns().isEmpty()) {
+                    // This is a previously-deleted row.
+                    // They reappear (with empty contents) in range slices query results until garbage-collected.
+                    // See Cassandra FAQ: http://wiki.apache.org/cassandra/FAQ#range_ghosts
                     logger.info("DAOManagerTestBase.cleanCassandraDB: tombstone row");
                     continue;
                 }

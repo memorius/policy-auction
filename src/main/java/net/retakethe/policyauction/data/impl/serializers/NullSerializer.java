@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.impl.serializers;
 import java.nio.ByteBuffer;
 
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
+import me.prettyprint.hector.api.ddl.ComparatorType;
 
 /**
  * Used for null values, e.g. columns where only the name is meaningful.
@@ -32,5 +33,10 @@ public class NullSerializer extends AbstractSerializer<Object> {
     @Override
     public Object fromByteBuffer(ByteBuffer byteBuffer) {
         return null;
+    }
+
+    @Override
+    public ComparatorType getComparatorType() {
+        return ComparatorType.BYTESTYPE;
     }
 }

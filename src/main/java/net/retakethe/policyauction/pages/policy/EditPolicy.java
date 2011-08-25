@@ -35,7 +35,7 @@ public class EditPolicy {
 
     public Object onSuccess()
     {
-        daoManager.getPolicyManager().persist(EntityFactory.getPolicyDAO(policy));
+        daoManager.getPolicyManager().save(EntityFactory.getPolicyDAO(policy));
         return allPoliciesPage;
     }
 }

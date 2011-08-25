@@ -19,11 +19,11 @@ public class AllPolicies {
     private DAOManager daoManager;
 
     public List<Policy> getAllPolicies() {
-        return EntityFactory.makePolicies(daoManager.getPolicyManager().getAllPolicies());
+        return EntityFactory.makePoliciesFromDAO(daoManager.getPolicyManager().getAllPolicies());
     }
 
     public Object onActionFromAdd() {
-        editPolicyPage.setup(EntityFactory.makePolicy(daoManager.getPolicyManager().createPolicy()), false);
+        editPolicyPage.setup(EntityFactory.makePolicyFromDAO(daoManager.getPolicyManager().createPolicy()), false);
         return editPolicyPage;
     }
 }

@@ -1,10 +1,5 @@
 package net.retakethe.policyauction.data.impl.serializers;
 
-import java.nio.ByteBuffer;
-
-import me.prettyprint.cassandra.serializers.AbstractSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.hector.api.ddl.ComparatorType;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 
 /**
@@ -12,7 +7,7 @@ import net.retakethe.policyauction.data.api.types.DateAndHour;
  *
  * @see me.prettyprint.cassandra.serializers.StringSerializer
  */
-public class DateAndHourSerializer extends AbstractSerializer<DateAndHour> {
+public class DateAndHourSerializer extends AbstractStringSerializer<DateAndHour> {
 
     private static final DateAndHourSerializer INSTANCE = new DateAndHourSerializer();
 
@@ -26,24 +21,12 @@ public class DateAndHourSerializer extends AbstractSerializer<DateAndHour> {
     private DateAndHourSerializer() {}
 
     @Override
-    public ByteBuffer toByteBuffer(DateAndHour obj) {
-        if (obj == null) {
-            return null;
-        }
-        return StringSerializer.get().toByteBuffer(obj.getGMTDateAndHourString());
+    protected String toString(DateAndHour obj) {
+        return obj.getGMTDateAndHourString();
     }
 
     @Override
-    public DateAndHour fromByteBuffer(ByteBuffer byteBuffer) {
-        String s = StringSerializer.get().fromByteBuffer(byteBuffer);
-        if (s == null) {
-            return null;
-        }
-        return DateAndHour.fromGMTString(s);
-    }
-
-    @Override
-    public ComparatorType getComparatorType() {
-        return StringSerializer.get().getComparatorType();
+    protected DateAndHour fromString(String obj) {
+        return DateAndHour.fromGMTString(obj);
     }
 }

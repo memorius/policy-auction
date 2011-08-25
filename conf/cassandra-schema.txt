@@ -55,13 +55,33 @@ create column family users
     ];
 
 create column family users_by_name
-    with comment = 'Lookup of userID from user name'
+    with comment = 'Lookup of userID by user name'
     and comparator = UTF8Type
     and column_metadata = [{
             column_name: user_id,
             validation_class: TimeUUIDType
         }
     ];
+
+create column family user_policy_votes_pending
+    with comment = 'Per-user vote records awaiting propagation to policy_current_votes'
+    and key_validation_class = TimeUUIDType
+    and comparator = TimeUUIDType
+    and default_validation_class = UTF8Type
+    and keys_cached = 1000
+    and rows_cached = 0
+    and key_cache_save_period = 0
+    and row_cache_save_period = 0;
+
+create column family user_policy_votes
+    with comment = 'Per-user vote records which have been propagated to policy_current_votes'
+    and key_validation_class = TimeUUIDType
+    and comparator = TimeUUIDType
+    and default_validation_class = UTF8Type
+    and keys_cached = 1000
+    and rows_cached = 0
+    and key_cache_save_period = 0
+    and row_cache_save_period = 0;
 
 create column family memcache_string
     with comment = 'Single-row lookup tables for in-memory small datasets, with string-named columns'

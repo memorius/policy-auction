@@ -23,7 +23,8 @@ import net.retakethe.policyauction.data.impl.schema.timestamp.TimestampFactory;
  * @author Nick Clarke
  */
 public class SingleRowRangeSupercolumnFamily<K, T extends Timestamp, SN, N, R extends SupercolumnRange<K, T, SN, N>>
-        extends RangeSupercolumnFamily<K, T, SN, N, R> {
+        extends RangeSupercolumnFamily<K, T, SN, N, R>
+        implements SingleRowColumnFamily<K> {
 
     private final K key;
 
@@ -34,6 +35,7 @@ public class SingleRowRangeSupercolumnFamily<K, T extends Timestamp, SN, N, R ex
         this.key = key;
     }
 
+    @Override
     public K getKey() {
         return key;
     }

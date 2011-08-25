@@ -1,16 +1,18 @@
 package net.retakethe.policyauction.data.impl.query.impl;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import me.prettyprint.hector.api.Serializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import net.retakethe.policyauction.data.impl.query.api.ColumnResult;
 import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.UnresolvedColumnResult;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
+import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
+import net.retakethe.policyauction.util.Functional;
 
 /**
  * @author Nick Clarke
@@ -18,23 +20,35 @@ import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 public class ColumnSliceImpl<T extends Timestamp, N> implements ColumnSlice<T, N> {
 
     private final me.prettyprint.hector.api.beans.ColumnSlice<N, Object> wrappedColumnSlice;
-    private final List<UnresolvedColumnResult<N>> columns;
 
     public ColumnSliceImpl(me.prettyprint.hector.api.beans.ColumnSlice<N, Object> wrappedColumnSlice) {
         this.wrappedColumnSlice = wrappedColumnSlice;
-
-        List<HColumn<N, Object>> wrappedColumns = wrappedColumnSlice.getColumns();
-        int size = wrappedColumns.size();
-        columns = new ArrayList<UnresolvedColumnResult<N>>(size);
-
-        for (HColumn<N, Object> wrappedColumn : wrappedColumns) {
-            columns.add(new UnresolvedColumnResultImpl<N>(wrappedColumn));
-        }
     }
 
     @Override
     public List<UnresolvedColumnResult<N>> getColumns() {
-        return Collections.unmodifiableList(columns);
+        return Collections.unmodifiableList(
+                Functional.map(wrappedColumnSlice.getColumns(),
+                        new Functional.Converter<HColumn<N, Object>, UnresolvedColumnResult<N>>() {
+                            @Override
+                            public UnresolvedColumnResult<N> convert(HColumn<N, Object> wrappedColumn) {
+                                return new UnresolvedColumnResultImpl<N>(wrappedColumn);
+                            }
+                        }));
+    }
+
+    @Override
+    public <V> List<ColumnResult<T, N, V>> getColumns(final ColumnRange<?, T, N, V> columnRange) {
+        final ColumnFamily<?, T, N> cf = columnRange.getColumnFamily();
+        final Serializer<V> valueSerializer = columnRange.getValueSerializer();
+        return Collections.unmodifiableList(
+                Functional.map(wrappedColumnSlice.getColumns(),
+                        new Functional.Converter<HColumn<N, Object>, ColumnResult<T, N, V>>() {
+                            @Override
+                            public ColumnResult<T, N, V> convert(HColumn<N, Object> wrappedColumn) {
+                                return new ColumnResultImpl<T, N, V>(wrappedColumn, cf, valueSerializer);
+                            }
+                        }));
     }
 
     @Override

@@ -27,7 +27,11 @@ public class DAOManagerImpl implements DAOManager {
 
     private final LogManagerImpl logManager;
     private final PolicyManagerImpl policyManager;
+    private final SystemInfoManagerImpl systemInfoManager;
     private final UserManagerImpl userManager;
+    private final UserVoteAllocationManagerImpl userVoteManager;
+    private final VoteSalaryManagerImpl voteSalaryManager;
+    private final VotingConfigManagerImpl votingConfigManager;
 
     /**
      * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
@@ -50,12 +54,21 @@ public class DAOManagerImpl implements DAOManager {
         }
         keyspaceManager = new KeyspaceManagerImpl(address + ':' + String.valueOf(port));
 
+        systemInfoManager = new SystemInfoManagerImpl(keyspaceManager);
+
         logManager = new LogManagerImpl(keyspaceManager);
         initializeCassandraLogAppender();
 
         policyManager = new PolicyManagerImpl(keyspaceManager);
-        
+
         userManager = new UserManagerImpl(keyspaceManager);
+
+        votingConfigManager = new VotingConfigManagerImpl(keyspaceManager);
+
+        voteSalaryManager = new VoteSalaryManagerImpl(keyspaceManager, systemInfoManager, votingConfigManager);
+
+        userVoteManager = new UserVoteAllocationManagerImpl(keyspaceManager, votingConfigManager,
+                voteSalaryManager);
     }
 
     private void initializeCassandraLogAppender() {
@@ -82,6 +95,11 @@ public class DAOManagerImpl implements DAOManager {
     }
 
     @Override
+    public LogManagerImpl getLogManager() {
+        return logManager;
+    }
+
+    @Override
     public PolicyManagerImpl getPolicyManager() {
         return policyManager;
     }
@@ -91,4 +109,23 @@ public class DAOManagerImpl implements DAOManager {
     	return userManager;
     }
 
+    @Override
+    public UserVoteAllocationManagerImpl getUserVoteAllocationManager() {
+        return userVoteManager;
+    }
+
+    @Override
+    public VotingConfigManagerImpl getVotingConfigManager() {
+        return this.votingConfigManager;
+    }
+
+    @Override
+    public VoteSalaryManagerImpl getVoteSalaryManager() {
+        return voteSalaryManager;
+    }
+
+    @Override
+    public SystemInfoManagerImpl getSystemInfoManager() {
+        return systemInfoManager;
+    }
 }

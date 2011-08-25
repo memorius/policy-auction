@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.impl.serializers;
 import java.nio.ByteBuffer;
 
 import me.prettyprint.cassandra.serializers.AbstractSerializer;
+import me.prettyprint.hector.api.ddl.ComparatorType;
 
 /**
  * Hector serializer implementation for use where Hector requires us to provide one but it will never be used,
@@ -40,5 +41,10 @@ public class DummySerializer<T> extends AbstractSerializer<T> {
     @Override
     public T fromByteBuffer(ByteBuffer byteBuffer) {
         throw new UnsupportedOperationException("DummySerializer.fromByteBuffer");
+    }
+
+    @Override
+    public ComparatorType getComparatorType() {
+        return ComparatorType.BYTESTYPE;
     }
 }

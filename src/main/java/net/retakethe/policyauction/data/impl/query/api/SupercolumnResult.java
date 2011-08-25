@@ -16,7 +16,9 @@ public interface SupercolumnResult<T extends Timestamp, SN, N> {
      */
     List<UnresolvedColumnResult<N>> getSubcolumns();
 
+    <V> List<ColumnResult<T, N, V>> getSubcolumns(SubcolumnRange<?, T, SN, N, V> subcolumnRange);
+
     <V> ColumnResult<T, N, V> getSubcolumn(NamedSubcolumn<?, T, SN, N, V> subcolumn);
 
-    <V> ColumnResult<T, N, V> getSubcolumn(SubcolumnRange<?, T, SN, N, V> subcolumn, N subcolumnName);
+    <V> ColumnResult<T, N, V> getSubcolumn(SubcolumnRange<?, T, SN, N, V> subcolumnRange, N subcolumnName);
 }

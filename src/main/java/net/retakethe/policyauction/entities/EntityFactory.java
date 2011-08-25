@@ -8,22 +8,25 @@ import net.retakethe.policyauction.util.Functional;
 import net.retakethe.policyauction.util.Functional.Converter;
 
 /**
- * Conversion between data access layer and Tapestry entities layer
+ * Conversion between data access layer and Tapestry entities layer.
+ * <p>
+ * This exists mostly so that access to the entities' embedded DAO objects can be hidden (protected methods) from the
+ * Tapestry page classes, so the separation of layers is maintained.
  *
  * @author Nick Clarke
  */
 public final class EntityFactory {
 
-    public static List<Policy> makePolicies(List<PolicyDAO> allPolicies) {
+    public static List<Policy> makePoliciesFromDAO(List<PolicyDAO> allPolicies) {
         return Functional.map(allPolicies, new Converter<PolicyDAO, Policy>() {
             @Override
             public Policy convert(PolicyDAO a) {
-                return makePolicy(a);
+                return makePolicyFromDAO(a);
             }
         });
     }
 
-    public static Policy makePolicy(PolicyDAO policyDAO) {
+    public static Policy makePolicyFromDAO(PolicyDAO policyDAO) {
         return new Policy(policyDAO);
     }
 
