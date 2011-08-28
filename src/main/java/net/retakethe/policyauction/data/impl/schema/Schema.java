@@ -38,6 +38,8 @@ public final class Schema {
     public static final PoliciesCF POLICIES = new PoliciesCF();
     
     public static final UsersCF USERS = new UsersCF();
+    
+    public static final UsersByNameCF USERS_BY_NAME = new UsersByNameCF();
 
     public static final UserVotesCF USER_VOTES_PENDING = new UserVotesCF("user_policy_votes_pending");
 
@@ -68,6 +70,7 @@ public final class Schema {
     }
     
     public static final class UsersCF extends ColumnFamily<UserID, MillisTimestamp, String> {
+    	public final NamedColumn<UserID, MillisTimestamp, String, String> USERNAME;
     	public final NamedColumn<UserID, MillisTimestamp, String, String> EMAIL;
     	public final NamedColumn<UserID, MillisTimestamp, String, String> PASSWORD_HASH;
     	
@@ -85,6 +88,7 @@ public final class Schema {
     	
     	private UsersCF() {
 			super(SchemaKeyspace.MAIN, "users", Type.USER_ID, MillisTimestampFactory.get(), Type.UTF8);
+			USERNAME = new StringStringColumn<UserID, MillisTimestamp>("username", this);
 			EMAIL = new StringStringColumn<UserID, MillisTimestamp>("email", this);
 			PASSWORD_HASH = new StringStringColumn<UserID, MillisTimestamp>("password_hash", this);
 			
@@ -100,9 +104,18 @@ public final class Schema {
 			
 			USER_ROLE = new StringStringColumn<UserID, MillisTimestamp>("user_role", this);
 		}
-
     }
 
+    public static final class UsersByNameCF extends ColumnFamily<String, MillisTimestamp, String> {
+
+    	public final NamedColumn<String, MillisTimestamp, String, UserID> USER_ID;
+    	private UsersByNameCF() {
+    		super(SchemaKeyspace.MAIN, "users_by_name", Type.UTF8, MillisTimestampFactory.get(), Type.UTF8);
+    		
+    		USER_ID = new StringNamedColumn<String, MillisTimestamp, UserID>("user_id", this, Type.USER_ID);
+    	}
+    }
+    
     public static final class UserVotesCF extends RangeColumnFamily<UserID, UniqueTimestamp, VoteRecordID, JSONObject> {
         private UserVotesCF(String columnFamilyName) {
             super(SchemaKeyspace.MAIN, columnFamilyName, Type.USER_ID, UniqueTimestampFactory.get(),

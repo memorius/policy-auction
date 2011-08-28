@@ -11,7 +11,7 @@ import java.util.List;
  */
 public final class CollectionUtils {
 
-    public static <T>
+    public static <T, T1 extends T>
             List<T> list(T e1) {
         List<T> l = new ArrayList<T>(1);
         l.add(e1);

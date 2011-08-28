@@ -6,6 +6,8 @@ import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.api.types.UserRole;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 public class UserDAOImpl implements UserDAO {
 
 	/** The Constant serialVersionUID. */
@@ -87,8 +89,8 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public void setPasswordHash(final String passwordHash) {
-		this.passwordHash = passwordHash;
+	public void setPassword(final String password) {
+		this.passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
 	}
 
 	@Override

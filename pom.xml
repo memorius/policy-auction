@@ -12,6 +12,11 @@
             <id>memorius</id>
             <email>memorius@gmail.com</email>
         </developer>
+        <developer>
+            <name>Mathew Hartley</name>
+            <id>fourseven</id>
+            <email>matt@route66.sytes.net</email>
+        </developer>
     </developers>
 
     <dependencies>
@@ -56,6 +61,13 @@
                 <exclusion><groupId>org.apache.cassandra</groupId><artifactId>cassandra-all</artifactId></exclusion>
             </exclusions>
         </dependency>
+        
+        <!-- Password hashing -->
+        <dependency>
+		    <groupId>org.mindrot</groupId>
+		    <artifactId>jbcrypt</artifactId>
+		    <version>0.3m</version>
+		</dependency>
 
         <!-- Hector dependencies, here so we can set specific versions -->
         <dependency>

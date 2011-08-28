@@ -21,6 +21,8 @@ public interface UserManager {
     UserID makeUserID(String asString);
 
     UserDAO getUser(UserID userID) throws NoSuchUserException;
+    
+    UserID getUserID(String username) throws NoSuchUserException;
 
     UserDAO createUser();
 

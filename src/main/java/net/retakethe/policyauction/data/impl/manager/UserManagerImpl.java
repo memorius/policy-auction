@@ -17,6 +17,7 @@ import net.retakethe.policyauction.data.impl.query.api.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.Row;
 import net.retakethe.policyauction.data.impl.query.api.SliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema;
+import net.retakethe.policyauction.data.impl.schema.Schema.UsersByNameCF;
 import net.retakethe.policyauction.data.impl.schema.Schema.UsersCF;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.MillisTimestamp;
@@ -43,6 +44,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     @Override
     public UserDAO getUser(UserID userID) throws NoSuchUserException {
         List<NamedColumn<UserID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USERNAME,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.EMAIL,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_HASH,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP,
@@ -74,14 +76,13 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         
         String userRole;
         
-        // FIXME - Using userid as username, will need another call to build this field.
-        username = userID.asString();
         try {
             email = getNonNullColumn(cs, Schema.USERS.EMAIL);
         } catch (NoSuchColumnException e) {
             throw new NoSuchUserException(userID);
         }
         try {
+        	username = getNonNullColumn(cs, Schema.USERS.USERNAME);
             passwordHash = getNonNullColumn(cs, Schema.USERS.PASSWORD_HASH);
             passwordExpiryTimestamp = getNonNullColumn(cs, Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP);
             
@@ -99,6 +100,23 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         userRole = getColumnOrNull(cs, Schema.USERS.USER_ROLE);
         
         return new UserDAOImpl(userID, username, email, passwordHash, passwordExpiryTimestamp, firstName, lastName, showRealName, createdTimestamp, voteSalaryLastPaidTimestamp, voteSalaryDate, userRole);
+    }
+    
+    @Override
+    public UserID getUserID(String username) throws NoSuchUserException {
+    	
+
+        UsersByNameCF cf = Schema.USERS_BY_NAME;
+        QueryResult<ColumnSlice<MillisTimestamp, String>> qr =
+                cf.createSliceQuery(getKeyspaceManager(), username, null, null, null, false, Integer.MAX_VALUE).execute();
+
+        ColumnSlice<MillisTimestamp, String> cs = qr.get();
+        
+        try {
+			return getNonNullColumn(cs, Schema.USERS_BY_NAME.USER_ID);
+		} catch (NoSuchColumnException e) {
+			throw new RuntimeException("Invalid username record for key " + username, e);
+		}
     }
 
     @Override
@@ -160,10 +178,9 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                         
                         String userRole;
                         
-                        // FIXME - Using userid as username, will need another call to build this field.
-                        username = row.getKey().asString();
                         try {
-                            email = getNonNullColumn(cs, Schema.USERS.EMAIL);
+                            username = getNonNullColumn(cs, Schema.USERS.USERNAME);
+                        	email = getNonNullColumn(cs, Schema.USERS.EMAIL);
                             
                             passwordHash = getNonNullColumn(cs, Schema.USERS.PASSWORD_HASH);
                             passwordExpiryTimestamp = getNonNullColumn(cs, Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP);

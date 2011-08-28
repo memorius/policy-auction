@@ -22,6 +22,9 @@ create column family users
     with comment = 'Users by userID'
     and comparator = UTF8Type
     and column_metadata = [{
+            column_name: username,
+            validation_class: UTF8Type
+        }, {
             column_name: email,
             validation_class: UTF8Type
         }, {

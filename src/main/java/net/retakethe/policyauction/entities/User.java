@@ -43,12 +43,13 @@ public class User implements Serializable {
 		userDAO.setEmail(email);
 	}
 
+	@NonVisual
 	public String getPasswordHash() {
 		return userDAO.getPasswordHash();
 	}
 
-	public void setPasswordHash(final String passwordHash) {
-		userDAO.setPasswordHash(passwordHash);
+	public void setPasswordHash(final String password) {
+		userDAO.setPassword(password);
 	}
 
 	public String getFirstName() {

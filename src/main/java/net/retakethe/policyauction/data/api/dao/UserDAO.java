@@ -15,7 +15,7 @@ public interface UserDAO extends Serializable {
 	String getEmail();
 	void setEmail(String email);
 	String getPasswordHash();
-	void setPasswordHash(String passwordHash);
+	void setPassword(String password);
 	Date getPasswordExpiryTimestamp();
 	void setPasswordExpiryTimestamp(Date passwordExpiryTimestamp);
 	
