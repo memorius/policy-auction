@@ -21,6 +21,9 @@ Requirements:
             http://testng.org/doc/eclipse.html
 
 Background reading:
+    This project:
+        README-user-stories.txt   - User interaction requirements / design.
+        README-datastructures.txt - Cassandra data structure design, vote counting algorithms etc.
     Tapestry info / tutorial:
         http://tapestry.apache.org/creating-the-skeleton-application.html
     Cassandra info / tutorial:
