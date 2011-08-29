@@ -6,11 +6,11 @@ import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.SystemInfoManager;
 import net.retakethe.policyauction.data.api.VoteSalaryManager;
 import net.retakethe.policyauction.data.api.VotingConfigManager;
-import net.retakethe.policyauction.data.api.dao.VoteSalaryPayment;
+import net.retakethe.policyauction.data.api.dao.VoteSalaryPaymentDAO;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchUserException;
 import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.UserID;
-import net.retakethe.policyauction.data.impl.dao.VoteSalaryPaymentImpl;
+import net.retakethe.policyauction.data.impl.dao.VoteSalaryPaymentDAOImpl;
 import net.retakethe.policyauction.data.impl.query.api.ColumnResult;
 import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.Mutator;
@@ -61,12 +61,12 @@ public class VoteSalaryManagerImpl extends AbstractDAOManagerImpl implements Vot
     }
 
     @Override
-    public List<VoteSalaryPayment> getUserVoteSalaryHistory(UserID userID) throws NoSuchUserException {
+    public List<VoteSalaryPaymentDAO> getUserVoteSalaryHistory(UserID userID) throws NoSuchUserException {
         return getSalaryRecordsSince(getUserRegistrationDate(userID));
     }
 
     @Override
-    public List<VoteSalaryPayment> getSystemWideVoteSalaryHistory() {
+    public List<VoteSalaryPaymentDAO> getSystemWideVoteSalaryHistory() {
         return getSalaryRecordsSince(new LocalDate(systemInfoManager.getFirstStartupTime()));
     }
 
@@ -76,7 +76,7 @@ public class VoteSalaryManagerImpl extends AbstractDAOManagerImpl implements Vot
         return new LocalDate(systemInfoManager.getFirstStartupTime());
     }
 
-    private List<VoteSalaryPayment> getSalaryRecordsSince(LocalDate startDate) {
+    private List<VoteSalaryPaymentDAO> getSalaryRecordsSince(LocalDate startDate) {
         LocalDate today = LocalDate.now();
 
         createSalaryRecordsIfNeeded(today);
@@ -138,7 +138,7 @@ public class VoteSalaryManagerImpl extends AbstractDAOManagerImpl implements Vot
      * @param startDate inclusive
      * @param endDate inclusive
      */
-    private List<VoteSalaryPayment> readVoteSalary(LocalDate startDate, LocalDate endDate) {
+    private List<VoteSalaryPaymentDAO> readVoteSalary(LocalDate startDate, LocalDate endDate) {
         VoteSalaryRow cf = Schema.VOTE_SALARY;
         ColumnRange<String, MillisTimestamp, LocalDate, Long> columnRange = cf.getColumnRange();
 
@@ -146,7 +146,7 @@ public class VoteSalaryManagerImpl extends AbstractDAOManagerImpl implements Vot
                 cf.createSliceQuery(getKeyspaceManager(), startDate, endDate, false, Integer.MAX_VALUE).execute();
         List<ColumnResult<MillisTimestamp, LocalDate, Long>> columns = result.get().getColumns(columnRange);
 
-        List<VoteSalaryPayment> salary = toSalaryRecords(columns);
+        List<VoteSalaryPaymentDAO> salary = toSalaryRecords(columns);
 
         // Find one more record backwards from the start date, if there are any.
         // This is so that if you start ON a salary day, you receive that day's salary;
@@ -179,15 +179,15 @@ public class VoteSalaryManagerImpl extends AbstractDAOManagerImpl implements Vot
         return salary;
     }
 
-    private VoteSalaryPayment makeSalaryRecord(ColumnResult<MillisTimestamp, LocalDate, Long> columnResult) {
-        return new VoteSalaryPaymentImpl(columnResult.getName(), columnResult.getValue().getValue());
+    private VoteSalaryPaymentDAO makeSalaryRecord(ColumnResult<MillisTimestamp, LocalDate, Long> columnResult) {
+        return new VoteSalaryPaymentDAOImpl(columnResult.getName(), columnResult.getValue().getValue());
     }
 
-    private List<VoteSalaryPayment> toSalaryRecords(List<ColumnResult<MillisTimestamp, LocalDate, Long>> columns) {
+    private List<VoteSalaryPaymentDAO> toSalaryRecords(List<ColumnResult<MillisTimestamp, LocalDate, Long>> columns) {
         return Functional.map(columns,
-                new Functional.Converter<ColumnResult<MillisTimestamp, LocalDate, Long>, VoteSalaryPayment>() {
+                new Functional.Converter<ColumnResult<MillisTimestamp, LocalDate, Long>, VoteSalaryPaymentDAO>() {
                     @Override
-                    public VoteSalaryPayment convert(ColumnResult<MillisTimestamp, LocalDate, Long> columnResult) {
+                    public VoteSalaryPaymentDAO convert(ColumnResult<MillisTimestamp, LocalDate, Long> columnResult) {
                         return makeSalaryRecord(columnResult);
                     }
                 });

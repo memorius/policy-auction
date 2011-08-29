@@ -19,7 +19,7 @@ import net.retakethe.policyauction.data.api.UserVoteAllocationManager;
 import net.retakethe.policyauction.data.api.VoteSalaryManager;
 import net.retakethe.policyauction.data.api.VotingConfigManager;
 import net.retakethe.policyauction.data.api.dao.CurrentUserVotesDAO;
-import net.retakethe.policyauction.data.api.dao.VoteSalaryPayment;
+import net.retakethe.policyauction.data.api.dao.VoteSalaryPaymentDAO;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchUserException;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.UserID;
@@ -231,7 +231,7 @@ public class UserVoteAllocationManagerImpl extends AbstractDAOManagerImpl implem
      */
     private long getTotalUserVoteSalary(UserID userID) throws NoSuchUserException {
         long total = 0L;
-        for (VoteSalaryPayment salaryInfo : voteSalaryManager.getUserVoteSalaryHistory(userID)) {
+        for (VoteSalaryPaymentDAO salaryInfo : voteSalaryManager.getUserVoteSalaryHistory(userID)) {
             total += salaryInfo.getVotes();
         }
 

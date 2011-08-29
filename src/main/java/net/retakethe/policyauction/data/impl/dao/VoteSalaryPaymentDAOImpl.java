@@ -1,19 +1,19 @@
 package net.retakethe.policyauction.data.impl.dao;
 
-import net.retakethe.policyauction.data.api.dao.VoteSalaryPayment;
+import net.retakethe.policyauction.data.api.dao.VoteSalaryPaymentDAO;
 
 import org.joda.time.LocalDate;
 
 /**
  * @author Nick Clarke
  */
-public class VoteSalaryPaymentImpl implements VoteSalaryPayment {
+public class VoteSalaryPaymentDAOImpl implements VoteSalaryPaymentDAO {
     private static final long serialVersionUID = 0L;
 
     private final long votes;
     private final LocalDate date;
 
-    public VoteSalaryPaymentImpl(LocalDate date, long votes) {
+    public VoteSalaryPaymentDAOImpl(LocalDate date, long votes) {
         this.date = date;
         this.votes = votes;
     }

@@ -7,7 +7,7 @@ import org.joda.time.LocalDate;
 /**
  * @author Nick Clarke
  */
-public interface VoteSalaryPayment extends Serializable {
+public interface VoteSalaryPaymentDAO extends Serializable {
 
     LocalDate getDate();
 

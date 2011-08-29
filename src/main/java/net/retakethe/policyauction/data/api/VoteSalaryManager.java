@@ -2,7 +2,7 @@ package net.retakethe.policyauction.data.api;
 
 import java.util.List;
 
-import net.retakethe.policyauction.data.api.dao.VoteSalaryPayment;
+import net.retakethe.policyauction.data.api.dao.VoteSalaryPaymentDAO;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchUserException;
 import net.retakethe.policyauction.data.api.types.UserID;
 
@@ -28,7 +28,7 @@ public interface VoteSalaryManager {
      *
      * @return non-null list in date order
      */
-    List<VoteSalaryPayment> getSystemWideVoteSalaryHistory();
+    List<VoteSalaryPaymentDAO> getSystemWideVoteSalaryHistory();
 
     /**
      * Get history of all vote salary payments received by a particular user.
@@ -42,6 +42,6 @@ public interface VoteSalaryManager {
      * @see UserVoteAllocationManager#getCurrentUserVoteAllocation(UserID)
      * @see net.retakethe.policyauction.data.api.dao.CurrentUserVotesDAO#getUnallocatedVotes()
      */
-    List<VoteSalaryPayment> getUserVoteSalaryHistory(UserID userID) throws NoSuchUserException;
+    List<VoteSalaryPaymentDAO> getUserVoteSalaryHistory(UserID userID) throws NoSuchUserException;
 
 }

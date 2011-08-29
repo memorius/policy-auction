@@ -5,7 +5,7 @@ import static org.testng.Assert.assertNull;
 
 import java.util.List;
 
-import net.retakethe.policyauction.data.api.dao.VoteSalaryPayment;
+import net.retakethe.policyauction.data.api.dao.VoteSalaryPaymentDAO;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchUserException;
 import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.UserID;
@@ -40,18 +40,18 @@ public class VoteSalaryManagerImplTest extends CleanDbEveryMethodDAOManagerTestB
         assertNull(manager.getVoteSalaryLastPaid());
 
         // First retrieval assigns records
-        List<VoteSalaryPayment> systemSalary = manager.getSystemWideVoteSalaryHistory();
+        List<VoteSalaryPaymentDAO> systemSalary = manager.getSystemWideVoteSalaryHistory();
         LocalDate lastPaid = manager.getVoteSalaryLastPaid();
         assertEquals(lastPaid, today);
 
         assertEquals(systemSalary.size(), 1);
-        VoteSalaryPayment payment = systemSalary.get(0);
+        VoteSalaryPaymentDAO payment = systemSalary.get(0);
         assertEquals(payment.getVotes(), VotingConfigManagerImplTest.DEFAULT_USER_VOTE_SALARY_INCREMENT);
         assertEquals(payment.getDate(), today);
 
         // TODO: test with a real user record once manager is actually using the user registration records
         UserID userID1 = new UserIDImpl();
-        List<VoteSalaryPayment> userSalary = manager.getUserVoteSalaryHistory(userID1);
+        List<VoteSalaryPaymentDAO> userSalary = manager.getUserVoteSalaryHistory(userID1);
         assertEquals(userSalary.size(), 1);
         payment = systemSalary.get(0);
         assertEquals(payment.getVotes(), VotingConfigManagerImplTest.DEFAULT_USER_VOTE_SALARY_INCREMENT);
@@ -86,7 +86,7 @@ public class VoteSalaryManagerImplTest extends CleanDbEveryMethodDAOManagerTestB
         assertNull(manager.getVoteSalaryLastPaid());
 
         // First retrieval assigns records
-        List<VoteSalaryPayment> systemWide = manager.getSystemWideVoteSalaryHistory();
+        List<VoteSalaryPaymentDAO> systemWide = manager.getSystemWideVoteSalaryHistory();
         LocalDate lastPaid = manager.getVoteSalaryLastPaid();
         assertEquals(lastPaid, mostRecentCycleStart);
 
@@ -94,7 +94,7 @@ public class VoteSalaryManagerImplTest extends CleanDbEveryMethodDAOManagerTestB
 
         LocalDate expectedNextDate = firstStartupDate;
         boolean first = true;
-        for (VoteSalaryPayment payment : systemWide) {
+        for (VoteSalaryPaymentDAO payment : systemWide) {
             assertEquals(payment.getVotes(), votesPerInterval);
             assertEquals(payment.getDate(), expectedNextDate);
             if (first) {
@@ -108,13 +108,13 @@ public class VoteSalaryManagerImplTest extends CleanDbEveryMethodDAOManagerTestB
         // TODO: test properly once we have user registration date in user record:
         //       set system startup date in the past, set registration date in the user record, then retrieve votes
         UserID userID1 = new UserIDImpl();
-        List<VoteSalaryPayment> userSalary = manager.getUserVoteSalaryHistory(userID1);
+        List<VoteSalaryPaymentDAO> userSalary = manager.getUserVoteSalaryHistory(userID1);
 
         assertEquals(userSalary.size(), expectedPayments);
 
         expectedNextDate = firstStartupDate;
         first = true;
-        for (VoteSalaryPayment payment : userSalary) {
+        for (VoteSalaryPaymentDAO payment : userSalary) {
             assertEquals(payment.getVotes(), votesPerInterval);
             assertEquals(payment.getDate(), expectedNextDate);
             if (first) {
