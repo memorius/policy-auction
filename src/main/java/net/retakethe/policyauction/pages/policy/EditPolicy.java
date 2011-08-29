@@ -2,7 +2,7 @@ package net.retakethe.policyauction.pages.policy;
 
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.entities.EntityFactory;
-import net.retakethe.policyauction.entities.Policy;
+import net.retakethe.policyauction.entities.PolicyDetails;
 
 import org.apache.tapestry5.annotations.InjectPage;
 import org.apache.tapestry5.annotations.Persist;
@@ -14,7 +14,7 @@ public class EditPolicy {
 
     @Property
     @Persist
-    private Policy policy;
+    private PolicyDetails policy;
 
     private boolean isExisting;
 
@@ -24,7 +24,7 @@ public class EditPolicy {
     @InjectPage
     private AllPolicies allPoliciesPage;
 
-    public void setup(Policy policy, boolean isExisting) {
+    public void setup(PolicyDetails policy, boolean isExisting) {
         this.policy = policy;
         this.isExisting = isExisting;
     }

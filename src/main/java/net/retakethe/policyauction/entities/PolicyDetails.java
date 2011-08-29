@@ -3,7 +3,7 @@ package net.retakethe.policyauction.entities;
 import java.io.Serializable;
 import java.util.Date;
 
-import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
 
 import org.apache.tapestry5.beaneditor.NonVisual;
 import org.apache.tapestry5.beaneditor.Validate;
@@ -11,17 +11,17 @@ import org.apache.tapestry5.beaneditor.Validate;
 /**
  * @author Nick Clarke
  */
-public class Policy implements Serializable {
+public class PolicyDetails implements Serializable {
     private static final long serialVersionUID = 0L;
 
-    private final PolicyDAO policyDAO;
+    private final PolicyDetailsDAO policyDAO;
 
-    public Policy(PolicyDAO policyDAO) {
+    public PolicyDetails(PolicyDetailsDAO policyDAO) {
         this.policyDAO = policyDAO;
     }
 
     @NonVisual
-    protected PolicyDAO getPolicyDAO() {
+    protected PolicyDetailsDAO getPolicyDetailsDAO() {
         return policyDAO;
     }
 

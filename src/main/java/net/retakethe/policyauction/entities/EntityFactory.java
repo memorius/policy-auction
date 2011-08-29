@@ -2,7 +2,7 @@ package net.retakethe.policyauction.entities;
 
 import java.util.List;
 
-import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.util.Functional;
 import net.retakethe.policyauction.util.Functional.Converter;
@@ -17,21 +17,21 @@ import net.retakethe.policyauction.util.Functional.Converter;
  */
 public final class EntityFactory {
 
-    public static List<Policy> makePoliciesFromDAO(List<PolicyDAO> allPolicies) {
-        return Functional.map(allPolicies, new Converter<PolicyDAO, Policy>() {
+    public static List<PolicyDetails> makePolicyDetailsFromDAO(List<PolicyDetailsDAO> allPolicies) {
+        return Functional.map(allPolicies, new Converter<PolicyDetailsDAO, PolicyDetails>() {
             @Override
-            public Policy convert(PolicyDAO a) {
-                return makePolicyFromDAO(a);
+            public PolicyDetails convert(PolicyDetailsDAO a) {
+                return makePolicyDetailsFromDAO(a);
             }
         });
     }
 
-    public static Policy makePolicyFromDAO(PolicyDAO policyDAO) {
-        return new Policy(policyDAO);
+    public static PolicyDetails makePolicyDetailsFromDAO(PolicyDetailsDAO policyDAO) {
+        return new PolicyDetails(policyDAO);
     }
 
-    public static PolicyDAO getPolicyDAO(Policy policy) {
-        return policy.getPolicyDAO();
+    public static PolicyDetailsDAO getPolicyDAO(PolicyDetails policy) {
+        return policy.getPolicyDetailsDAO();
     }
     
     public static List<User> makeUsers(List<UserDAO> allUsers) {

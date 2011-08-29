@@ -7,9 +7,11 @@ import java.util.List;
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.PolicyManager;
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.impl.dao.PolicyDAOImpl;
+import net.retakethe.policyauction.data.impl.dao.PolicyDetailsDAOImpl;
 import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.Mutator;
@@ -43,12 +45,35 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
 
     @Override
     public PolicyDAO getPolicy(PolicyID policyID) throws NoSuchPolicyException {
+        // TODO: check policy state
+
+        List<NamedColumn<PolicyID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME);
+        SliceQuery<PolicyID, MillisTimestamp, String> query =
+                Schema.POLICIES.createSliceQuery(getKeyspaceManager(), policyID, list);
+
+        QueryResult<ColumnSlice<MillisTimestamp, String>> queryResult = query.execute();
+
+        ColumnSlice<MillisTimestamp, String> cs = queryResult.get();
+
+        String shortName;
+        try {
+            shortName = getNonNullColumn(cs, Schema.POLICIES.SHORT_NAME);
+        } catch (NoSuchColumnException e) {
+            throw new NoSuchPolicyException(policyID);
+        }
+
+        return new PolicyDAOImpl(policyID, shortName);
+    }
+
+    @Override
+    public PolicyDetailsDAO getPolicyDetails(PolicyID policyID) throws NoSuchPolicyException {
         List<NamedColumn<PolicyID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME,
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.DESCRIPTION,
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.LAST_EDITED);
         SliceQuery<PolicyID, MillisTimestamp, String> query =
-                Schema.POLICIES.createSliceQuery(getKeyspaceManager(), policyID, list);
+            Schema.POLICIES.createSliceQuery(getKeyspaceManager(), policyID, list);
 
         QueryResult<ColumnSlice<MillisTimestamp, String>> queryResult = query.execute();
 
@@ -69,20 +94,18 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
             throw new RuntimeException("Invalid policy record for key " + policyID, e);
         }
 
-        return new PolicyDAOImpl(policyID, shortName, description, lastEdited);
+        return new PolicyDetailsDAOImpl(policyID, shortName, description, lastEdited);
     }
 
     @Override
-    public PolicyDAO createPolicy() {
-        return new PolicyDAOImpl(new PolicyIDImpl());
+    public PolicyDetailsDAO createPolicy() {
+        return new PolicyDetailsDAOImpl(new PolicyIDImpl());
     }
 
     @Override
     public List<PolicyDAO> getAllPolicies() {
         List<NamedColumn<PolicyID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME,
-                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.DESCRIPTION,
-                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.LAST_EDITED);
+                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME);
         RangeSlicesQuery<PolicyID, MillisTimestamp, String> query =
                 Schema.POLICIES.createRangeSlicesQuery(getKeyspaceManager(),
                         list);
@@ -119,23 +142,74 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
                             throw new SkippedElementException();
                         }
 
-                        String description;
-                        Date lastEdited;
-                        try {
-                            description = getNonNullColumn(cs, Schema.POLICIES.DESCRIPTION);
-                            lastEdited = getNonNullColumn(cs, Schema.POLICIES.LAST_EDITED);
-                        } catch (NoSuchColumnException e) {
-                            throw new RuntimeException("Invalid policy record for key " + row.getKey(), e);
-                        }
-
-                        return new PolicyDAOImpl(row.getKey(), shortName, description,
-                                lastEdited);
+                        return new PolicyDAOImpl(row.getKey(), shortName);
                     }
                 });
     }
 
     @Override
-    public void save(PolicyDAO policy) {
+    public List<PolicyDetailsDAO> getAllPolicyDetails() {
+        List<NamedColumn<PolicyID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME,
+                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.DESCRIPTION,
+                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.LAST_EDITED);
+        RangeSlicesQuery<PolicyID, MillisTimestamp, String> query =
+            Schema.POLICIES.createRangeSlicesQuery(getKeyspaceManager(),
+                    list);
+        
+        // TODO: may need paging of data once we have more than a few hundred.
+        //       This may need some sort of indexing since we're using RandomPartitioner,
+        //       in order to return them in a useful order.
+        query.setRowCount(1000);
+        // TODO: needed?
+        // query.setKeys("fake_key_0", "fake_key_4");
+        
+        QueryResult<OrderedRows<PolicyID, MillisTimestamp, String>> result = query.execute();
+        
+        OrderedRows<PolicyID, MillisTimestamp, String> orderedRows = result.get();
+        if (orderedRows == null) {
+            return Collections.emptyList();
+        }
+        
+        return Functional.filter(orderedRows.getList(),
+                new Filter<Row<PolicyID, MillisTimestamp, String>, PolicyDetailsDAO>() {
+            @Override
+            public PolicyDetailsDAO filter(Row<PolicyID, MillisTimestamp, String> row)
+            throws SkippedElementException {
+                ColumnSlice<MillisTimestamp, String> cs = row.getColumnSlice();
+                if (cs == null) {
+                    throw new SkippedElementException();
+                }
+                
+                String shortName;
+                try {
+                    shortName = getNonNullColumn(cs, Schema.POLICIES.SHORT_NAME);
+                } catch (NoSuchColumnException e) {
+                    // Tombstone row
+                    throw new SkippedElementException();
+                }
+                
+                String description;
+                Date lastEdited;
+                try {
+                    description = getNonNullColumn(cs, Schema.POLICIES.DESCRIPTION);
+                    lastEdited = getNonNullColumn(cs, Schema.POLICIES.LAST_EDITED);
+                } catch (NoSuchColumnException e) {
+                    throw new RuntimeException("Invalid policy record for key " + row.getKey(), e);
+                }
+
+                return new PolicyDetailsDAOImpl(row.getKey(), shortName, description,
+                        lastEdited);
+            }
+        });
+    }
+    
+    @Override
+    public void save(PolicyDetailsDAO policy) {
+        if (policy == null) {
+            throw new IllegalArgumentException("policy must not be null");
+        }
+
         PolicyID policyID = policy.getPolicyID();
 
         PoliciesCF cf = Schema.POLICIES;
@@ -153,8 +227,10 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
     }
 
     @Override
-    public void deletePolicy(PolicyDAO policy) {
-        PolicyID policyID = policy.getPolicyID();
+    public void deletePolicy(PolicyID policyID) {
+        if (policyID == null) {
+            throw new IllegalArgumentException("policyID must not be null");
+        }
 
         Mutator<PolicyID, MillisTimestamp> m = Schema.POLICIES.createMutator(getKeyspaceManager());
 

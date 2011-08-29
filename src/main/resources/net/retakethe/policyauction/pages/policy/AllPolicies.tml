@@ -5,7 +5,7 @@
 
     <p>All Policies</p>
 
-    <t:grid source="allPolicies"/>
+    <t:grid source="allPolicyDetails"/>
 
     <p>
         <t:actionlink t:id="add">Add policy</t:actionlink>

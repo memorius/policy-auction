@@ -114,7 +114,7 @@ public class UserVoteAllocationManagerImplTest extends CleanDbEveryMethodDAOMana
         UserID userID2 = new UserIDImpl();
         assertEmptyVoteAllocation((CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID2), userID2);
 
-        // Policy creation
+        // PolicyDetails creation
         PolicyID policyID3 = new PolicyIDImpl();
         dao.recordPolicyCreation(policyID3);
         long policy3Votes = voteCostToCreatePolicy;

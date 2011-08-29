@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
 
 import org.testng.Assert;
@@ -27,7 +28,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
 
     @Test(groups = {"dao"})
     public void testCreatePersistGetPolicy() throws NoSuchPolicyException {
-        PolicyDAO p = manager.createPolicy();
+        PolicyDetailsDAO p = manager.createPolicy();
         p.setDescription("My policy");
         p.setShortName("My short name");
 
@@ -35,7 +36,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
 
         manager.save(p);
 
-        PolicyDAO retrieved = manager.getPolicy(p.getPolicyID());
+        PolicyDetailsDAO retrieved = manager.getPolicyDetails(p.getPolicyID());
         assertEquals(retrieved.getPolicyID(), p.getPolicyID());
         assertEquals(retrieved.getDescription(), p.getDescription());
         assertEquals(retrieved.getShortName(), p.getShortName());
@@ -45,7 +46,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
     @Test(groups = {"dao"}, expectedExceptions = NoSuchPolicyException.class)
     public void testGetNonExistentPolicy() throws NoSuchPolicyException {
         // Get for ID that hasn't been stored yet
-        PolicyDAO p = manager.createPolicy();
+        PolicyDetailsDAO p = manager.createPolicy();
 
         manager.getPolicy(p.getPolicyID());
     }
@@ -53,7 +54,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
     @Test(groups = {"dao"})
     public void testGetDeletedPolicy() throws NoSuchPolicyException {
         // Get for ID that's been stored and deleted
-        PolicyDAO p = manager.createPolicy();
+        PolicyDetailsDAO p = manager.createPolicy();
 
         p.setDescription("blah");
         p.setShortName("blah");
@@ -62,7 +63,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
         PolicyDAO retrieved = manager.getPolicy(p.getPolicyID());
         Assert.assertNotNull(retrieved);
 
-        manager.deletePolicy(p);
+        manager.deletePolicy(p.getPolicyID());
 
         try {
             manager.getPolicy(p.getPolicyID());
@@ -72,12 +73,12 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
 
     @Test(groups = {"dao"})
     public void testGetAllPolicies() {
-        PolicyDAO p1 = manager.createPolicy();
+        PolicyDetailsDAO p1 = manager.createPolicy();
         p1.setDescription("My policy 1");
         p1.setShortName("My short name 1");
         manager.save(p1);
 
-        PolicyDAO p2 = manager.createPolicy();
+        PolicyDetailsDAO p2 = manager.createPolicy();
         p2.setDescription("My policy 2");
         p2.setShortName("My short name 2");
         manager.save(p2);
