@@ -46,6 +46,12 @@ public class VotingConfigManagerImpl extends AbstractDAOManagerImpl implements V
     }
 
     @Override
+    public long getVoteFinalizeDelaySeconds() {
+        // TODO: maybe cache in memory for a few minutes
+        return readVoteFinalizeDelaySeconds();
+    }
+
+    @Override
     public void setVoteCostToCreatePolicy(long voteCost) {
         AssertArgument.isTrue(voteCost >= 0, "voteCost must be positive", voteCost);
         Schema.VOTING_CONFIG.VOTE_COST_TO_CREATE_POLICY.setColumnValue(getKeyspaceManager(), voteCost);
@@ -77,6 +83,12 @@ public class VotingConfigManagerImpl extends AbstractDAOManagerImpl implements V
         Schema.VOTING_CONFIG.USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK.setColumnValue(getKeyspaceManager(), voteSalaryDayOfWeek);
     }
 
+    @Override
+    public void setVoteFinalizeDelaySeconds(long voteFinalizeDelaySeconds) {
+        AssertArgument.isTrue(voteFinalizeDelaySeconds > 0, "voteFinalizeDelaySeconds must be >0", voteFinalizeDelaySeconds);
+        Schema.VOTING_CONFIG.VOTE_FINALIZE_DELAY_SECONDS.setColumnValue(getKeyspaceManager(), voteFinalizeDelaySeconds);
+    }
+
     private byte readVoteWithdrawalPenaltyPercentage() {
         return Schema.VOTING_CONFIG.VOTE_WITHDRAWAL_PENALTY_PERCENTAGE.getColumnValueOrSetDefault(getKeyspaceManager());
     }
@@ -95,5 +107,9 @@ public class VotingConfigManagerImpl extends AbstractDAOManagerImpl implements V
 
     private DayOfWeek readUserVoteSalaryWeeklyDayOfWeek() {
         return Schema.VOTING_CONFIG.USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK.getColumnValueOrSetDefault(getKeyspaceManager());
+    }
+
+    private long readVoteFinalizeDelaySeconds() {
+        return Schema.VOTING_CONFIG.VOTE_FINALIZE_DELAY_SECONDS.getColumnValueOrSetDefault(getKeyspaceManager());
     }
 }

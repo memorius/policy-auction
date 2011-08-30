@@ -155,6 +155,7 @@ public final class Schema {
         public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Long> USER_VOTE_SALARY_INCREMENT;
         public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Short> USER_VOTE_SALARY_FREQUENCY_DAYS;
         public final DefaultValuedNamedColumn<String, MillisTimestamp, String, DayOfWeek> USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK;
+        public final DefaultValuedNamedColumn<String, MillisTimestamp, String, Long> VOTE_FINALIZE_DELAY_SECONDS;
 
         private VotingConfigRow() {
             super(SchemaKeyspace.MAIN, "memcache_string", "voting-config", Type.UTF8, MillisTimestampFactory.get(),
@@ -169,6 +170,9 @@ public final class Schema {
                     "user_vote_salary_frequency_days", this, Type.SHORT, (short) 7);
             USER_VOTE_SALARY_WEEKLY_DAY_OF_WEEK = new DefaultValuedNamedColumn<String, MillisTimestamp, String, DayOfWeek>(
                     "user_vote_salary_weekly_day_of_week", this, Type.DAY_OF_WEEK, DayOfWeek.MONDAY);
+            VOTE_FINALIZE_DELAY_SECONDS = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Long>(
+                    // This should typically be the same as cassandra GC_GRACE_SECONDS.
+                    "vote_finalize_delay_seconds", this, Type.LONG, 10 * 24 * 60 * 60L);
         }
     }
 

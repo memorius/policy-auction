@@ -39,4 +39,17 @@ public interface VotingConfigManager {
      */
     void setUserVoteSalaryWeeklyDayOfWeek(DayOfWeek voteSalaryDayOfWeek);
 
+    /**
+     * Set amount of time to wait before assuming current vote records are final and no late-write conflicts can occur.
+     *
+     * @return number of seconds, always >0
+     */
+    long getVoteFinalizeDelaySeconds();
+
+    /**
+     * Set amount of time to wait before assuming current vote records are final and no late-write conflicts can occur.
+     *
+     * @param voteFinalizeDelaySeconds must be >0; normally the same as cassandra GC_GRACE_SECONDS.
+     */
+    void setVoteFinalizeDelaySeconds(long voteFinalizeDelaySeconds);
 }
