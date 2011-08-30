@@ -199,7 +199,11 @@ public class UserVoteAllocationManagerImplTest extends CleanDbEveryMethodDAOMana
     }
 
     @Test(groups = {"dao"})
-    public void testCollisionResolution() throws NoSuchUserException {
+    public void testCollisionResolution() throws NoSuchUserException, InterruptedException {
+        // If test sometimes fails on slow machines, try increasing this value.
+        final long voteFinalizeDelaySeconds = 2L;
+        votingConfigManager.setVoteFinalizeDelaySeconds(voteFinalizeDelaySeconds);
+
         PolicyID policyID1 = new PolicyIDImpl();
         PolicyID policyID2 = new PolicyIDImpl();
 
@@ -260,23 +264,52 @@ public class UserVoteAllocationManagerImplTest extends CleanDbEveryMethodDAOMana
         branch2.setVotesAllocated(policyID1, 8);
         branch2.setVotesAllocated(policyID2, 4);
         manager.save(branch2);
+        final long branch2LastSavedMillis = System.currentTimeMillis();
         branch2 = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
         assertEquals(branch2.getUnallocatedVotes(), initialUnallocated - (8 + 4));
         assertEquals(branch2.getVotesAllocated(policyID1), 8);
         assertEquals(branch2.getVotesAllocated(policyID2), 4);
-        VoteRecordID branch2Parent = branch2.getPreviousVoteID();
 
-        // Try saving on branch1 head again; retrieve; it should be lost and we should get the head of branch2 instead.
-        // This is because branch1 already lost the conflict resolution when we first re-retrieved branch2:
-        // - the nodes only on branch1 were already deleted.
+        // Try saving on branch1 head again; retrieve; branch1 then wins because it's newer; even though branch1 lost
+        // the conflict resolution before, it hasn't been expired since we didn't read voteFinalizeDelaySeconds;
+        // so now it wins again.
         branch1.setVotesAllocated(policyID1, 20);
-        branch1.setVotesAllocated(policyID2, 16);
+        branch1.setVotesAllocated(policyID2, 15);
         manager.save(branch1);
         CurrentUserVotesImpl conflicted = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
-        assertEquals(conflicted.getUnallocatedVotes(), initialUnallocated - (8 + 4));
-        assertEquals(conflicted.getVotesAllocated(policyID1), 8);
-        assertEquals(conflicted.getVotesAllocated(policyID2), 4);
-        assertEquals(conflicted.getPreviousVoteID(), branch2Parent);
+        assertEquals(conflicted.getUnallocatedVotes(), initialUnallocated - (20 + 15));
+        assertEquals(conflicted.getVotesAllocated(policyID1), 20);
+        assertEquals(conflicted.getVotesAllocated(policyID2), 15);
+
+        // Wait until voteFinalizeDelaySeconds has passed after last write on branch2
+        while (true) {
+            long now = System.currentTimeMillis();
+            long earlyBy = (branch2LastSavedMillis + (voteFinalizeDelaySeconds * 1000L)) - now;
+            if (earlyBy > 0) {
+                Thread.sleep(earlyBy);
+            } else {
+                break;
+            }
+        }
+
+        // Re-retrieve, should see branch1 still; the re-retrieve will expire the branch2 stuff because it's old
+        conflicted = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEquals(conflicted.getUnallocatedVotes(), initialUnallocated - (20 + 15));
+        assertEquals(conflicted.getVotesAllocated(policyID1), 20);
+        assertEquals(conflicted.getVotesAllocated(policyID2), 15);
+
+        // Write to branch2, knowing that parent is already expired
+        // Branch2 already lost the conflict resolution when we retrieved branch1, and was deleted because it was old enough,
+        // hence the new write has missing parents and is discarded.
+        branch2.setVotesAllocated(policyID1, 10);
+        branch2.setVotesAllocated(policyID2, 5);
+        manager.save(branch2);
+
+        // Assert that the retrievable values are still the ones from branch1
+        conflicted = (CurrentUserVotesImpl) manager.getCurrentUserVoteAllocation(userID);
+        assertEquals(conflicted.getUnallocatedVotes(), initialUnallocated - (20 + 15));
+        assertEquals(conflicted.getVotesAllocated(policyID1), 20);
+        assertEquals(conflicted.getVotesAllocated(policyID2), 15);
     }
 
     // TODO: test getCurrentUserVoteAllocation NoSuchUserException once manager is actually using the user registration records

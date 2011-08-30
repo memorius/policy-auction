@@ -33,6 +33,7 @@ import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.UserVotesCF;
 import net.retakethe.policyauction.data.impl.schema.timestamp.UniqueTimestamp;
 import net.retakethe.policyauction.data.impl.schema.value.Value;
+import net.retakethe.policyauction.data.impl.types.AbstractTimeUUIDImpl;
 import net.retakethe.policyauction.data.impl.types.PolicyIDImpl;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordIDImpl;
@@ -184,6 +185,8 @@ public class UserVoteAllocationManagerImpl extends AbstractDAOManagerImpl implem
         }
     };
 
+    private static final long MILLIS_PER_SECOND = 1000L;
+
     private final VoteSalaryManager voteSalaryManager;
     private final VotingConfigManager votingConfigManager;
 
@@ -259,6 +262,12 @@ public class UserVoteAllocationManagerImpl extends AbstractDAOManagerImpl implem
                 });
     }
 
+    private boolean isOldEnoughToDelete(VoteRecordID id, long expirableAgeMillis) {
+        long age = System.currentTimeMillis()
+                - UUIDUtils.getTimeMillisFromTimeUUID(((AbstractTimeUUIDImpl) id).getUUID());
+        return (age >= expirableAgeMillis);
+    }
+
     /**
      * Find the chain with the newest child, propagate deletions for the rest and for any with missing parents.
      * Results are returned in order from oldest to newest.
@@ -266,6 +275,8 @@ public class UserVoteAllocationManagerImpl extends AbstractDAOManagerImpl implem
      * @param voteRecords in time order
      */
     private List<VoteRecord> resolveCollisions(UserID userID, List<VoteRecord> voteRecords) {
+        final long expirableAgeMillis = votingConfigManager.getVoteFinalizeDelaySeconds() * MILLIS_PER_SECOND;
+
         Map<VoteRecordID, VoteRecord> allRecords = new LinkedHashMap<VoteRecordID, VoteRecord>(voteRecords.size());
         for (VoteRecord voteRecord : voteRecords) {
             allRecords.put(voteRecord.getVoteID(), voteRecord);
@@ -325,7 +336,8 @@ public class UserVoteAllocationManagerImpl extends AbstractDAOManagerImpl implem
                     missingParent = true;
                     for (VoteRecordID idToDelete : meAndMyAncestors) {
                         VoteRecord recordToDelete = allRecords.remove(idToDelete);
-                        if (recordToDelete != null) {
+                        // Only actually delete after timeout - parent may appear in delayed write
+                        if (recordToDelete != null && isOldEnoughToDelete(idToDelete, expirableAgeMillis)) {
                             toDelete.add(recordToDelete);
                         }
                     }
@@ -350,7 +362,8 @@ public class UserVoteAllocationManagerImpl extends AbstractDAOManagerImpl implem
                     conflictedItems.removeAll(winningChain);
                     for (VoteRecordID idToDelete : conflictedItems) {
                         VoteRecord recordToDelete = allRecords.remove(idToDelete);
-                        if (recordToDelete != null) {
+                        // Only actually delete after timeout - parent may appear in delayed write
+                        if (recordToDelete != null && isOldEnoughToDelete(idToDelete, expirableAgeMillis)) {
                             toDelete.add(recordToDelete);
                         }
                     }
