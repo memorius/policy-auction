@@ -1,18 +1,25 @@
 package net.retakethe.policyauction.data.impl.schema;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.PolicyState;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.PortfolioID;
 import net.retakethe.policyauction.data.api.types.UserID;
+import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
+import net.retakethe.policyauction.data.impl.query.api.Mutator;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
 import net.retakethe.policyauction.data.impl.schema.column.DefaultValuedNamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringNamedColumn;
 import net.retakethe.policyauction.data.impl.schema.column.typed.StringStringColumn;
+import net.retakethe.policyauction.data.impl.schema.family.BaseColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.ColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.RangeColumnFamily;
 import net.retakethe.policyauction.data.impl.schema.family.RangeSupercolumnFamily;
@@ -22,8 +29,10 @@ import net.retakethe.policyauction.data.impl.schema.subcolumn.SuperRangeNamedSub
 import net.retakethe.policyauction.data.impl.schema.supercolumn.SupercolumnRange;
 import net.retakethe.policyauction.data.impl.schema.timestamp.MillisTimestamp;
 import net.retakethe.policyauction.data.impl.schema.timestamp.MillisTimestampFactory;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 import net.retakethe.policyauction.data.impl.schema.timestamp.UniqueTimestamp;
 import net.retakethe.policyauction.data.impl.schema.timestamp.UniqueTimestampFactory;
+import net.retakethe.policyauction.data.impl.types.PortfolioIDImpl;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
 
 import org.apache.tapestry5.json.JSONObject;
@@ -36,7 +45,13 @@ import org.joda.time.LocalDate;
  */
 public final class Schema {
 
+    private static final List<BaseColumnFamily<?, ? extends Timestamp>> ALL_CFS
+            = new LinkedList<BaseColumnFamily<?, ? extends Timestamp>>();
+
+
     public static final PoliciesCF POLICIES = new PoliciesCF();
+
+    public static final PortfoliosCF PORTFOLIOS = new PortfoliosCF();
     
     public static final UsersCF USERS = new UsersCF();
     
@@ -83,9 +98,41 @@ public final class Schema {
             IS_PARTY_OFFICIAL = new StringNamedColumn<PolicyID, MillisTimestamp, Boolean>("is_party_official", this, Type.BOOLEAN);
             LAST_EDITED = new StringNamedColumn<PolicyID, MillisTimestamp, Date>("last_edited", this, Type.DATE);
             STATE_CHANGED = new StringNamedColumn<PolicyID, MillisTimestamp, Date>("state_changed", this, Type.DATE);
+            addCF(this);
         }
     }
     
+    public static final class PortfoliosCF extends ColumnFamily<PortfolioID, MillisTimestamp, String> {
+        public final NamedColumn<PortfolioID, MillisTimestamp, String, String> NAME;
+        public final NamedColumn<PortfolioID, MillisTimestamp, String, String> DESCRIPTION;
+
+        private PortfoliosCF() {
+            super(SchemaKeyspace.MAIN, "portfolios", Type.PORTFOLIO_ID, MillisTimestampFactory.get(), Type.UTF8);
+            NAME = new StringStringColumn<PortfolioID, MillisTimestamp>("name", this);
+            DESCRIPTION = new StringStringColumn<PortfolioID, MillisTimestamp>("description", this);
+            addCF(this);
+        }
+
+        @Override
+        public void initialize(KeyspaceManager ksm) {
+            Mutator<PortfolioID, MillisTimestamp> m = createMutator(ksm);
+            for (String[] nameAndDescription : new String[][] {
+                    // TODO: add other portfolios as required.
+                    // When changing this, must update static constants in PortfolioManagerImplTest too.
+                    new String[]{"Education", "Schools, universities, ECE"},
+                    new String[]{"Tax", "Income tax, GST, CGT"},
+                    new String[]{"Health", "Doctors, hospitals, health funding"}
+                }) {
+                // ID is just a wrapper around name, so re-insertion every startup is idempotent
+                String name = nameAndDescription[0];
+                PortfolioIDImpl id = new PortfolioIDImpl(name);
+                NAME.addColumnInsertion(m, id, createValue(name));
+                DESCRIPTION.addColumnInsertion(m, id, createValue(nameAndDescription[1]));
+            }
+            m.execute();
+        }
+    }
+
     public static final class UsersCF extends ColumnFamily<UserID, MillisTimestamp, String> {
     	public final NamedColumn<UserID, MillisTimestamp, String, String> USERNAME;
     	public final NamedColumn<UserID, MillisTimestamp, String, String> EMAIL;
@@ -120,6 +167,7 @@ public final class Schema {
 			VOTE_SALARY_DATE = new StringNamedColumn<UserID, MillisTimestamp, Date>("vote_salary_date", this, Type.DATE);
 			
 			USER_ROLE = new StringStringColumn<UserID, MillisTimestamp>("user_role", this);
+			addCF(this);
 		}
     }
 
@@ -130,6 +178,7 @@ public final class Schema {
     		super(SchemaKeyspace.MAIN, "users_by_name", Type.UTF8, MillisTimestampFactory.get(), Type.UTF8);
     		
     		USER_ID = new StringNamedColumn<String, MillisTimestamp, UserID>("user_id", this, Type.USER_ID);
+    		addCF(this);
     	}
     }
     
@@ -138,6 +187,7 @@ public final class Schema {
             super(SchemaKeyspace.MAIN, columnFamilyName, Type.USER_ID, UniqueTimestampFactory.get(),
                     Type.VOTE_RECORD_ID);
             setColumnRange(new ColumnRange<UserID, UniqueTimestamp, VoteRecordID, JSONObject>(this, Type.JSON));
+            addCF(this);
         }
     }
 
@@ -146,6 +196,7 @@ public final class Schema {
             super(SchemaKeyspace.MAIN, "memcache_string", "vote-salary", Type.UTF8, MillisTimestampFactory.get(),
                     Type.DAY);
             setColumnRange(new ColumnRange<String, MillisTimestamp, LocalDate, Long>(this, Type.LONG));
+            addCF(this);
         }
     }
 
@@ -173,6 +224,7 @@ public final class Schema {
             VOTE_FINALIZE_DELAY_SECONDS = new DefaultValuedNamedColumn<String, MillisTimestamp, String, Long>(
                     // This should typically be the same as cassandra GC_GRACE_SECONDS.
                     "vote_finalize_delay_seconds", this, Type.LONG, 10 * 24 * 60 * 60L);
+            addCF(this);
         }
     }
 
@@ -193,6 +245,7 @@ public final class Schema {
             };
             VOTE_SALARY_LAST_PAID = new NamedColumn<String, MillisTimestamp, String, LocalDate>(
                     "vote_salary_last_paid", this, Type.DAY);
+            addCF(this);
         }
     }
 
@@ -201,6 +254,7 @@ public final class Schema {
             super(SchemaKeyspace.MAIN, "misc_string", "log-hours", Type.UTF8, MillisTimestampFactory.get(),
                     Type.DATE_AND_HOUR);
             setColumnRange(new ColumnRange<String, MillisTimestamp, DateAndHour, Object>(this, Type.NULL));
+            addCF(this);
         }
     }
 
@@ -233,6 +287,16 @@ public final class Schema {
             super(SchemaKeyspace.LOGS, "log", Type.DATE_AND_HOUR, MillisTimestampFactory.get(),
                     Type.LOG_MESSAGE_ID, Type.UTF8);
             setSupercolumnRange(new LogMessageRange());
+            addCF(this);
         }
+    }
+
+
+    public static List<BaseColumnFamily<?, ? extends Timestamp>> getAllCFs() {
+        return Collections.unmodifiableList(ALL_CFS);
+    }
+
+    private static void addCF(BaseColumnFamily<?, ? extends Timestamp> cf) {
+        ALL_CFS.add(cf);
     }
 }

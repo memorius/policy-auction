@@ -38,6 +38,14 @@ public abstract class BaseColumnFamily<K, T extends Timestamp> {
         this.timestampFactory = timestampFactory;
     }
 
+    /**
+     * Optional initializer, called once at keyspace startup (and in tests after DB clean).
+     * Subclasses should override to add anything required, e.g. creation of initial rows.
+     * <p>
+     * This default implementation does nothing.
+     */
+    public void initialize(KeyspaceManager ksm) {}
+
     public SchemaKeyspace getKeyspace() {
         return keyspace;
     }

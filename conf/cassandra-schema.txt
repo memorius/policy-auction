@@ -8,6 +8,7 @@ use policy_auction;
 
 create column family policies
     with comment = 'Policies keyed by policyID, and votes given them by each user'
+    and key_validation_class = TimeUUIDType
     and comparator = UTF8Type
     and column_metadata = [{
             column_name: short_name,
@@ -17,6 +18,23 @@ create column family policies
             validation_class: UTF8Type
         }
     ];
+
+create column family portfolios
+    with comment = 'Portfolios keyed by portfolioID'
+    and key_validation_class = UTF8Type
+    and comparator = UTF8Type
+    and column_metadata = [{
+            column_name: name,
+            validation_class: UTF8Type
+        }, {
+            column_name: description,
+            validation_class: UTF8Type
+        }
+    ]
+    and keys_cached = 1.0
+    and rows_cached = 1.0
+    and key_cache_save_period = 0
+    and row_cache_save_period = 0;
 
 create column family users
     with comment = 'Users by userID'

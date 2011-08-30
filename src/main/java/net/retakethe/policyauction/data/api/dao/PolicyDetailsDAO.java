@@ -26,8 +26,8 @@ public interface PolicyDetailsDAO extends Serializable {
      */
     UserID getOwnerUserID();
 
-    /* TODO: add when categories are implemented
-    CategoryID getCategoryID();
+    /* TODO: add when portfolios are implemented
+    PortfolioID getPortfolioID();
     */
 
     /*

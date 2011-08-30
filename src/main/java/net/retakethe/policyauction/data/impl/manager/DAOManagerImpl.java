@@ -27,6 +27,7 @@ public class DAOManagerImpl implements DAOManager {
 
     private final LogManagerImpl logManager;
     private final PolicyManagerImpl policyManager;
+    private final PortfolioManagerImpl portfolioManager;
     private final SystemInfoManagerImpl systemInfoManager;
     private final UserManagerImpl userManager;
     private final UserVoteAllocationManagerImpl userVoteManager;
@@ -53,11 +54,14 @@ public class DAOManagerImpl implements DAOManager {
             throw new IllegalArgumentException("address must not be null");
         }
         keyspaceManager = new KeyspaceManagerImpl(address + ':' + String.valueOf(port));
+        keyspaceManager.initializeColumnFamilies();
 
         systemInfoManager = new SystemInfoManagerImpl(keyspaceManager);
 
         logManager = new LogManagerImpl(keyspaceManager);
         initializeCassandraLogAppender();
+
+        portfolioManager = new PortfolioManagerImpl(keyspaceManager);
 
         policyManager = new PolicyManagerImpl(keyspaceManager);
 
@@ -102,6 +106,11 @@ public class DAOManagerImpl implements DAOManager {
     @Override
     public PolicyManagerImpl getPolicyManager() {
         return policyManager;
+    }
+    
+    @Override
+    public PortfolioManagerImpl getPortfolioManager() {
+        return portfolioManager;
     }
     
     @Override

@@ -15,6 +15,8 @@ public interface DAOManager {
 
     PolicyManager getPolicyManager();
 
+    PortfolioManager getPortfolioManager();
+
     UserManager getUserManager();
 
     UserVoteAllocationManager getUserVoteAllocationManager();

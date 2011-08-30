@@ -10,7 +10,10 @@ import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
+import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.SchemaKeyspace;
+import net.retakethe.policyauction.data.impl.schema.family.BaseColumnFamily;
+import net.retakethe.policyauction.data.impl.schema.timestamp.Timestamp;
 
 public class KeyspaceManagerImpl implements KeyspaceManager {
 
@@ -34,6 +37,16 @@ public class KeyspaceManagerImpl implements KeyspaceManager {
             keyspace.setConsistencyLevelPolicy(schemaKS.getConsistencyLevelPolicy());
 
             keyspaces.put(schemaKS, keyspace);
+        }
+    }
+
+    /**
+     * Called at startup (and per test cycle after cleaning DB).
+     * Allow CFs to do any initialization they need, e.g. creating default rows.
+     */
+    public void initializeColumnFamilies() {
+        for (BaseColumnFamily<?, ? extends Timestamp> cf : Schema.getAllCFs()) {
+            cf.initialize(this);
         }
     }
 

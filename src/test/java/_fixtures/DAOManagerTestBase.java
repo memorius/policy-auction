@@ -7,6 +7,7 @@ import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.manager.DAOManagerImpl;
+import net.retakethe.policyauction.data.impl.manager.KeyspaceManagerImpl;
 import net.retakethe.policyauction.data.impl.query.QueryFactory;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.Mutator;
@@ -86,6 +87,8 @@ public abstract class DAOManagerTestBase {
         cleanColumnFamily(keyspaceManager, Schema.VOTE_SALARY);
         cleanColumnFamily(keyspaceManager, Schema.VOTING_CONFIG);
         cleanColumnFamily(keyspaceManager, Schema.SYSTEM_INFO);
+
+        ((KeyspaceManagerImpl) keyspaceManager).initializeColumnFamilies();
 
         logger.info("DAOManagerTestBase.cleanCassandraDB finished");
     }

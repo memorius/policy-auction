@@ -16,6 +16,7 @@ import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.PortfolioID;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.serializers.ByteSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
@@ -27,6 +28,7 @@ import net.retakethe.policyauction.data.impl.serializers.LogMessageIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.NullSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyStateSerializer;
+import net.retakethe.policyauction.data.impl.serializers.PortfolioIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.UserIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.VoteRecordIDSerializer;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
@@ -116,6 +118,11 @@ public final class Type<T> {
      * PolicyID: TimeUUIDType.
      */
     public static final Type<PolicyID> POLICY_ID = new Type<PolicyID>(PolicyID.class, PolicyIDSerializer.get());
+
+    /**
+     * PortfolioID: TimeUUIDType.
+     */
+    public static final Type<PortfolioID> PORTFOLIO_ID = new Type<PortfolioID>(PortfolioID.class, PortfolioIDSerializer.get());
 
     /**
      * UserID: TimeUUIDType.
