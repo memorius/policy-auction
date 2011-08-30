@@ -9,7 +9,11 @@ import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
+import net.retakethe.policyauction.data.api.dao.PolicyState;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
+import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.UserID;
+import net.retakethe.policyauction.data.impl.types.UserIDImpl;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -28,25 +32,50 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
 
     @Test(groups = {"dao"})
     public void testCreatePersistGetPolicy() throws NoSuchPolicyException {
-        PolicyDetailsDAO p = manager.createPolicy();
+        UserID userID = createUserID();
+        Date stateChangeAfter = new Date();
+        PolicyDetailsDAO p = manager.createPolicy(userID);
         p.setDescription("My policy");
         p.setShortName("My short name");
+        p.setRationaleDescription("none whatsoever");
+        p.setCostsToTaxpayersDescription("lots");
+        p.setWhoIsAffectedDescription("everyone");
+        p.setHowAffectedDescription("badly");
+        p.setIsPartyOfficialPolicy(true);
+
+        PolicyID id = p.getPolicyID();
 
         Date editedAfter = new Date();
 
         manager.save(p);
 
-        PolicyDetailsDAO retrieved = manager.getPolicyDetails(p.getPolicyID());
-        assertEquals(retrieved.getPolicyID(), p.getPolicyID());
-        assertEquals(retrieved.getDescription(), p.getDescription());
-        assertEquals(retrieved.getShortName(), p.getShortName());
-        assertFalse(retrieved.getLastEdited().before(editedAfter));
+        PolicyDAO policy = manager.getPolicy(id);
+        assertEquals(policy.getPolicyID(), id);
+        assertEquals(policy.getShortName(), p.getShortName());
+
+        PolicyDetailsDAO details = manager.getPolicyDetails(id);
+        assertEquals(details.getPolicyID(), id);
+        assertEquals(details.getShortName(), p.getShortName());
+        assertEquals(details.getPolicyState(), PolicyState.ACTIVE);
+        assertEquals(details.getOwnerUserID(), userID);
+        assertEquals(details.getRationaleDescription(), p.getRationaleDescription());
+        assertEquals(details.getWhoIsAffectedDescription(), p.getWhoIsAffectedDescription());
+        assertEquals(details.getHowAffectedDescription(), p.getHowAffectedDescription());
+        assertEquals(details.getCostsToTaxpayersDescription(), p.getCostsToTaxpayersDescription());
+        assertEquals(details.isPartyOfficialPolicy(), p.isPartyOfficialPolicy());
+        assertEquals(details.getDescription(), p.getDescription());
+        assertFalse(details.getLastEdited().before(editedAfter));
+        assertFalse(details.getStateChanged().before(stateChangeAfter));
+    }
+
+    private UserID createUserID() {
+        return new UserIDImpl();
     }
 
     @Test(groups = {"dao"}, expectedExceptions = NoSuchPolicyException.class)
     public void testGetNonExistentPolicy() throws NoSuchPolicyException {
         // Get for ID that hasn't been stored yet
-        PolicyDetailsDAO p = manager.createPolicy();
+        PolicyDetailsDAO p = manager.createPolicy(createUserID());
 
         manager.getPolicy(p.getPolicyID());
     }
@@ -54,7 +83,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
     @Test(groups = {"dao"})
     public void testGetDeletedPolicy() throws NoSuchPolicyException {
         // Get for ID that's been stored and deleted
-        PolicyDetailsDAO p = manager.createPolicy();
+        PolicyDetailsDAO p = manager.createPolicy(createUserID());
 
         p.setDescription("blah");
         p.setShortName("blah");
@@ -73,13 +102,11 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
 
     @Test(groups = {"dao"})
     public void testGetAllPolicies() {
-        PolicyDetailsDAO p1 = manager.createPolicy();
-        p1.setDescription("My policy 1");
+        PolicyDetailsDAO p1 = manager.createPolicy(createUserID());
         p1.setShortName("My short name 1");
         manager.save(p1);
 
-        PolicyDetailsDAO p2 = manager.createPolicy();
-        p2.setDescription("My policy 2");
+        PolicyDetailsDAO p2 = manager.createPolicy(createUserID());
         p2.setShortName("My short name 2");
         manager.save(p2);
 

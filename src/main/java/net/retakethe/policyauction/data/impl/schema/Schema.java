@@ -2,6 +2,7 @@ package net.retakethe.policyauction.data.impl.schema;
 
 import java.util.Date;
 
+import net.retakethe.policyauction.data.api.dao.PolicyState;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
@@ -57,15 +58,31 @@ public final class Schema {
 
 
     public static final class PoliciesCF extends ColumnFamily<PolicyID, MillisTimestamp, String> {
+        public final NamedColumn<PolicyID, MillisTimestamp, String, UserID> OWNER;
+        public final NamedColumn<PolicyID, MillisTimestamp, String, PolicyState> STATE;
         public final NamedColumn<PolicyID, MillisTimestamp, String, String> SHORT_NAME;
         public final NamedColumn<PolicyID, MillisTimestamp, String, String> DESCRIPTION;
+        public final NamedColumn<PolicyID, MillisTimestamp, String, String> RATIONALE;
+        public final NamedColumn<PolicyID, MillisTimestamp, String, String> COSTS_TO_TAXPAYERS;
+        public final NamedColumn<PolicyID, MillisTimestamp, String, String> WHO_AFFECTED;
+        public final NamedColumn<PolicyID, MillisTimestamp, String, String> HOW_AFFECTED;
+        public final NamedColumn<PolicyID, MillisTimestamp, String, Boolean> IS_PARTY_OFFICIAL;
         public final NamedColumn<PolicyID, MillisTimestamp, String, Date> LAST_EDITED;
+        public final NamedColumn<PolicyID, MillisTimestamp, String, Date> STATE_CHANGED;
 
         private PoliciesCF() {
             super(SchemaKeyspace.MAIN, "policies", Type.POLICY_ID, MillisTimestampFactory.get(), Type.UTF8);
+            OWNER = new StringNamedColumn<PolicyID, MillisTimestamp, UserID>("owner", this, Type.USER_ID);
+            STATE = new StringNamedColumn<PolicyID, MillisTimestamp, PolicyState>("state", this, Type.POLICY_STATE);
             SHORT_NAME = new StringStringColumn<PolicyID, MillisTimestamp>("short_name", this);
             DESCRIPTION = new StringStringColumn<PolicyID, MillisTimestamp>("description", this);
+            RATIONALE = new StringStringColumn<PolicyID, MillisTimestamp>("rationale", this);
+            COSTS_TO_TAXPAYERS = new StringStringColumn<PolicyID, MillisTimestamp>("costs_to_taxpayers", this);
+            WHO_AFFECTED = new StringStringColumn<PolicyID, MillisTimestamp>("who_affected", this);
+            HOW_AFFECTED = new StringStringColumn<PolicyID, MillisTimestamp>("how_affected", this);
+            IS_PARTY_OFFICIAL = new StringNamedColumn<PolicyID, MillisTimestamp, Boolean>("is_party_official", this, Type.BOOLEAN);
             LAST_EDITED = new StringNamedColumn<PolicyID, MillisTimestamp, Date>("last_edited", this, Type.DATE);
+            STATE_CHANGED = new StringNamedColumn<PolicyID, MillisTimestamp, Date>("state_changed", this, Type.DATE);
         }
     }
     

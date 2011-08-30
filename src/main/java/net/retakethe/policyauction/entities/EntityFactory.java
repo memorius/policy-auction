@@ -2,6 +2,7 @@ package net.retakethe.policyauction.entities;
 
 import java.util.List;
 
+import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.util.Functional;
@@ -17,6 +18,19 @@ import net.retakethe.policyauction.util.Functional.Converter;
  */
 public final class EntityFactory {
 
+    public static List<Policy> makePolicyFromDAO(List<PolicyDAO> allPolicies) {
+        return Functional.map(allPolicies, new Converter<PolicyDAO, Policy>() {
+            @Override
+            public Policy convert(PolicyDAO a) {
+                return makePolicyFromDAO(a);
+            }
+        });
+    }
+    
+    public static Policy makePolicyFromDAO(PolicyDAO policyDAO) {
+        return new Policy(policyDAO);
+    }
+    
     public static List<PolicyDetails> makePolicyDetailsFromDAO(List<PolicyDetailsDAO> allPolicies) {
         return Functional.map(allPolicies, new Converter<PolicyDetailsDAO, PolicyDetails>() {
             @Override

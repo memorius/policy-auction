@@ -11,6 +11,7 @@ import me.prettyprint.cassandra.serializers.ShortSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Serializer;
+import net.retakethe.policyauction.data.api.dao.PolicyState;
 import net.retakethe.policyauction.data.api.types.DateAndHour;
 import net.retakethe.policyauction.data.api.types.DayOfWeek;
 import net.retakethe.policyauction.data.api.types.LogMessageID;
@@ -25,6 +26,7 @@ import net.retakethe.policyauction.data.impl.serializers.LocalDateSerializer;
 import net.retakethe.policyauction.data.impl.serializers.LogMessageIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.NullSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
+import net.retakethe.policyauction.data.impl.serializers.PolicyStateSerializer;
 import net.retakethe.policyauction.data.impl.serializers.UserIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.VoteRecordIDSerializer;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
@@ -132,6 +134,12 @@ public final class Type<T> {
     public static final Type<LogMessageID> LOG_MESSAGE_ID = new Type<LogMessageID>(LogMessageID.class,
             LogMessageIDSerializer.get());
 
+    /**
+     * PolicyState enum, stored in cassandra as string UTF8Type.
+     */
+    public static final Type<PolicyState> POLICY_STATE = new Type<PolicyState>(PolicyState.class,
+            PolicyStateSerializer.get());
+
     public static final Type<Object> DUMMY = new Type<Object>(Object.class, DummySerializer.get());
 
     /**
@@ -139,7 +147,6 @@ public final class Type<T> {
      * Values are ignored when storing, an empty byte array is stored instead. Queries always return null values.
      */
     public static final Type<Object> NULL = new Type<Object>(Object.class, NullSerializer.get());
-
 
 
     private final Class<T> type;
