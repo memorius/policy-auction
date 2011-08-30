@@ -1,5 +1,6 @@
 package net.retakethe.policyauction.data.impl.manager;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -47,8 +48,9 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
     public PolicyDAO getPolicy(PolicyID policyID) throws NoSuchPolicyException {
         // TODO: check policy state
 
-        List<NamedColumn<PolicyID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME);
+        List<NamedColumn<PolicyID, MillisTimestamp, String, ?>> list =
+                new ArrayList<NamedColumn<PolicyID, MillisTimestamp, String, ?>>(1);
+        list.add(Schema.POLICIES.SHORT_NAME);
         SliceQuery<PolicyID, MillisTimestamp, String> query =
                 Schema.POLICIES.createSliceQuery(getKeyspaceManager(), policyID, list);
 
@@ -104,11 +106,11 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
 
     @Override
     public List<PolicyDAO> getAllPolicies() {
-        List<NamedColumn<PolicyID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
-                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME);
+        List<NamedColumn<PolicyID, MillisTimestamp, String, ?>> list =
+                new ArrayList<NamedColumn<PolicyID, MillisTimestamp, String, ?>>(1);
+        list.add(Schema.POLICIES.SHORT_NAME);
         RangeSlicesQuery<PolicyID, MillisTimestamp, String> query =
-                Schema.POLICIES.createRangeSlicesQuery(getKeyspaceManager(),
-                        list);
+                Schema.POLICIES.createRangeSlicesQuery(getKeyspaceManager(), list);
 
         // TODO: may need paging of data once we have more than a few hundred.
         //       This may need some sort of indexing since we're using RandomPartitioner,
