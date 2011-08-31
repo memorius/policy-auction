@@ -43,7 +43,6 @@ public class User implements Serializable {
 		userDAO.setEmail(email);
 	}
 
-	@NonVisual
 	public String getPasswordHash() {
 		return userDAO.getPasswordHash();
 	}

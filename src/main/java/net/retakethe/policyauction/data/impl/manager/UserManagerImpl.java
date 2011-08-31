@@ -1,5 +1,6 @@
 package net.retakethe.policyauction.data.impl.manager;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -106,15 +107,16 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     
     @Override
     public UsernameDAO getUsername(String username) throws NoSuchUserException {
-    	
 
-        UsersByNameCF cf = Schema.USERS_BY_NAME;
-        QueryResult<ColumnSlice<MillisTimestamp, String>> qr =
-                cf.createSliceQuery(getKeyspaceManager(), username, null, null, null, false, Integer.MAX_VALUE).execute();
+        List<NamedColumn<String, MillisTimestamp, String, ?>> list =
+                new ArrayList<NamedColumn<String, MillisTimestamp, String, ?>>(1);
+        list.add(Schema.USERS_BY_NAME.USER_ID);
+        SliceQuery<String, MillisTimestamp, String> query =
+                Schema.USERS_BY_NAME.createSliceQuery(getKeyspaceManager(), username, list);
 
-        ColumnSlice<MillisTimestamp, String> cs = qr.get();
-        
-        UserID userID;
+        QueryResult<ColumnSlice<MillisTimestamp, String>> queryResult = query.execute();
+
+        ColumnSlice<MillisTimestamp, String> cs = queryResult.get();
         try {
 			return new UsernameDAOImpl(getNonNullColumn(cs, Schema.USERS_BY_NAME.USER_ID), username);
 		} catch (NoSuchColumnException e) {
@@ -130,6 +132,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     @Override
     public List<UserDAO> getAllUsers() {
         List<NamedColumn<UserID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USERNAME,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.EMAIL,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_HASH,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP,
@@ -214,7 +217,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         MillisTimestamp ts = userscf.createCurrentTimestamp();
         Mutator<UserID, MillisTimestamp> usersMutator = userscf.createMutator(getKeyspaceManager());
 
-        //cf.USERNAME.addColumnInsertion(m, userID, cf.createValue(user.getShortName(), ts));
+        userscf.USERNAME.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getUsername(), ts));
         userscf.EMAIL.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getEmail(), ts));
         userscf.PASSWORD_HASH.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getPasswordHash(), ts));
         userscf.PASSWORD_EXPIRY_TIMESTAMP.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getPasswordExpiryTimestamp(), ts));

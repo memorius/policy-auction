@@ -5,6 +5,11 @@
 
     <p>${createOrUpdate} User</p>
 
-    <t:beaneditform object="user" submitlabel="${createOrUpdate}" />
+    <t:beaneditform object="user" submitlabel="${createOrUpdate}" >
+      <t:parameter name="password">
+      <t:label for="password"/>
+      <t:passwordfield t:id="password" value="user.passwordHash"/>
+    </t:parameter>
+    </t:beaneditform>
 
 </html>
