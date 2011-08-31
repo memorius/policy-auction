@@ -356,14 +356,16 @@ public class UserVoteAllocationManagerImpl extends AbstractDAOManagerImpl implem
             VoteRecordID youngestLeafID = leafToAncestors.lastKey();
             Set<VoteRecordID> winningChain = leafToAncestors.get(youngestLeafID);
             for (Map.Entry<VoteRecordID, Set<VoteRecordID>> entry : leafToAncestors.entrySet()) {
-                if (!youngestLeafID.equals(entry.getKey())) {
-                    // Delete all children that are not in the winning chain.
+                VoteRecordID leaf = entry.getKey();
+                if (!youngestLeafID.equals(leaf)) {
+                    // Remove (and, if old enough, delete) all children that are not in the winning chain.
+                    boolean delete = isOldEnoughToDelete(leaf, expirableAgeMillis);
                     Set<VoteRecordID> conflictedItems = entry.getValue();
                     conflictedItems.removeAll(winningChain);
                     for (VoteRecordID idToDelete : conflictedItems) {
                         VoteRecord recordToDelete = allRecords.remove(idToDelete);
                         // Only actually delete after timeout - parent may appear in delayed write
-                        if (recordToDelete != null && isOldEnoughToDelete(idToDelete, expirableAgeMillis)) {
+                        if (delete && recordToDelete != null) {
                             toDelete.add(recordToDelete);
                         }
                     }
