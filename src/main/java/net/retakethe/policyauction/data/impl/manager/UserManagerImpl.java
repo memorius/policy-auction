@@ -7,8 +7,10 @@ import java.util.List;
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.UserManager;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
+import net.retakethe.policyauction.data.api.dao.UsernameDAO;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.dao.UserDAOImpl;
+import net.retakethe.policyauction.data.impl.dao.UsernameDAOImpl;
 import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.Mutator;
@@ -103,7 +105,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     }
     
     @Override
-    public UserID getUserID(String username) throws NoSuchUserException {
+    public UsernameDAO getUsername(String username) throws NoSuchUserException {
     	
 
         UsersByNameCF cf = Schema.USERS_BY_NAME;
@@ -112,8 +114,9 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
 
         ColumnSlice<MillisTimestamp, String> cs = qr.get();
         
+        UserID userID;
         try {
-			return getNonNullColumn(cs, Schema.USERS_BY_NAME.USER_ID);
+			return new UsernameDAOImpl(getNonNullColumn(cs, Schema.USERS_BY_NAME.USER_ID), username);
 		} catch (NoSuchColumnException e) {
 			throw new RuntimeException("Invalid username record for key " + username, e);
 		}
@@ -207,26 +210,34 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     public void persist(UserDAO user) {
         UserID userID = user.getUserID();
 
-        UsersCF cf = Schema.USERS;
-        MillisTimestamp ts = cf.createCurrentTimestamp();
-        Mutator<UserID, MillisTimestamp> m = cf.createMutator(getKeyspaceManager());
+        UsersCF userscf = Schema.USERS;
+        MillisTimestamp ts = userscf.createCurrentTimestamp();
+        Mutator<UserID, MillisTimestamp> usersMutator = userscf.createMutator(getKeyspaceManager());
 
         //cf.USERNAME.addColumnInsertion(m, userID, cf.createValue(user.getShortName(), ts));
-        cf.EMAIL.addColumnInsertion(m, userID, cf.createValue(user.getEmail(), ts));
-        cf.PASSWORD_HASH.addColumnInsertion(m, userID, cf.createValue(user.getPasswordHash(), ts));
-        cf.PASSWORD_EXPIRY_TIMESTAMP.addColumnInsertion(m, userID, cf.createValue(user.getPasswordExpiryTimestamp(), ts));
-        cf.FIRST_NAME.addColumnInsertion(m, userID, cf.createValue(user.getFirstName(), ts));
-        cf.LAST_NAME.addColumnInsertion(m, userID, cf.createValue(user.getLastName(), ts));
+        userscf.EMAIL.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getEmail(), ts));
+        userscf.PASSWORD_HASH.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getPasswordHash(), ts));
+        userscf.PASSWORD_EXPIRY_TIMESTAMP.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getPasswordExpiryTimestamp(), ts));
+        userscf.FIRST_NAME.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getFirstName(), ts));
+        userscf.LAST_NAME.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getLastName(), ts));
         
-        cf.SHOW_REAL_NAME.addColumnInsertion(m, userID, cf.createValue(user.isShowRealName(), ts));
-        cf.CREATED_TIMESTAMP.addColumnInsertion(m, userID, cf.createValue(user.getCreatedTimestamp(), ts));
-        cf.VOTE_SALARY_LAST_PAID_TIMESTAMP.addColumnInsertion(m, userID, cf.createValue(user.getVoteSalaryLastPaidTimestamp(), ts));
-        cf.VOTE_SALARY_DATE.addColumnInsertion(m, userID, cf.createValue(user.getVoteSalaryDate(), ts));
-        cf.USER_ROLE.addColumnInsertion(m, userID, cf.createValue(user.getUserRole().toString(), ts));
-
-
+        userscf.SHOW_REAL_NAME.addColumnInsertion(usersMutator, userID, userscf.createValue(user.isShowRealName(), ts));
+        userscf.CREATED_TIMESTAMP.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getCreatedTimestamp(), ts));
+        userscf.VOTE_SALARY_LAST_PAID_TIMESTAMP.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getVoteSalaryLastPaidTimestamp(), ts));
+        userscf.VOTE_SALARY_DATE.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getVoteSalaryDate(), ts));
+        userscf.USER_ROLE.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getUserRole().toString(), ts));
         // TODO: error handling? Throws HectorException.
-        m.execute();
+        usersMutator.execute();
+        
+        String username = user.getUsername();
+        
+        UsersByNameCF usersByNameCF = Schema.USERS_BY_NAME;
+        ts = usersByNameCF.createCurrentTimestamp();
+        Mutator<String, MillisTimestamp> usersByNameMutator = usersByNameCF.createMutator(getKeyspaceManager());
+        
+        usersByNameCF.USER_ID.addColumnInsertion(usersByNameMutator, username, usersByNameCF.createValue(userID, ts));
+        
+        usersByNameMutator.execute();
     }
 
     @Override
@@ -234,10 +245,13 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         UserID userID = user.getUserID();
 
         Mutator<UserID, MillisTimestamp> m = Schema.USERS.createMutator(getKeyspaceManager());
-
+        Mutator<String, MillisTimestamp> usersByNameMutator = Schema.USERS_BY_NAME.createMutator(getKeyspaceManager());
+        
         Schema.USERS.addRowDeletion(m, userID);
+        Schema.USERS_BY_NAME.addRowDeletion(usersByNameMutator, user.getUsername());
 
         m.execute();
+        usersByNameMutator.execute();
 
         // TODO: this will need to delete from other ColumnFamilies too and trigger recalcs
     }

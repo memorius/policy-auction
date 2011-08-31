@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.api;
 import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.UserDAO;
+import net.retakethe.policyauction.data.api.dao.UsernameDAO;
 import net.retakethe.policyauction.data.api.types.UserID;
 
 /**
@@ -22,7 +23,7 @@ public interface UserManager {
 
     UserDAO getUser(UserID userID) throws NoSuchUserException;
     
-    UserID getUserID(String username) throws NoSuchUserException;
+    UsernameDAO getUsername(String username) throws NoSuchUserException;
 
     UserDAO createUser();
 
