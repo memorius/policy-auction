@@ -5,7 +5,7 @@
 
     <p>All Users</p>
 
-    <t:grid source="allUsers"/>
+    <t:grid source="allUsers" exclude="passwordHash"/>
 
     <p>
         <t:actionlink t:id="add">Add user</t:actionlink>
