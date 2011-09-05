@@ -15,6 +15,13 @@ public class User implements Serializable {
 	private static final long serialVersionUID = 1822423197198171663L;
 
 	private final UserDAO userDAO;
+	
+	/**
+	 * Instantiates a new user - this will be called by tapestry, one should always expect there to be a user object, but not nec. a logged in one (with any data in the DAO).
+	 */
+	public User() {
+		this.userDAO = null;
+	}
 
 	public User(final UserDAO userDAO) {
 		this.userDAO = userDAO;
@@ -113,5 +120,9 @@ public class User implements Serializable {
 		if (userDAO.getUserRole() == null) {
 			userDAO.setUserRole(UserRole.USER);
 		}
+	}
+	
+	public boolean isLoggedIn() {
+		return userDAO != null;
 	}
 }

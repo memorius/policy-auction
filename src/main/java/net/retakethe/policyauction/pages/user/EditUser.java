@@ -2,6 +2,7 @@ package net.retakethe.policyauction.pages.user;
 
 import java.util.Date;
 
+import net.retakethe.policyauction.annotations.PublicPage;
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.entities.EntityFactory;
@@ -12,7 +13,7 @@ import org.apache.tapestry5.annotations.Persist;
 import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
-
+@PublicPage
 public class EditUser {
 
 	@Property

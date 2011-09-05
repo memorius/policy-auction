@@ -231,7 +231,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         userscf.USER_ROLE.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getUserRole().toString(), ts));
         // TODO: error handling? Throws HectorException.
         usersMutator.execute();
-        
+
         String username = user.getUsername();
         
         UsersByNameCF usersByNameCF = Schema.USERS_BY_NAME;

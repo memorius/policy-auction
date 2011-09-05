@@ -4,12 +4,14 @@ import java.io.IOException;
 
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.data.impl.manager.DAOManagerImpl;
+import net.retakethe.policyauction.services.filters.PublicPageFilter;
 
 import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.annotations.Local;
+import org.apache.tapestry5.services.ComponentRequestFilter;
 import org.apache.tapestry5.services.Request;
 import org.apache.tapestry5.services.RequestFilter;
 import org.apache.tapestry5.services.RequestHandler;
@@ -126,4 +128,13 @@ public class AppModule
         
         configuration.add("Timing", filter);
     }
+    
+	/**
+	 * Contribute component request handler - in this case the Public page protection filter - all page classes not marked @publicpage will not render unless the user is logged in.
+	 *
+	 * @param configuration the configuration
+	 */
+	public void contributeComponentRequestHandler(OrderedConfiguration<ComponentRequestFilter> configuration) {
+		configuration.addInstance("PublicPageFilter", PublicPageFilter.class);
+	}
 }

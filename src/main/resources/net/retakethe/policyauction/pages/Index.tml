@@ -4,7 +4,7 @@
       xmlns:p="tapestry:parameter">
         <!-- Most of the page content, including <head>, <body>, etc. tags, comes from Layout.tml -->
 
-    <p>${message:greeting}</p>
+    <p>${message:greeting}, ${username}</p>
 
     <p>
         <t:pagelink page="policy/PolicyIndex">Policies</t:pagelink>
