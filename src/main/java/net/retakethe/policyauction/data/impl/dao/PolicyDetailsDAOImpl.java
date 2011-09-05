@@ -5,6 +5,7 @@ import java.util.Date;
 import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
 import net.retakethe.policyauction.data.api.dao.PolicyState;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.PortfolioID;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.util.AssertArgument;
 
@@ -16,6 +17,7 @@ public class PolicyDetailsDAOImpl implements PolicyDetailsDAO {
 
     private final PolicyID policyID;
     private final UserID ownerUserID;
+    private final PortfolioID portfolioID;
 
     private PolicyState policyState;
     private Date lastEdited;
@@ -29,11 +31,16 @@ public class PolicyDetailsDAOImpl implements PolicyDetailsDAO {
     private String howAffectedDescription;
     private boolean isPartyOfficialPolicy;
 
-    public PolicyDetailsDAOImpl(PolicyID policyID, UserID ownerUserID) {
+
+    public PolicyDetailsDAOImpl(PolicyID policyID, UserID ownerUserID, PortfolioID portfolioID) {
         AssertArgument.notNull(policyID, "policyID");
         this.policyID = policyID;
+
         AssertArgument.notNull(ownerUserID, "ownerUserID");
         this.ownerUserID = ownerUserID;
+
+        AssertArgument.notNull(portfolioID, "portfolioID");
+        this.portfolioID = portfolioID;
 
         this.policyState = PolicyState.ACTIVE;
         Date now = new Date();
@@ -52,6 +59,7 @@ public class PolicyDetailsDAOImpl implements PolicyDetailsDAO {
     public PolicyDetailsDAOImpl(
             PolicyID policyID,
             UserID ownerUserID,
+            PortfolioID portfolioID,
             PolicyState policyState,
             Date stateChanged,
             Date lastEdited,
@@ -64,26 +72,40 @@ public class PolicyDetailsDAOImpl implements PolicyDetailsDAO {
             boolean isPartyOfficialPolicy) {
         AssertArgument.notNull(policyID, "policyID");
         this.policyID = policyID;
+
         AssertArgument.notNull(ownerUserID, "ownerUserID");
         this.ownerUserID = ownerUserID;
+
+        AssertArgument.notNull(portfolioID, "portfolioID");
+        this.portfolioID = portfolioID;
+
         AssertArgument.notNull(policyState, "policyState");
         this.policyState = policyState;
+
         AssertArgument.notNull(stateChanged, "stateChanged");
         this.stateChanged = stateChanged;
+
         AssertArgument.notNull(lastEdited, "lastEdited");
         this.lastEdited = lastEdited;
+
         AssertArgument.notNull(shortName, "shortName");
         this.shortName = shortName;
+
         AssertArgument.notNull(description, "description");
         this.description = description;
+
         AssertArgument.notNull(rationaleDescription, "rationaleDescription");
         this.rationaleDescription = rationaleDescription;
+
         AssertArgument.notNull(costsToTaxpayersDescription, "costsToTaxpayersDescription");
         this.costsToTaxpayersDescription = costsToTaxpayersDescription;
+
         AssertArgument.notNull(whoIsAffectedDescription, "whoIsAffectedDescription");
         this.whoIsAffectedDescription = whoIsAffectedDescription;
+
         AssertArgument.notNull(howAffectedDescription, "howAffectedDescription");
         this.howAffectedDescription = howAffectedDescription;
+
         this.isPartyOfficialPolicy = isPartyOfficialPolicy;
     }
 
@@ -140,6 +162,11 @@ public class PolicyDetailsDAOImpl implements PolicyDetailsDAO {
     @Override
     public UserID getOwnerUserID() {
         return ownerUserID;
+    }
+
+    @Override
+    public PortfolioID getPortfolioID() {
+        return portfolioID;
     }
 
     @Override

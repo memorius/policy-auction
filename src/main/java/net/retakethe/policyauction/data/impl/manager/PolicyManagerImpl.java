@@ -7,11 +7,14 @@ import java.util.List;
 
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.PolicyManager;
+import net.retakethe.policyauction.data.api.PortfolioManager;
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
 import net.retakethe.policyauction.data.api.dao.PolicyState;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
+import net.retakethe.policyauction.data.api.exceptions.NoSuchPortfolioException;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.PortfolioID;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.impl.dao.PolicyDAOImpl;
 import net.retakethe.policyauction.data.impl.dao.PolicyDetailsDAOImpl;
@@ -38,8 +41,13 @@ import net.retakethe.policyauction.util.Functional.SkippedElementException;
  */
 public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyManager {
 
-    public PolicyManagerImpl(KeyspaceManager keyspaceManager) {
+    private final PortfolioManager portfolioManager;
+
+    public PolicyManagerImpl(KeyspaceManager keyspaceManager, PortfolioManager portfolioManager) {
         super(keyspaceManager);
+
+        AssertArgument.notNull(portfolioManager, "portfolioManager");
+        this.portfolioManager = portfolioManager;
     }
 
     @Override
@@ -75,6 +83,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
     public PolicyDetailsDAO getPolicyDetails(PolicyID policyID) throws NoSuchPolicyException {
         List<NamedColumn<PolicyID, MillisTimestamp, String, ?>> list = CollectionUtils.list(
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.OWNER,
+                (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.PORTFOLIO,
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.STATE,
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.SHORT_NAME,
                 (NamedColumn<PolicyID, MillisTimestamp, String, ?>) Schema.POLICIES.DESCRIPTION,
@@ -100,6 +109,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
         }
 
         UserID owner;
+        PortfolioID portfolioID;
         PolicyState state;
         String description;
         String rationale;
@@ -111,6 +121,7 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
         Date stateChanged;
         try {
             owner = getNonNullColumn(cs, Schema.POLICIES.OWNER);
+            portfolioID = getNonNullColumn(cs, Schema.POLICIES.PORTFOLIO);
             state = getNonNullColumn(cs, Schema.POLICIES.STATE);
             description = getNonNullColumn(cs, Schema.POLICIES.DESCRIPTION);
             rationale = getNonNullColumn(cs, Schema.POLICIES.RATIONALE);
@@ -124,14 +135,15 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
             throw new RuntimeException("Invalid policy record for key " + policyID, e);
         }
 
-        return new PolicyDetailsDAOImpl(policyID, owner, state, stateChanged, lastEdited, shortName, description,
+        return new PolicyDetailsDAOImpl(policyID, owner, portfolioID, state, stateChanged, lastEdited, shortName, description,
                 rationale, costsToTaxpayers, whoAffected, howAffected, isPartyOfficial);
     }
 
     @Override
-    public PolicyDetailsDAO createPolicy(UserID ownerUserID) {
+    public PolicyDetailsDAO createPolicy(UserID ownerUserID, PortfolioID portfolioID) {
         AssertArgument.notNull(ownerUserID, "ownerUserID");
-        return new PolicyDetailsDAOImpl(new PolicyIDImpl(), ownerUserID);
+        AssertArgument.notNull(portfolioID, "portfolioID");
+        return new PolicyDetailsDAOImpl(new PolicyIDImpl(), ownerUserID, portfolioID);
     }
 
     @Override
@@ -188,6 +200,8 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
         // TODO: do nothing if no attributes changed
 
         PolicyID policyID = policy.getPolicyID();
+        PortfolioID portfolioID = policy.getPortfolioID();
+        validatePortfolioID(portfolioID);
 
         PoliciesCF cf = Schema.POLICIES;
         MillisTimestamp ts = cf.createCurrentTimestamp();
@@ -203,12 +217,21 @@ public class PolicyManagerImpl extends AbstractDAOManagerImpl implements PolicyM
         cf.HOW_AFFECTED.addColumnInsertion(m, policyID, cf.createValue(policy.getHowAffectedDescription(), ts));
         cf.IS_PARTY_OFFICIAL.addColumnInsertion(m, policyID, cf.createValue(policy.isPartyOfficialPolicy(), ts));
         cf.OWNER.addColumnInsertion(m, policyID, cf.createValue(policy.getOwnerUserID(), ts));
+        cf.PORTFOLIO.addColumnInsertion(m, policyID, cf.createValue(portfolioID, ts));
 
         // We're saving changes, so update the edit time
         cf.LAST_EDITED.addColumnInsertion(m, policyID, cf.createValue(new Date(), ts));
 
         // TODO: error handling? Throws HectorException.
         m.execute();
+    }
+
+    private void validatePortfolioID(PortfolioID portfolioID) {
+        try {
+            portfolioManager.getPortfolio(portfolioID);
+        } catch (NoSuchPortfolioException e) {
+            throw new RuntimeException("Invalid portfolio for policy", e);
+        }
     }
 
     @Override

@@ -6,6 +6,7 @@ import net.retakethe.policyauction.data.api.dao.PolicyDAO;
 import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.PortfolioID;
 import net.retakethe.policyauction.data.api.types.UserID;
 
 
@@ -23,7 +24,7 @@ public interface PolicyManager {
     /**
      * @param ownerUserID must not be null
      */
-    PolicyDetailsDAO createPolicy(UserID ownerUserID);
+    PolicyDetailsDAO createPolicy(UserID ownerUserID, PortfolioID portfolioID);
 
     // TODO: two methods - active and ALL. Active can use fast single-row index.
     List<PolicyDAO> getAllPolicies();

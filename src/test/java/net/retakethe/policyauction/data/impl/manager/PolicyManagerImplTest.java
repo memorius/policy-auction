@@ -12,7 +12,9 @@ import net.retakethe.policyauction.data.api.dao.PolicyDetailsDAO;
 import net.retakethe.policyauction.data.api.dao.PolicyState;
 import net.retakethe.policyauction.data.api.exceptions.NoSuchPolicyException;
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.PortfolioID;
 import net.retakethe.policyauction.data.api.types.UserID;
+import net.retakethe.policyauction.data.impl.types.PortfolioIDImpl;
 import net.retakethe.policyauction.data.impl.types.UserIDImpl;
 
 import org.testng.Assert;
@@ -33,8 +35,9 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
     @Test(groups = {"dao"})
     public void testCreatePersistGetPolicy() throws NoSuchPolicyException {
         UserID userID = createUserID();
+        PortfolioID portfolioID = createPortfolioID();
         Date stateChangeAfter = new Date();
-        PolicyDetailsDAO p = manager.createPolicy(userID);
+        PolicyDetailsDAO p = manager.createPolicy(userID, portfolioID);
         p.setDescription("My policy");
         p.setShortName("My short name");
         p.setRationaleDescription("none whatsoever");
@@ -58,6 +61,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
         assertEquals(details.getShortName(), p.getShortName());
         assertEquals(details.getPolicyState(), PolicyState.ACTIVE);
         assertEquals(details.getOwnerUserID(), userID);
+        assertEquals(details.getPortfolioID(), portfolioID);
         assertEquals(details.getRationaleDescription(), p.getRationaleDescription());
         assertEquals(details.getWhoIsAffectedDescription(), p.getWhoIsAffectedDescription());
         assertEquals(details.getHowAffectedDescription(), p.getHowAffectedDescription());
@@ -72,10 +76,14 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
         return new UserIDImpl();
     }
 
+    private PortfolioID createPortfolioID() {
+        return new PortfolioIDImpl(PortfolioManagerImplTest.KNOWN_PORTFOLIO_ID);
+    }
+
     @Test(groups = {"dao"}, expectedExceptions = NoSuchPolicyException.class)
     public void testGetNonExistentPolicy() throws NoSuchPolicyException {
         // Get for ID that hasn't been stored yet
-        PolicyDetailsDAO p = manager.createPolicy(createUserID());
+        PolicyDetailsDAO p = manager.createPolicy(createUserID(), createPortfolioID());
 
         manager.getPolicy(p.getPolicyID());
     }
@@ -83,7 +91,7 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
     @Test(groups = {"dao"})
     public void testGetDeletedPolicy() throws NoSuchPolicyException {
         // Get for ID that's been stored and deleted
-        PolicyDetailsDAO p = manager.createPolicy(createUserID());
+        PolicyDetailsDAO p = manager.createPolicy(createUserID(), createPortfolioID());
 
         p.setDescription("blah");
         p.setShortName("blah");
@@ -102,11 +110,11 @@ public class PolicyManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase 
 
     @Test(groups = {"dao"})
     public void testGetAllPolicies() {
-        PolicyDetailsDAO p1 = manager.createPolicy(createUserID());
+        PolicyDetailsDAO p1 = manager.createPolicy(createUserID(), createPortfolioID());
         p1.setShortName("My short name 1");
         manager.save(p1);
 
-        PolicyDetailsDAO p2 = manager.createPolicy(createUserID());
+        PolicyDetailsDAO p2 = manager.createPolicy(createUserID(), createPortfolioID());
         p2.setShortName("My short name 2");
         manager.save(p2);
 

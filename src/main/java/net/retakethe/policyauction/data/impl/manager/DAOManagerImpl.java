@@ -63,7 +63,7 @@ public class DAOManagerImpl implements DAOManager {
 
         portfolioManager = new PortfolioManagerImpl(keyspaceManager);
 
-        policyManager = new PolicyManagerImpl(keyspaceManager);
+        policyManager = new PolicyManagerImpl(keyspaceManager, portfolioManager);
 
         userManager = new UserManagerImpl(keyspaceManager);
 

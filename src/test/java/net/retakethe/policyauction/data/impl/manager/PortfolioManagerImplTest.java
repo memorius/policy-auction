@@ -17,10 +17,10 @@ import _fixtures.CleanDbEveryMethodDAOManagerTestBase;
 public class PortfolioManagerImplTest extends CleanDbEveryMethodDAOManagerTestBase {
 
     // These values will need updating with Schema.PortfoliosCF.initialize
-    private static String KNOWN_PORTFOLIO_ID = "Education";
-    private static String KNOWN_PORTFOLIO_NAME = KNOWN_PORTFOLIO_ID;
-    private static String KNOWN_PORTFOLIO_DESCRIPTION = "Schools, universities, ECE";
-    private static int NUMBER_OF_PORTFOLIOS = 3;
+    public static final String KNOWN_PORTFOLIO_ID = "Education";
+    private static final String KNOWN_PORTFOLIO_NAME = KNOWN_PORTFOLIO_ID;
+    private static final String KNOWN_PORTFOLIO_DESCRIPTION = "Schools, universities, ECE";
+    private static final int NUMBER_OF_PORTFOLIOS = 3;
 
     private PortfolioManagerImpl manager;
 

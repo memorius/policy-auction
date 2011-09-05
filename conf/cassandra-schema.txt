@@ -16,6 +16,36 @@ create column family policies
         }, {
             column_name: description,
             validation_class: UTF8Type
+        }, {
+            column_name: state,
+            validation_class: UTF8Type
+        }, {
+            column_name: owner,
+            validation_class: TimeUUIDType
+        }, {
+            column_name: portfolio,
+            validation_class: UTF8Type
+        }, {
+            column_name: rationale,
+            validation_class: UTF8Type
+        }, {
+            column_name: costs_to_taxpayers,
+            validation_class: UTF8Type
+        }, {
+            column_name: who_affected,
+            validation_class: UTF8Type
+        }, {
+            column_name: how_affected,
+            validation_class: UTF8Type
+        }, {
+            column_name: is_party_official,
+            validation_class: BytesType
+        }, {
+            column_name: last_edited,
+            validation_class: LongType
+        }, {
+            column_name: state_changed,
+            validation_class: LongType
         }
     ];
 

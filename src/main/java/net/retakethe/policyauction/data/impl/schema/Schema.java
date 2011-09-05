@@ -74,6 +74,7 @@ public final class Schema {
 
     public static final class PoliciesCF extends ColumnFamily<PolicyID, MillisTimestamp, String> {
         public final NamedColumn<PolicyID, MillisTimestamp, String, UserID> OWNER;
+        public final NamedColumn<PolicyID, MillisTimestamp, String, PortfolioID> PORTFOLIO;
         public final NamedColumn<PolicyID, MillisTimestamp, String, PolicyState> STATE;
         public final NamedColumn<PolicyID, MillisTimestamp, String, String> SHORT_NAME;
         public final NamedColumn<PolicyID, MillisTimestamp, String, String> DESCRIPTION;
@@ -88,6 +89,7 @@ public final class Schema {
         private PoliciesCF() {
             super(SchemaKeyspace.MAIN, "policies", Type.POLICY_ID, MillisTimestampFactory.get(), Type.UTF8);
             OWNER = new StringNamedColumn<PolicyID, MillisTimestamp, UserID>("owner", this, Type.USER_ID);
+            PORTFOLIO = new StringNamedColumn<PolicyID, MillisTimestamp, PortfolioID>("portfolio", this, Type.PORTFOLIO_ID);
             STATE = new StringNamedColumn<PolicyID, MillisTimestamp, PolicyState>("state", this, Type.POLICY_STATE);
             SHORT_NAME = new StringStringColumn<PolicyID, MillisTimestamp>("short_name", this);
             DESCRIPTION = new StringStringColumn<PolicyID, MillisTimestamp>("description", this);

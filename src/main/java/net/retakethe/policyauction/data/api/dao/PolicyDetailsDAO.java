@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 import net.retakethe.policyauction.data.api.types.PolicyID;
+import net.retakethe.policyauction.data.api.types.PortfolioID;
 import net.retakethe.policyauction.data.api.types.UserID;
 
 public interface PolicyDetailsDAO extends Serializable {
@@ -26,9 +27,7 @@ public interface PolicyDetailsDAO extends Serializable {
      */
     UserID getOwnerUserID();
 
-    /* TODO: add when portfolios are implemented
     PortfolioID getPortfolioID();
-    */
 
     /*
     long getTotalVotes();
