@@ -16,6 +16,10 @@ a:active {
     text-decoration:none;
 }
 
+strong {
+    font-weight:bold;
+}
+
 div#container {
     margin:auto;
     width:978px;
@@ -125,6 +129,12 @@ div#page_content {
 div#page_content h2 {
     font-size:123.1%;
     margin-bottom:1em;
+}
+
+div#page_content h3 {
+    font-size:108%;
+    margin:1em 0 .5em 0;
+    font-weight:bold;
 }
 
 div#footer {

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 import net.retakethe.policyauction.data.api.dao.UserDAO;
+import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.api.types.UserRole;
 
 import org.apache.tapestry5.beaneditor.NonVisual;
@@ -30,6 +31,10 @@ public class User implements Serializable {
 	@NonVisual
 	protected UserDAO getUserDAO() {
 		return userDAO;
+	}
+
+	public UserID getUserID() {
+		return userDAO.getUserID();
 	}
 
 	@Validate("required")

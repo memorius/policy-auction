@@ -1,0 +1,19 @@
+<html t:type="layout" title="Policy Auction - Vote Allocation"
+      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
+      xmlns:p="tapestry:parameter">
+
+<p>
+    Your current vote allocation is <strong>${unallocatedVotes}</strong>.
+</p>
+
+<h3>Policies</h3>
+<t:loop source="allPolicies" value="policy">
+    <p>
+        <strong>${policy.shortName}</strong><br />
+        Votes Allocated: <strong>${getPolicyVotes(policy.policyID)}</strong><br />
+        TODO: Add/Remove Votes<br />
+        <br />
+    </p>
+</t:loop>
+
+</html>

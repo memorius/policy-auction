@@ -8,6 +8,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
 <link rel="stylesheet" type="text/css"
     href="http://yui.yahooapis.com/combo?3.3.0/build/cssfonts/fonts-min.css&amp;3.3.0/build/cssreset/reset-min.css" />
+<link rel="stylesheet" type="text/css" href="${context:layout/layout.css}" />
 </head>
 <body>
     <div id="container">

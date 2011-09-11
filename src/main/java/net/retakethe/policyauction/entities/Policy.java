@@ -3,6 +3,7 @@ package net.retakethe.policyauction.entities;
 import java.io.Serializable;
 
 import net.retakethe.policyauction.data.api.dao.PolicyDAO;
+import net.retakethe.policyauction.data.api.types.PolicyID;
 
 import org.apache.tapestry5.beaneditor.NonVisual;
 
@@ -25,5 +26,9 @@ public class Policy implements Serializable {
 
     public String getShortName() {
         return policyDAO.getShortName();
+    }
+
+    public PolicyID getPolicyID() {
+        return policyDAO.getPolicyID();
     }
 }
