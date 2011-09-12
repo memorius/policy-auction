@@ -1,6 +1,7 @@
 package net.retakethe.policyauction.data.impl.dao;
 
 import java.util.Date;
+import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.data.api.types.UserID;
@@ -29,7 +30,7 @@ public class UserDAOImpl implements UserDAO {
 	private Date voteSalaryLastPaidTimestamp;
 	private Date voteSalaryDate;
 
-	private UserRole userRole;
+	private List<UserRole> userRoles;
 
 	public UserDAOImpl(final UserID userID) {
 		if (userID == null ){
@@ -38,7 +39,7 @@ public class UserDAOImpl implements UserDAO {
 		this.userID = userID;
 	}
 
-	public UserDAOImpl(final UserID userID, final String username, final String email, final String passwordHash, final Date passwordExpiryTimestamp, final String firstName, final String lastName, final Boolean showRealName, final Date createdTimestamp, final Date voteSalaryLastPaidTimestamp, final Date voteSalaryDate, final String userRole) {
+	public UserDAOImpl(final UserID userID, final String username, final String email, final String passwordHash, final Date passwordExpiryTimestamp, final String firstName, final String lastName, final Boolean showRealName, final Date createdTimestamp, final Date voteSalaryLastPaidTimestamp, final Date voteSalaryDate, final List<UserRole> userRoles) {
 		this.userID = userID;
 		this.username = username;
 		this.email = email;
@@ -55,7 +56,7 @@ public class UserDAOImpl implements UserDAO {
 		this.voteSalaryLastPaidTimestamp = voteSalaryLastPaidTimestamp;
 		this.voteSalaryDate = voteSalaryDate;
 
-		setUserRole(userRole);
+		this.userRoles = userRoles;
 	}
 
 	@Override
@@ -164,21 +165,12 @@ public class UserDAOImpl implements UserDAO {
 	}
 
 	@Override
-	public UserRole getUserRole() {
-		return userRole;
+	public List<UserRole> getUserRoles() {
+		return userRoles;
 	}
 
 	@Override
-	public void setUserRole(final UserRole userRole) {
-		this.userRole = userRole;
-	}
-
-	public void setUserRole(final String userRole) {
-		for (UserRole role : UserRole.values()) {
-			if (role.toString().equalsIgnoreCase(userRole)) {
-				this.userRole = role;
-				break;
-			}
-		}
+	public void setUserRoles(final List<UserRole> userRole) {
+		this.userRoles = userRole;
 	}
 }

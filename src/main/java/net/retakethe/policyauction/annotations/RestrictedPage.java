@@ -6,9 +6,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import net.retakethe.policyauction.data.api.types.UserRole;
+
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface PublicPage {
-
+public @interface RestrictedPage {
+	UserRole[] allowedRoles();
 }

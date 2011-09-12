@@ -10,6 +10,7 @@ import net.retakethe.policyauction.data.api.UserManager;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.data.api.dao.UsernameDAO;
 import net.retakethe.policyauction.data.api.types.UserID;
+import net.retakethe.policyauction.data.api.types.UserRole;
 import net.retakethe.policyauction.data.impl.dao.UserDAOImpl;
 import net.retakethe.policyauction.data.impl.dao.UsernameDAOImpl;
 import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
@@ -31,6 +32,8 @@ import net.retakethe.policyauction.util.Functional.Filter;
 import net.retakethe.policyauction.util.Functional.SkippedElementException;
 
 /**
+ * User management service.
+ * 
  * @author Mathew Hartley
  */
 public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManager {
@@ -77,7 +80,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         Date voteSalaryLastPaidTimestamp;
         Date voteSalaryDate;
         
-        String userRole;
+        List<UserRole> userRoles;
         
         try {
             email = getNonNullColumn(cs, Schema.USERS.EMAIL);
@@ -100,9 +103,9 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         voteSalaryLastPaidTimestamp = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP);
         voteSalaryDate = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_DATE);
 
-        userRole = getColumnOrNull(cs, Schema.USERS.USER_ROLE);
+        userRoles = getUserRoles(userID);
         
-        return new UserDAOImpl(userID, username, email, passwordHash, passwordExpiryTimestamp, firstName, lastName, showRealName, createdTimestamp, voteSalaryLastPaidTimestamp, voteSalaryDate, userRole);
+        return new UserDAOImpl(userID, username, email, passwordHash, passwordExpiryTimestamp, firstName, lastName, showRealName, createdTimestamp, voteSalaryLastPaidTimestamp, voteSalaryDate, userRoles);
     }
     
     @Override
@@ -141,8 +144,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.SHOW_REAL_NAME,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.CREATED_TIMESTAMP,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP,
-                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_DATE,
-                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USER_ROLE);
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_DATE);
         RangeSlicesQuery<UserID, MillisTimestamp, String> query =
                 Schema.USERS.createRangeSlicesQuery(getKeyspaceManager(), list);
 
@@ -182,7 +184,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                         Date voteSalaryLastPaidTimestamp;
                         Date voteSalaryDate;
                         
-                        String userRole;
+                        List<UserRole> userRoles;
                         
                         try {
                             username = getNonNullColumn(cs, Schema.USERS.USERNAME);
@@ -192,9 +194,12 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                             passwordExpiryTimestamp = getNonNullColumn(cs, Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP);
                             
                             createdTimestamp = getNonNullColumn(cs, Schema.USERS.CREATED_TIMESTAMP);
+                            userRoles = getUserRoles(row.getKey());
                         } catch (NoSuchColumnException e) {
                             throw new RuntimeException("Invalid user record for key " + row.getKey(), e);
-                        }
+                        } catch (NoSuchUserException e) {
+                            throw new RuntimeException("Invalid user record for key " + row.getKey(), e);
+						}
                         firstName = getColumnOrNull(cs, Schema.USERS.FIRST_NAME);
                         lastName = getColumnOrNull(cs, Schema.USERS.LAST_NAME);
                         showRealName = getColumnOrNull(cs, Schema.USERS.SHOW_REAL_NAME);
@@ -202,9 +207,8 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                         voteSalaryLastPaidTimestamp = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP);
                         voteSalaryDate = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_DATE);
 
-                        userRole = getColumnOrNull(cs, Schema.USERS.USER_ROLE);
                         
-                        return new UserDAOImpl(row.getKey(), username, email, passwordHash, passwordExpiryTimestamp, firstName, lastName, showRealName, createdTimestamp, voteSalaryLastPaidTimestamp, voteSalaryDate, userRole);
+                        return new UserDAOImpl(row.getKey(), username, email, passwordHash, passwordExpiryTimestamp, firstName, lastName, showRealName, createdTimestamp, voteSalaryLastPaidTimestamp, voteSalaryDate, userRoles);
                     }
                 });
     }
@@ -228,7 +232,6 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         userscf.CREATED_TIMESTAMP.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getCreatedTimestamp(), ts));
         userscf.VOTE_SALARY_LAST_PAID_TIMESTAMP.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getVoteSalaryLastPaidTimestamp(), ts));
         userscf.VOTE_SALARY_DATE.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getVoteSalaryDate(), ts));
-        userscf.USER_ROLE.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getUserRole().toString(), ts));
         // TODO: error handling? Throws HectorException.
         usersMutator.execute();
 
@@ -258,4 +261,46 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
 
         // TODO: this will need to delete from other ColumnFamilies too and trigger recalcs
     }
+
+	@Override
+	public List<UserRole> getUserRoles(UserID userID) throws NoSuchUserException {
+		List<NamedColumn<UserID, MillisTimestamp, String, ?>> list =
+                new ArrayList<NamedColumn<UserID, MillisTimestamp, String, ?>>(1);
+        list.add(Schema.USER_ROLES.USER_ROLE);
+        RangeSlicesQuery<UserID, MillisTimestamp, String> query =
+                Schema.USERS.createRangeSlicesQuery(getKeyspaceManager(), list);
+
+        // TODO: may need paging of data once we have more than a few hundred.
+        //       This may need some sort of indexing since we're using RandomPartitioner,
+        //       in order to return them in a useful order.
+        query.setRowCount(1000);
+        // TODO: needed?
+        // query.setKeys("fake_key_0", "fake_key_4");
+
+        QueryResult<OrderedRows<UserID, MillisTimestamp, String>> result = query.execute();
+
+        OrderedRows<UserID, MillisTimestamp, String> orderedRows = result.get();
+        if (orderedRows == null) {
+            return Collections.emptyList();
+        }
+
+        return Functional.filter(orderedRows.getList(),
+                new Filter<Row<UserID, MillisTimestamp, String>, UserRole>() {
+                    @Override
+                    public UserRole filter(Row<UserID, MillisTimestamp, String> row) throws SkippedElementException {
+                        ColumnSlice<MillisTimestamp, String> cs = row.getColumnSlice();
+                        if (cs == null) {
+                            throw new SkippedElementException();
+                        }
+
+                        UserRole userRole;
+                        try {
+                        	userRole = getNonNullColumn(cs, Schema.USER_ROLES.USER_ROLE);
+                        } catch (NoSuchColumnException e) {
+                            throw new RuntimeException("Invalid user record for key " + row.getKey(), e);
+                        }
+                        return userRole;
+                    }
+                });
+	}
 }

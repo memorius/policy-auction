@@ -5,6 +5,7 @@ import java.util.List;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.data.api.dao.UsernameDAO;
 import net.retakethe.policyauction.data.api.types.UserID;
+import net.retakethe.policyauction.data.api.types.UserRole;
 
 /**
  * @author Mathew Hartley
@@ -20,6 +21,8 @@ public interface UserManager {
     }
 
     UserID makeUserID(String asString);
+    
+    List<UserRole> getUserRoles(UserID userID) throws NoSuchUserException;
 
     UserDAO getUser(UserID userID) throws NoSuchUserException;
     

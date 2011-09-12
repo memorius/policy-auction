@@ -27,6 +27,7 @@ public class UsernameDAOImpl implements UsernameDAO {
 		this.username = username;
 	}
 
+	@Override
 	public UserID getUserID() {
 		return userID;
 	}

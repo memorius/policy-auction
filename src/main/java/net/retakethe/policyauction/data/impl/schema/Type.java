@@ -18,6 +18,7 @@ import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.PortfolioID;
 import net.retakethe.policyauction.data.api.types.UserID;
+import net.retakethe.policyauction.data.api.types.UserRole;
 import net.retakethe.policyauction.data.impl.serializers.ByteSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DateAndHourSerializer;
 import net.retakethe.policyauction.data.impl.serializers.DayOfWeekSerializer;
@@ -30,6 +31,7 @@ import net.retakethe.policyauction.data.impl.serializers.PolicyIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PolicyStateSerializer;
 import net.retakethe.policyauction.data.impl.serializers.PortfolioIDSerializer;
 import net.retakethe.policyauction.data.impl.serializers.UserIDSerializer;
+import net.retakethe.policyauction.data.impl.serializers.UserRoleSerializer;
 import net.retakethe.policyauction.data.impl.serializers.VoteRecordIDSerializer;
 import net.retakethe.policyauction.data.impl.types.internal.VoteRecordID;
 
@@ -128,7 +130,12 @@ public final class Type<T> {
      * UserID: TimeUUIDType.
      */
     public static final Type<UserID> USER_ID = new Type<UserID>(UserID.class, UserIDSerializer.get());
-
+ 
+    /**
+     * UserRole enum, stored in cassandra as string UTF8Type.
+     */
+    public static final Type<UserRole> USER_ROLE = new Type<UserRole>(UserRole.class, UserRoleSerializer.get());
+    
     /**
      * VoteRecordID: TimeUUIDType.
      */

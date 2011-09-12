@@ -114,6 +114,15 @@ create column family users_by_name
         }
     ];
 
+create column family user_roles
+    with comment = 'Roles attached to a userID'
+    and comparator = UTF8Type
+    and column_metadata = [{
+            column_name: user_role,
+            validation_class: UTF8Type
+        }
+    ];
+
 create column family user_policy_votes_pending
     with comment = 'Per-user vote records awaiting propagation to policy_current_votes'
     and key_validation_class = TimeUUIDType

@@ -12,6 +12,7 @@ import net.retakethe.policyauction.data.api.types.LogMessageID;
 import net.retakethe.policyauction.data.api.types.PolicyID;
 import net.retakethe.policyauction.data.api.types.PortfolioID;
 import net.retakethe.policyauction.data.api.types.UserID;
+import net.retakethe.policyauction.data.api.types.UserRole;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.data.impl.query.api.Mutator;
 import net.retakethe.policyauction.data.impl.schema.column.ColumnRange;
@@ -56,6 +57,8 @@ public final class Schema {
     public static final UsersCF USERS = new UsersCF();
     
     public static final UsersByNameCF USERS_BY_NAME = new UsersByNameCF();
+    
+    public static final UserRolesCF USER_ROLES = new UserRolesCF();
 
     public static final UserVotesCF USER_VOTES_PENDING = new UserVotesCF("user_policy_votes_pending");
 
@@ -180,6 +183,17 @@ public final class Schema {
     		super(SchemaKeyspace.MAIN, "users_by_name", Type.UTF8, MillisTimestampFactory.get(), Type.UTF8);
     		
     		USER_ID = new StringNamedColumn<String, MillisTimestamp, UserID>("user_id", this, Type.USER_ID);
+    		addCF(this);
+    	}
+    }
+
+    public static final class UserRolesCF extends ColumnFamily<UserID, MillisTimestamp, String> {
+
+    	public final NamedColumn<UserID, MillisTimestamp, String, UserRole> USER_ROLE;
+    	private UserRolesCF() {
+    		super(SchemaKeyspace.MAIN, "users_by_name", Type.USER_ID, MillisTimestampFactory.get(), Type.UTF8);
+    		
+    		USER_ROLE = new StringNamedColumn<UserID, MillisTimestamp, UserRole>("user_role", this, Type.USER_ROLE);
     		addCF(this);
     	}
     }

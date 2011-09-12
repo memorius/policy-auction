@@ -2,6 +2,7 @@ package net.retakethe.policyauction.data.api.dao;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.api.types.UserRole;
@@ -35,7 +36,7 @@ public interface UserDAO extends Serializable {
 	Date getVoteSalaryDate();
 	void setVoteSalaryDate(Date voteSalaryDate);
 	
-	UserRole getUserRole();
-	void setUserRole(UserRole userRole);
+	List<UserRole> getUserRoles();
+	void setUserRoles(List<UserRole> userRole);
 	
 }
