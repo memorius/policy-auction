@@ -2,6 +2,7 @@ package net.retakethe.policyauction.entities;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.data.api.types.UserRole;
@@ -102,24 +103,16 @@ public class User implements Serializable {
 		return userDAO.getVoteSalaryDate();
 	}
 
-	public UserRole getRole() {
-		return userDAO.getUserRole();
+	public List<UserRole> getRoles() {
+		return userDAO.getUserRoles();
 	}
 
-	public void setRole(final UserRole role) {
-		userDAO.setUserRole(role);
+	public void setRoles(final List<UserRole> role) {
+		userDAO.setUserRoles(role);
 	}
-
-	public void setRole(final String role) {
-		for (UserRole userRole : UserRole.values()) {
-			if (userRole.equals(role)) {
-				userDAO.setUserRole(userRole);
-				break;
-			}
-		}
-		if (userDAO.getUserRole() == null) {
-			userDAO.setUserRole(UserRole.USER);
-		}
+	
+	public boolean isRole(UserRole role) {
+		return userDAO.getUserRoles().contains(role);
 	}
 	
 	public boolean isLoggedIn() {

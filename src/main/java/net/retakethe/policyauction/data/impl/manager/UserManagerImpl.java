@@ -21,6 +21,7 @@ import net.retakethe.policyauction.data.impl.query.api.RangeSlicesQuery;
 import net.retakethe.policyauction.data.impl.query.api.Row;
 import net.retakethe.policyauction.data.impl.query.api.SliceQuery;
 import net.retakethe.policyauction.data.impl.schema.Schema;
+import net.retakethe.policyauction.data.impl.schema.Schema.UserRolesCF;
 import net.retakethe.policyauction.data.impl.schema.Schema.UsersByNameCF;
 import net.retakethe.policyauction.data.impl.schema.Schema.UsersCF;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
@@ -215,7 +216,15 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
 
     @Override
     public void persist(UserDAO user) {
-        UserID userID = user.getUserID();
+        saveUserDAO(user);
+
+        saveUsername(user);
+
+        saveUserRoles(user);
+    }
+
+	private void saveUserDAO(UserDAO user) {
+		UserID userID = user.getUserID();
 
         UsersCF userscf = Schema.USERS;
         MillisTimestamp ts = userscf.createCurrentTimestamp();
@@ -234,17 +243,28 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         userscf.VOTE_SALARY_DATE.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getVoteSalaryDate(), ts));
         // TODO: error handling? Throws HectorException.
         usersMutator.execute();
+	}
 
-        String username = user.getUsername();
-        
-        UsersByNameCF usersByNameCF = Schema.USERS_BY_NAME;
+	private void saveUsername(UserDAO user) {
+		MillisTimestamp ts;
+		UsersByNameCF usersByNameCF = Schema.USERS_BY_NAME;
         ts = usersByNameCF.createCurrentTimestamp();
         Mutator<String, MillisTimestamp> usersByNameMutator = usersByNameCF.createMutator(getKeyspaceManager());
         
-        usersByNameCF.USER_ID.addColumnInsertion(usersByNameMutator, username, usersByNameCF.createValue(userID, ts));
-        
+        usersByNameCF.USER_ID.addColumnInsertion(usersByNameMutator, user.getUsername(), usersByNameCF.createValue(user.getUserID(), ts));
         usersByNameMutator.execute();
-    }
+	}
+
+	private void saveUserRoles(UserDAO user) {
+		MillisTimestamp ts;
+		UserRolesCF userRolesCF = Schema.USER_ROLES;
+        ts = userRolesCF.createCurrentTimestamp();
+        Mutator<UserID, MillisTimestamp> userRolesMutator = userRolesCF.createMutator(getKeyspaceManager());
+        for (UserRole role : user.getUserRoles()) {
+        	userRolesCF.USER_ROLE.addColumnInsertion(userRolesMutator, user.getUserID(), userRolesCF.createValue(role, ts));
+        }
+        userRolesMutator.execute();
+	}
 
     @Override
     public void deleteUser(UserDAO user) {

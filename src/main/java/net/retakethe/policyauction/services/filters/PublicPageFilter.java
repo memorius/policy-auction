@@ -3,7 +3,8 @@ package net.retakethe.policyauction.services.filters;
 
 import java.io.IOException;
 
-import net.retakethe.policyauction.annotations.PublicPage;
+import net.retakethe.policyauction.annotations.RestrictedPage;
+import net.retakethe.policyauction.data.api.types.UserRole;
 import net.retakethe.policyauction.entities.User;
 import net.retakethe.policyauction.pages.session.NewSession;
 
@@ -63,18 +64,29 @@ public class PublicPageFilter implements ComponentRequestFilter {
 	}
 
 	private boolean isAuthorisedToPage(String logicalPageName) throws IOException {
-		// If the requested page is annotated @PublicPage...
+		// If the requested page is annotated @RestrictedPage...
 
 		Component page = componentSource.getPage(logicalPageName);
-		boolean publicPage = page.getClass().getAnnotation(PublicPage.class) != null;
+		boolean restrictedPage = page.getClass().getAnnotation(RestrictedPage.class) != null;
 
-		if (!publicPage) {
-
+		
+		if (restrictedPage) {
+			UserRole[] allowedRoles = page.getClass().getAnnotation(RestrictedPage.class).allowedRoles();
 			// If the session contains a User then you have already been authenticated
 
 			if (sessionStateManager.exists(User.class)) {
-				// TODO More fine-grain authorisation
-				return true;
+				if (allowedRoles != null && allowedRoles.length > 0) {
+					for (UserRole pageRoles : allowedRoles) {
+						if (sessionStateManager.get(User.class).getRoles().contains(pageRoles)) {
+							return true;
+						}
+					}
+					// user does not have required role to do anything with page. Sorry!
+					return false;
+				} else {
+					// No set role restrictions required, so as long as user is logged in we consider this ok.
+					return true;
+				}
 			}
 
 			// Else go to the Login page
