@@ -39,7 +39,7 @@ public class DAOManagerImpl implements DAOManager {
      *
      * @throws InitializationException
      */
-    @Inject // This in the one to call from AppModule to register this as a service
+    @Inject // This is the one to call from AppModule to register this as a service
     public DAOManagerImpl() {
         this("localhost", 9160);
     }

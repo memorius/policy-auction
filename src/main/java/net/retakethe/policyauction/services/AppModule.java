@@ -5,6 +5,7 @@ import java.io.IOException;
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.data.impl.manager.DAOManagerImpl;
 import net.retakethe.policyauction.services.filters.PublicPageFilter;
+import net.retakethe.policyauction.services.impl.EmailSenderImpl;
 
 import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
@@ -39,6 +40,9 @@ public class AppModule
         //       this will work by auto-injection of other services into constructor args:
         //       see here: http://tapestry.apache.org/defining-tapestry-ioc-services.html
         binder.bind(DAOManager.class, DAOManagerImpl.class);
+
+        // TODO: get configuration into email sender: AWS secret key, addresses, as per DAOManagerImpl above.
+        binder.bind(EmailSender.class, EmailSenderImpl.class);
     }
 
     public static void contributeApplicationDefaults(
