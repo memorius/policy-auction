@@ -11,6 +11,7 @@ import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.ServiceBinder;
+import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.Local;
 import org.apache.tapestry5.services.ComponentRequestFilter;
 import org.apache.tapestry5.services.Request;
@@ -25,10 +26,14 @@ import org.slf4j.Logger;
  */
 public class AppModule
 {
+    /**
+     * This defines services to be made available to app pages / components.
+     * <p>
+     * To use these services from a page, mark an appropriately-typed field with the {@link Inject} annotation
+     * and Tapestry will automatically populate it with the service implementation.
+     */
     public static void bind(ServiceBinder binder)
     {
-        // binder.bind(MyServiceInterface.class, MyServiceImpl.class);
-        
         // Make bind() calls on the binder object to define most IoC services.
         // Use service builder methods (example below) when the implementation
         // is provided inline, or requires more initialization than simply
@@ -39,9 +44,9 @@ public class AppModule
         // TODO: use tapestry methods of getting config properties (hosts etc) to the hector service.
         //       this will work by auto-injection of other services into constructor args:
         //       see here: http://tapestry.apache.org/defining-tapestry-ioc-services.html
+        //       and see EmailSenderImpl for an example using servlet context / system properties.
         binder.bind(DAOManager.class, DAOManagerImpl.class);
 
-        // TODO: get configuration into email sender: AWS secret key, addresses, as per DAOManagerImpl above.
         binder.bind(EmailSender.class, EmailSenderImpl.class);
     }
 

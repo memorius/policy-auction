@@ -13,8 +13,12 @@ import java.util.LinkedList;
 import net.retakethe.policyauction.data.impl.manager.InitializationException;
 import net.retakethe.policyauction.services.AppModule;
 import net.retakethe.policyauction.services.EmailSender;
+import net.retakethe.policyauction.services.config.PolicyAuctionConfigPropertyNames;
 
 import org.apache.tapestry5.ioc.annotations.Inject;
+import org.apache.tapestry5.ioc.annotations.Symbol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -31,37 +35,50 @@ import com.amazonaws.services.simpleemail.model.SendEmailResult;
  
 public class EmailSenderImpl implements EmailSender
 {
+    private static final Logger logger = LoggerFactory.getLogger(EmailSenderImpl.class);
+
     private final String accessKey;
     private final String secretKey;
+    private final boolean configured;
 
     /**
-     * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
+     * Constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
      *
      * @throws InitializationException
      */
     @Inject // This is the one to call from AppModule to register this as a service
-    public EmailSenderImpl() {
-        // TODO: get these from config properties at startup. See comments in AppModule.bind(ServiceBinder).
-        accessKey = "_INSERT_ACCESS_KEY_";
-        secretKey = "_INSERT_SECRET_KEY_";
+    public EmailSenderImpl(
+            // These values come from web.xml (or tomcat context config) <context-param> settings.
+            @Inject @Symbol(PolicyAuctionConfigPropertyNames.EMAIL_SENDER_AWS_ACCESS_KEY) final String accessKey,
+            @Inject @Symbol(PolicyAuctionConfigPropertyNames.EMAIL_SENDER_AWS_SECRET_KEY) final String secretKey) {
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
+
+        if ("DUMMY_PLACEHOLDER_VALUE".equals(this.accessKey)) {
+            this.configured = false;
+            logNotConfiguredWarning();
+        } else if ("DUMMY_PLACEHOLDER_VALUE".equals(this.secretKey)) {
+            this.configured = false;
+            logNotConfiguredWarning();
+        } else {
+            this.configured = true;
+        }
     }
 
-    /**
-     * For standalone testing
-     */
-	public static void main(String args[]) {
-		String sender = "michael@birks.co.nz"; // should be verified email
-
-		LinkedList<String> recipients = new LinkedList<String>();
-		recipients.add("michael@michaelbirks.com"); // again a verified email, if you are in sandbox
-
-		new EmailSenderImpl().sendMail(sender, recipients,
-		        "Straight from AWS SES",
-		        "Hey, did you know that this message was sent via Simple Email Service programmatically using AWS Java SDK.");
-	}
+    private void logNotConfiguredWarning() {
+        logger.warn(getClass().getName() + " is not configured, no emails will be sent. "
+                + "To fix this, set <context-params> in web.xml or tomcat context config.");
+    }
 
 	@Override
-    public void sendMail(String sender, LinkedList<String> recipients, String subject, String body) {
+    public void sendMail(String sender, LinkedList<String> recipients, String subject, String body)
+	        throws EmailNotSentException {
+	    if (!configured) {
+	        String message = "Not sending email because " + getClass().getName() + " is not configured";
+	        logger.debug(message);
+	        throw new EmailNotSentException(message);
+	    }
+
 		Destination destination = new Destination(recipients);
  
 		Content subjectContent = new Content(subject);
@@ -74,22 +91,19 @@ public class EmailSenderImpl implements EmailSender
 		AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
 		AmazonSimpleEmailServiceClient sesClient = new AmazonSimpleEmailServiceClient(credentials);
 		SendEmailResult result;
+		// TODO: if there are problems they may be temporary; we could keep emails in Cassandra and retry later.
         try {
             result = sesClient.sendEmail(request);
+            logger.debug("Sent email ok: " + result);
         } catch (MessageRejectedException e) {
-            // TODO: handle sensibly
             // What does this mean? sendEmail method documents it but doesn't say what it means.
-            throw new RuntimeException(e);
+            throw new EmailNotSentException(e);
         } catch (AmazonServiceException e) {
-            // TODO: handle sensibly
             // Error response from service: server error, bad request data, etc
-            throw new RuntimeException(e);
+            throw new EmailNotSentException(e);
         } catch (AmazonClientException e) {
-            // TODO: handle sensibly
             // Can't connect to service: network connection problem etc
-            throw new RuntimeException(e);
+            throw new EmailNotSentException(e);
         }
-
-		System.out.println(result);
 	}
 }

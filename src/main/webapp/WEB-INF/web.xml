@@ -10,6 +10,14 @@ of where to look for pages, components and mixins. -->
         <param-name>tapestry.app-package</param-name>
         <param-value>net.retakethe.policyauction</param-value>
     </context-param>
+    <context-param>
+        <param-name>net.retakethe.policyauction.EmailSender.aws.accessKey</param-name>
+        <param-value>DUMMY_PLACEHOLDER_VALUE</param-value>
+    </context-param>
+    <context-param>
+        <param-name>net.retakethe.policyauction.EmailSender.aws.secretKey</param-name>
+        <param-value>DUMMY_PLACEHOLDER_VALUE</param-value>
+    </context-param>
     <filter>
         <filter-name>app</filter-name>
         <filter-class>org.apache.tapestry5.TapestryFilter</filter-class>
