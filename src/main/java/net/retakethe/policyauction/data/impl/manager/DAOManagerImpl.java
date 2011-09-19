@@ -93,8 +93,19 @@ public class DAOManagerImpl implements DAOManager, RegistryShutdownListener {
         }
     }
 
-    public KeyspaceManager getKeyspaceManager() {
-        return keyspaceManager;
+    private void shutdownCassandraLogAppender() {
+        @SuppressWarnings("unchecked")
+        Enumeration<Appender> appenders = LogManager.getRootLogger().getAllAppenders();
+
+        while (appenders.hasMoreElements()) {
+            Appender appender = appenders.nextElement();
+
+            // This appender is configured in log4j.properties
+            // If we don't find one, that's OK - we're probably running in a unit test.
+            if (appender instanceof CassandraLog4jAppender) {
+                ((CassandraLog4jAppender) appender).close();
+            }
+        }
     }
 
     /**
@@ -117,7 +128,15 @@ public class DAOManagerImpl implements DAOManager, RegistryShutdownListener {
     }
 
     public void destroy() {
+        // Close the log appender (if not already closed) so that its queued messages are flushed through us
+        shutdownCassandraLogAppender();
+
+        // Disconnect from Cassandra and shut down the connection pool
         keyspaceManager.destroy();
+    }
+
+    public KeyspaceManager getKeyspaceManager() {
+        return keyspaceManager;
     }
 
     @Override

@@ -103,6 +103,12 @@ public class CassandraLog4jAppender extends AppenderSkeleton {
             }, MAX_WRITE_WAIT_SECONDS, MAX_WRITE_WAIT_SECONDS, TimeUnit.SECONDS); 
     }
 
+    /**
+     * Called to write a single log message.
+     * <p>
+     * Note that {@link AppenderSkeleton#doAppend(LoggingEvent)} calls this in a single-threaded manner
+     * - it synchronizes; calls are never interleaved.
+     */
     @Override
     protected void append(LoggingEvent event) {
         if (logWriter == null) {
@@ -129,10 +135,23 @@ public class CassandraLog4jAppender extends AppenderSkeleton {
         }
     }
 
+    /**
+     * Synchronized for interaction with {@link AppenderSkeleton#doAppend(LoggingEvent)}
+     */
     @Override
-    public void close() {
+    public synchronized void close() {
+        // We may get closed twice because DAOManagerImpl shuts us down before disconnecting from Cassandra,
+        // which may happen before log4j LogManager shutdown. This is harmless.
+        if (this.closed) {
+            return;
+        }
+        this.closed = true;
+
+        // Flush any remaining queued messages into the write threads
         batchWatcher.shutdown();
         flushBatch();
+
+        // Wait until all messages are processed through the LogWriter
         writeThreadPool.shutdown();
     }
 
