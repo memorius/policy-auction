@@ -149,12 +149,28 @@
             <version>2.5</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
+            <!-- AmazonAWS library: provides client to SES (Simple Email Service) -->
         	<groupId>com.amazonaws</groupId>
         	<artifactId>aws-java-sdk</artifactId>
         	<version>1.2.4</version>
         </dependency>
+        <dependency>
+            <!-- SES dependency -->
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.1.2</version>
+        </dependency>
+        <dependency>
+            <!-- SES indirect dependency: override the older httpcore:4.0.1 version pulled in by libthrift:0.6.1,
+                 which doesn't work with SES -->
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.1.2</version>
+        </dependency>
     </dependencies>
+
     <build>
         <finalName>policy-auction</finalName>
         <plugins>
