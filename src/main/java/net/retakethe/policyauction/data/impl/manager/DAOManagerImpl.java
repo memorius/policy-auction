@@ -6,11 +6,13 @@ import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.data.impl.logging.CassandraLog4jAppender;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
 import net.retakethe.policyauction.services.AppModule;
+import net.retakethe.policyauction.services.config.PolicyAuctionConfigPropertyNames;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.LogManager;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.PostInjection;
+import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.ioc.services.RegistryShutdownHub;
 import org.apache.tapestry5.ioc.services.RegistryShutdownListener;
 
@@ -38,26 +40,31 @@ public class DAOManagerImpl implements DAOManager, RegistryShutdownListener {
     private final VotingConfigManagerImpl votingConfigManager;
 
     /**
-     * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
-     *
-     * @throws InitializationException
-     */
-    @Inject // This is the one to call from AppModule to register this as a service
-    public DAOManagerImpl() {
-        this("localhost", 9160);
-    }
-
-    /**
      * Constructor used in testing
      *
      * @throws InitializationException
      */
     public DAOManagerImpl(String address, int port) {
-        if (address == null) {
-            throw new IllegalArgumentException("address must not be null");
-        }
-        keyspaceManager = new KeyspaceManagerImpl(address + ':' + String.valueOf(port));
-        keyspaceManager.initializeColumnFamilies();
+        this(new KeyspaceManagerImpl(address + ':' + String.valueOf(port)));
+    }
+
+    /**
+     * Default constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
+     *
+     * @throws InitializationException
+     */
+    @Inject // This is the one to call from AppModule to register this as a service
+    public DAOManagerImpl(
+            // These values come from web.xml (or tomcat context config) <context-param> settings.
+            @Inject @Symbol(PolicyAuctionConfigPropertyNames.DAO_MANAGER_CASSANDRA_HOSTS) final String hosts,
+            @Inject @Symbol(PolicyAuctionConfigPropertyNames.DAO_MANAGER_CASSANDRA_USERNAME) final String username,
+            @Inject @Symbol(PolicyAuctionConfigPropertyNames.DAO_MANAGER_CASSANDRA_PASSWORD) final String password) {
+        this(new KeyspaceManagerImpl(hosts, username, password));
+    }
+
+    private DAOManagerImpl(KeyspaceManagerImpl keyspaceManager) {
+        this.keyspaceManager = keyspaceManager;
+        this.keyspaceManager.initializeColumnFamilies();
 
         systemInfoManager = new SystemInfoManagerImpl(keyspaceManager);
 

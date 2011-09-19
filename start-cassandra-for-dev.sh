@@ -56,4 +56,4 @@ export CASSANDRA_CONF="$full_conf_dir"
 export MAX_HEAP_SIZE="512M"
 export HEAP_NEWSIZE="128M"
 
-exec "$cassandra_bin/bin/cassandra" -f "$@"
+exec "$cassandra_bin/bin/cassandra" -f -Dpasswd.properties="${cassandra_conf}/passwd.properties" "$@"

@@ -10,14 +10,33 @@ of where to look for pages, components and mixins. -->
         <param-name>tapestry.app-package</param-name>
         <param-value>net.retakethe.policyauction</param-value>
     </context-param>
+
     <context-param>
-        <param-name>net.retakethe.policyauction.EmailSender.aws.accessKey</param-name>
+        <!-- Value as obtained from Amazon Web Services account page -->
+        <param-name>net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-accessKey</param-name>
         <param-value>DUMMY_PLACEHOLDER_VALUE</param-value>
     </context-param>
     <context-param>
-        <param-name>net.retakethe.policyauction.EmailSender.aws.secretKey</param-name>
+        <!-- Value as obtained from Amazon Web Services account page -->
+        <param-name>net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-secretKey</param-name>
         <param-value>DUMMY_PLACEHOLDER_VALUE</param-value>
     </context-param>
+    <context-param>
+        <!-- Comma-separated 'host:port,host:port' or just 'host,host' -->
+        <param-name>net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-hosts</param-name>
+        <param-value>localhost:9160</param-value>
+    </context-param>
+    <context-param>
+        <!-- As in Cassandra passwd.properties -->
+        <param-name>net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-username</param-name>
+        <param-value>webapp</param-value>
+    </context-param>
+    <context-param>
+        <!-- As in Cassandra passwd.properties -->
+        <param-name>net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-password</param-name>
+        <param-value>j253tDL3OA61zq</param-value>
+    </context-param>
+
     <filter>
         <filter-name>app</filter-name>
         <filter-class>org.apache.tapestry5.TapestryFilter</filter-class>
