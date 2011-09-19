@@ -10,6 +10,9 @@ import net.retakethe.policyauction.services.AppModule;
 import org.apache.log4j.Appender;
 import org.apache.log4j.LogManager;
 import org.apache.tapestry5.ioc.annotations.Inject;
+import org.apache.tapestry5.ioc.annotations.PostInjection;
+import org.apache.tapestry5.ioc.services.RegistryShutdownHub;
+import org.apache.tapestry5.ioc.services.RegistryShutdownListener;
 
 /**
  * Data access using Apache Cassandra via Hector library.
@@ -21,7 +24,7 @@ import org.apache.tapestry5.ioc.annotations.Inject;
  *
  * @author Nick Clarke
  */
-public class DAOManagerImpl implements DAOManager {
+public class DAOManagerImpl implements DAOManager, RegistryShutdownListener {
 
     private final KeyspaceManagerImpl keyspaceManager;
 
@@ -93,7 +96,26 @@ public class DAOManagerImpl implements DAOManager {
     public KeyspaceManager getKeyspaceManager() {
         return keyspaceManager;
     }
-    
+
+    /**
+     * Called by Tapestry once service is created and configured.
+     */
+    @PostInjection
+    public void startupService(RegistryShutdownHub shutdownHub) {
+        // Register so that registryDidShutdown() will be called at Tapestry shutdown.
+        shutdownHub.addRegistryShutdownListener(this);
+    }
+
+    /**
+     * Listener method called by Tapestry when IOC container shuts down.
+     *
+     * @see #startupService(RegistryShutdownHub)
+     */
+    @Override
+    public void registryDidShutdown() {
+        destroy();
+    }
+
     public void destroy() {
         keyspaceManager.destroy();
     }
