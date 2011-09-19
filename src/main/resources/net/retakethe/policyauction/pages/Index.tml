@@ -12,8 +12,6 @@
     <p>
         <t:pagelink page="user/UserIndex">Users</t:pagelink>
     </p>
-    <p>${emailTest}</p>
-    
 
     <p:sidebar>
 
