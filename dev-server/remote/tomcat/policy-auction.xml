@@ -1,0 +1,28 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+<!--
+    This file provides context parameters to the application when running in Tomcat, overriding the defaults in the war file.
+
+    Save as:
+      $CATALINA_HOME/conf/Catalina/localhost/<war-file-name>.xml
+    e.g.
+      /etc/tomcat5/Catalina/localhost/policy-auction.xml
+-->
+<Context>
+
+    <!-- Replace the placeholders below with your own values -->
+
+    <Parameter name="net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-accessKey"
+               value="DUMMY_PLACEHOLDER_VALUE" override="true"/>
+
+    <Parameter name="net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-secretKey"
+               value="DUMMY_PLACEHOLDER_VALUE" override="true"/>
+
+    <Parameter name="net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-hosts"
+               value="localhost:9160" override="true"/>
+
+    <Parameter name="net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-username"
+               value="webapp" override="true"/>
+
+    <Parameter name="net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-password"
+               value="DUMMY_PLACEHOLDER_VALUE" override="true"/>
+</Context>
