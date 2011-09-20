@@ -131,13 +131,14 @@ public class DAOManagerImpl implements DAOManager, RegistryShutdownListener {
      */
     @Override
     public void registryDidShutdown() {
+        // Close the log appender (if not already closed) so that its queued messages are flushed through us.
+        // (don't do this in destroy() because that is used for tests, and this appender isn't present in tests)
+        shutdownCassandraLogAppender();
+
         destroy();
     }
 
     public void destroy() {
-        // Close the log appender (if not already closed) so that its queued messages are flushed through us
-        shutdownCassandraLogAppender();
-
         // Disconnect from Cassandra and shut down the connection pool
         keyspaceManager.destroy();
     }
