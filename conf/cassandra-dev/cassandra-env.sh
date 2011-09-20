@@ -20,11 +20,18 @@ calculate_heap_sizes()
         Linux)
             system_memory_in_mb=`free -m | awk '/Mem:/ {print $2}'`
             system_cpu_cores=`egrep -c 'processor([[:space:]]+):.*' /proc/cpuinfo`
+            break
         ;;
         FreeBSD)
             system_memory_in_bytes=`sysctl hw.physmem | awk '{print $2}'`
-            system_memory_in_mb=$((system_memory_in_bytes / 1024 / 1024))
+            system_memory_in_mb=`expr $system_memory_in_bytes / 1024 / 1024`
             system_cpu_cores=`sysctl hw.ncpu | awk '{print $2}'`
+            break
+        ;;
+        SunOS)
+            system_memory_in_mb=`prtconf | awk '/Memory size:/ {print $3}'`
+            system_cpu_cores=`psrinfo | wc -l`
+            break
         ;;
         *)
             # assume reasonable defaults for e.g. a modern desktop or
@@ -33,14 +40,14 @@ calculate_heap_sizes()
             system_cpu_cores="2"
         ;;
     esac
-    max_heap_size_in_mb=$((system_memory_in_mb / 2))
+    max_heap_size_in_mb=`expr $system_memory_in_mb / 2`
     MAX_HEAP_SIZE="${max_heap_size_in_mb}M"
 
     # Young gen: min(max_sensible_per_modern_cpu_core * num_cores, 1/4 * heap size)
     max_sensible_yg_per_core_in_mb="100"
-    max_sensible_yg_in_mb=$((max_sensible_yg_per_core_in_mb * system_cpu_cores))
+    max_sensible_yg_in_mb=`expr $max_sensible_yg_per_core_in_mb "*" $system_cpu_cores`
 
-    desired_yg_in_mb=$((max_heap_size_in_mb / 4))
+    desired_yg_in_mb=`expr $max_heap_size_in_mb / 4`
 
     if [ "$desired_yg_in_mb" -gt "$max_sensible_yg_in_mb" ]
     then
@@ -90,7 +97,7 @@ JMX_PORT="7199"
 JVM_OPTS="$JVM_OPTS -ea"
 
 # add the jamm javaagent
-check_openjdk=$(java -version 2>&1 | awk '{if (NR == 2) {print $1}}')
+check_openjdk=`"${JAVA:-java}" -version 2>&1 | awk '{if (NR == 2) {print $1}}'`
 if [ "$check_openjdk" != "OpenJDK" ]
 then
     JVM_OPTS="$JVM_OPTS -javaagent:$CASSANDRA_HOME/lib/jamm-0.2.2.jar"
@@ -110,7 +117,12 @@ JVM_OPTS="$JVM_OPTS -XX:ThreadPriorityPolicy=42"
 JVM_OPTS="$JVM_OPTS -Xms${MAX_HEAP_SIZE}"
 JVM_OPTS="$JVM_OPTS -Xmx${MAX_HEAP_SIZE}"
 JVM_OPTS="$JVM_OPTS -Xmn${HEAP_NEWSIZE}"
-JVM_OPTS="$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError" 
+JVM_OPTS="$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError"
+
+# set jvm HeapDumpPath with CASSANDRA_HEAPDUMP_DIR
+if [ "x$CASSANDRA_HEAPDUMP_DIR" != "x" ]; then
+    JVM_OPTS="$JVM_OPTS -XX:HeapDumpPath=$CASSANDRA_HEAPDUMP_DIR/cassandra-`date +%s`-pid$$.hprof"
+fi
 
 if [ "`uname`" = "Linux" ] ; then
     # reduce the per-thread stack size to minimize the impact of Thrift

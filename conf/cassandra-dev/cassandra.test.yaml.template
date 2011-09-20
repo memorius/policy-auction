@@ -7,7 +7,7 @@
 
 # The name of the cluster. This is mainly used to prevent machines in
 # one logical cluster from joining another.
-cluster_name: 'Policy Auction dev unit test'
+cluster_name: 'Policy Auction local dev unit test'
 
 # You should always specify InitialToken when setting up a production
 # cluster for the first time, and often when adding capacity later.
@@ -83,14 +83,17 @@ commitlog_rotation_threshold_in_mb: 128
 # commitlog_sync may be either "periodic" or "batch." 
 # When in batch mode, Cassandra won't ack writes until the commit log
 # has been fsynced to disk.  It will wait up to
-# CommitLogSyncBatchWindowInMS milliseconds for other writes, before
+# commitlog_sync_batch_window_in_ms milliseconds for other writes, before
 # performing the sync.
-commitlog_sync: periodic
-
+#
+# commitlog_sync: batch
+# commitlog_sync_batch_window_in_ms: 50
+#
 # the other option is "periodic" where writes may be acked immediately
 # and the CommitLog is simply synced every commitlog_sync_period_in_ms
 # milliseconds.
-commitlog_sync_period_in_ms: 2000
+commitlog_sync: periodic
+commitlog_sync_period_in_ms: 10000
 
 # any class that implements the SeedProvider interface and has a constructor that takes a Map<String, String> of
 # parameters will do.
@@ -166,7 +169,7 @@ memtable_flush_queue_size: 4
 sliced_buffer_size_in_kb: 64
 
 # TCP port, for commands and data
-storage_port: 7001
+storage_port: 7000
 
 # Address to bind to and tell other Cassandra nodes to connect to. You
 # _must_ change this if you want multiple nodes to be able to
@@ -188,21 +191,40 @@ listen_address: localhost
 # (i.e. it will be based on the configured hostname of the node).
 rpc_address: localhost
 # port for Thrift to listen for clients on
-rpc_port: 9161
+rpc_port: 9160
 
 # enable or disable keepalive on rpc connections
 rpc_keepalive: true
 
-# Cassandra uses thread-per-client for client RPC.  This can
-# be expensive in memory used for thread stack for a large
-# enough number of clients.  (Hence, connection pooling is
-# very, very strongly recommended.)
-# 
+# Cassandra provides you with a variety of options for RPC Server
+# sync  -> Creates one thread per connection but with a configurable number of
+#           threads.  This can be expensive in memory used for thread stack for
+#           a large enough number of clients.  (Hence, connection pooling is
+#           very, very strongly recommended.)
+#
+# async -> Nonblocking server implementation with one thread to serve 
+#           rpc connections.  This is not recommended for high throughput use
+#           cases.
+#
+# hsha  -> half sync and half async implementation with configurable number
+#           of worker threads (For managing connections).  IO Management is
+#           done by a set of threads currently equal to the number of
+#           processors in the system. The number of threads in the threadpool
+#           is configured via rpc_min_threads and rpc_max_threads.  (Connection
+#           pooling is strongly recommended in this case too.) 
+
+rpc_server_type: sync
+
 # Uncomment rpc_min|max|thread to set request pool size.
-# You would primarily set max as a safeguard against misbehaved
-# clients; if you do hit the max, Cassandra will block until
-# one disconnects before accepting more.  The defaults are
-# min of 16 and max unlimited.
+# You would primarily set max for the sync server to safeguard against
+# misbehaved clients; if you do hit the max, Cassandra will block until one
+# disconnects before accepting more.  The defaults are min of 16 and max
+# unlimited.
+# 
+# For the Hsha server, you would set the max so that a fair amount of resources
+# are provided to the other working threads on the server.
+#
+# This configuration is not used for the async server.
 #
 # rpc_min_threads: 16
 # rpc_max_threads: 2048
@@ -233,7 +255,7 @@ incremental_backups: false
 snapshot_before_compaction: false
 
 # change this to increase the compaction thread's priority.  In java, 1 is the
-# lowest priority and that is our default.
+# lowest priority and that is our default.  The highest allowed is 5.
 # compaction_thread_priority: 1
 
 # Add column indexes to a row after its contents reach this size.
@@ -250,13 +272,15 @@ column_index_size_in_kb: 64
 # will be logged specifying the row key.
 in_memory_compaction_limit_in_mb: 64
 
-# Number of compaction threads. This default to the number of processors,
-# enabling multiple compactions to execute at once. Using more than one
-# thread is highly recommended to preserve read performance in a mixed
-# read/write workload as this avoids sstables from accumulating during long
-# running compactions. The default is usually fine and if you experience
-# problems with compaction running too slowly or too fast, you should look at
+# Number of simultaneous compactions to allow, NOT including
+# validation "compactions" for anti-entropy repair. This defaults to
+# the number of cores. This can help preserve read performance in a
+# mixed read/write workload, by mitigating the tendency of small
+# sstables to accumulate during a single long running compactions. The
+# default is usually fine and if you experience problems with
+# compaction running too slowly or too fast, you should look at
 # compaction_throughput_mb_per_sec first.
+#
 # Uncomment to make compaction mono-threaded.
 #concurrent_compactors: 1
 
@@ -264,7 +288,8 @@ in_memory_compaction_limit_in_mb: 64
 # system. The faster you insert data, the faster you need to compact in
 # order to keep the sstable count down, but in general, setting this to
 # 16 to 32 times the rate you are inserting data is more than sufficient.
-# Setting this to 0 disables throttling.
+# Setting this to 0 disables throttling. Note that this account for all types
+# of compaction, including validation compaction.
 compaction_throughput_mb_per_sec: 16
 
 # Track cached row keys during compaction, and re-cache their new
@@ -273,7 +298,7 @@ compaction_throughput_mb_per_sec: 16
 compaction_preheat_key_cache: true
 
 # Time to wait for a reply from other nodes before failing the command 
-rpc_timeout_in_ms: 1000
+rpc_timeout_in_ms: 10000
 
 # phi value that must be reached for a host to be marked down.
 # most users should never need to adjust this.
@@ -355,9 +380,16 @@ request_scheduler: org.apache.cassandra.scheduler.NoScheduler
 # the request scheduling. Currently the only valid option is keyspace.
 # request_scheduler_id: keyspace
 
-# The Index Interval determines how large the sampling of row keys
-#  is for a given SSTable. The larger the sampling, the more effective
-#  the index is at the cost of space.
+# index_interval controls the sampling of entries from the primrary
+# row index in terms of space versus time.  The larger the interval,
+# the smaller and less effective the sampling will be.  In technicial
+# terms, the interval coresponds to the number of index entries that
+# are skipped between taking each sample.  All the sampled entries
+# must fit in memory.  Generally, a value between 128 and 512 here
+# coupled with a large key cache size on CFs results in the best trade
+# offs.  This value is not often changed, however if you have many
+# very small rows (many to an OS page), then increasing this will
+# often lower memory usage without a impact on performance.
 index_interval: 128
 
 # Enable or disable inter-node encryption
