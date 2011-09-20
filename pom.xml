@@ -55,7 +55,7 @@
         <dependency>
             <groupId>me.prettyprint</groupId>
             <artifactId>hector-core</artifactId>
-            <version>0.8.0-1</version>
+            <version>0.8.0-2</version>
             <!-- I don't think this should be needed, but Eclipse keeps coming up with the 0.8.1 version -->
             <exclusions>
                 <exclusion><groupId>org.apache.cassandra</groupId><artifactId>cassandra-all</artifactId></exclusion>
