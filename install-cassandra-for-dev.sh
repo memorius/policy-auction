@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cassandra_version='0.8.2'
+cassandra_version='0.8.6'
 
 trap_err () {
     err=$?
