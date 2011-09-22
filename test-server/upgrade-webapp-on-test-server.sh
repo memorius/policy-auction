@@ -34,10 +34,11 @@ if [ -z "$username" ] || [ -z "$server_host" ]; then
     exit_with_error "Empty host or username" 2
 fi
 
+echo "Building war..."
 mvn clean package
 
 echo "Copying war to target server..."
-scp target/policy-auction.war "${username}@${server_host}:~/policy-auction.war"
+scp test-server/remote/upgrade-policy-auction-war.sh target/policy-auction.war "${username}@${server_host}:~/"
 
 echo "...copied ok, installing..."
 ssh -t "${username}@${server_host}" sudo "~/upgrade-policy-auction-war.sh"
