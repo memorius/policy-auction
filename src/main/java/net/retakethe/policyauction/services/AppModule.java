@@ -2,9 +2,11 @@ package net.retakethe.policyauction.services;
 
 import java.io.IOException;
 
+import net.retakethe.policyauction.annotations.RestrictedPage;
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.data.impl.manager.DAOManagerImpl;
-import net.retakethe.policyauction.services.filters.PublicPageFilter;
+import net.retakethe.policyauction.services.filters.RestrictedPageFilter;
+
 import net.retakethe.policyauction.services.impl.EmailSenderImpl;
 
 import org.apache.tapestry5.SymbolConstants;
@@ -139,11 +141,11 @@ public class AppModule
     }
     
 	/**
-	 * Contribute component request handler - in this case the Public page protection filter - all page classes not marked @publicpage will not render unless the user is logged in.
+	 * Contribute component request handler - in this case the restricted page protection filter - all page classes marked {@link RestrictedPage} will not render unless the user is logged in.
 	 *
 	 * @param configuration the configuration
 	 */
 	public void contributeComponentRequestHandler(OrderedConfiguration<ComponentRequestFilter> configuration) {
-		configuration.addInstance("PublicPageFilter", PublicPageFilter.class);
+		configuration.addInstance("RestrictedPageFilter", RestrictedPageFilter.class);
 	}
 }

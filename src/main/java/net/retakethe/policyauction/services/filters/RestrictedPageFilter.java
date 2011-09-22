@@ -21,9 +21,9 @@ import org.apache.tapestry5.services.Response;
 import org.slf4j.Logger;
 
 /**
- * The Class PublicPageFilter. Designed to protect pages and redirect to logon page should a user not be logged on/in session.
+ * The Class RestrictedPageFilter. Designed to protect pages and redirect to logon page should a user not be logged on/in session.
  */
-public class PublicPageFilter implements ComponentRequestFilter {
+public class RestrictedPageFilter implements ComponentRequestFilter {
 
 	private final PageRenderLinkSource pageRenderLinkSource;
 	private final ComponentSource componentSource;
@@ -31,7 +31,7 @@ public class PublicPageFilter implements ComponentRequestFilter {
 	private ApplicationStateManager sessionStateManager;
 	private final Logger logger;
 	
-	public PublicPageFilter(PageRenderLinkSource pageRenderLinkSource, ComponentSource componentSource,
+	public RestrictedPageFilter(PageRenderLinkSource pageRenderLinkSource, ComponentSource componentSource,
 			Response response, ApplicationStateManager asm, Logger logger) {
 		this.pageRenderLinkSource = pageRenderLinkSource;
 		this.componentSource = componentSource;
@@ -77,7 +77,10 @@ public class PublicPageFilter implements ComponentRequestFilter {
 			if (sessionStateManager.exists(User.class)) {
 				if (allowedRoles != null && allowedRoles.length > 0) {
 					for (UserRole pageRoles : allowedRoles) {
-						if (sessionStateManager.get(User.class).getRoles().contains(pageRoles)) {
+						// No annotation was set as a specific role
+						if (pageRoles.equals(UserRole.NONE)) {
+							return true;
+						} else if (sessionStateManager.get(User.class).getRoles().contains(pageRoles)) {
 							return true;
 						}
 					}

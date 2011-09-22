@@ -2,7 +2,6 @@ package net.retakethe.policyauction.pages;
 
 import java.util.Date;
 
-import net.retakethe.policyauction.annotations.PublicPage;
 import net.retakethe.policyauction.entities.User;
 
 import org.apache.tapestry5.annotations.SessionState;
@@ -10,7 +9,6 @@ import org.apache.tapestry5.annotations.SessionState;
 /**
  * Start page of application policy-auction.
  */
-@PublicPage
 public class Index {
 	@SessionState(create=false)
 	private User currentUser;

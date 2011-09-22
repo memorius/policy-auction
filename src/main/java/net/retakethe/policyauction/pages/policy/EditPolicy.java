@@ -1,5 +1,6 @@
 package net.retakethe.policyauction.pages.policy;
 
+import net.retakethe.policyauction.annotations.RestrictedPage;
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.entities.EntityFactory;
 import net.retakethe.policyauction.entities.PolicyDetails;
@@ -9,7 +10,7 @@ import org.apache.tapestry5.annotations.Persist;
 import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
-
+@RestrictedPage
 public class EditPolicy {
 
     @Property

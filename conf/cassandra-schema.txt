@@ -99,9 +99,6 @@ create column family users
         }, {
             column_name: vote_salary_date,
             validation_class: LongType
-        }, {
-            column_name: user_role,
-            validation_class: UTF8Type
         }
     ];
 

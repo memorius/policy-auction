@@ -1,6 +1,5 @@
 package net.retakethe.policyauction.pages.session;
 
-import net.retakethe.policyauction.annotations.PublicPage;
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.entities.User;
 import net.retakethe.policyauction.pages.Index;
@@ -18,7 +17,6 @@ import org.apache.tapestry5.ioc.annotations.Inject;
 /**
  * The Class NewSession. Page used for a user to logon to the system.
  */
-@PublicPage
 public class NewSession {
 	
 	@SessionState

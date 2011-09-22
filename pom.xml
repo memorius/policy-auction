@@ -140,7 +140,11 @@
             <version>${tapestry-release-version}</version>
             <scope>test</scope>
         </dependency>
-
+         <dependency>
+             <groupId>org.chenillekit</groupId>
+             <artifactId>chenillekit-tapestry</artifactId>
+             <version>1.3.2</version>
+         </dependency>
         <!-- Provided by the servlet container, but sometimes referenced in the application
        code. -->
         <dependency>

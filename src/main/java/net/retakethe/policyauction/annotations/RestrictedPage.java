@@ -12,5 +12,5 @@ import net.retakethe.policyauction.data.api.types.UserRole;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RestrictedPage {
-	UserRole[] allowedRoles();
+	UserRole[] allowedRoles() default {UserRole.NONE};
 }

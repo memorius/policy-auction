@@ -5,11 +5,22 @@
 
     <p>${createOrUpdate} User</p>
 
-    <t:beaneditform object="user" submitlabel="${createOrUpdate}" >
-      <t:parameter name="password">
+    <t:beaneditform submitlabel="${createOrUpdate}" object="user" add="roles, repeatPassword" reorder="username,passwordHash,repeatPassword,email,firstName,lastName,showRealName,roles">
+    <t:parameter name="password">
       <t:label for="password"/>
       <t:passwordfield t:id="password" value="user.passwordHash"/>
     </t:parameter>
+    <t:parameter name="repeatPassword">
+      <t:label for="repeatPassword"/>
+      <t:passwordfield t:id="repeatPassword" value="repeatPassword"/>
+    </t:parameter>
+    
+    <t:parameter name="roles">
+        <t:Loop t:source="myMap.keySet()" t:value="currentKey"> 
+            <input type="checkbox" t:type="checkbox" t:id="checkbox" t:value="currentValue"/>
+            <label t:type="Label" for="checkbox">${mapValue}</label>
+        </t:Loop>
+    </t:parameter>
     </t:beaneditform>
-
+    
 </html>

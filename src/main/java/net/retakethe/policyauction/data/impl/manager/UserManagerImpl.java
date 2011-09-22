@@ -60,8 +60,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.SHOW_REAL_NAME,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.CREATED_TIMESTAMP,
                 (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP,
-                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_DATE,
-                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.USER_ROLE);
+                (NamedColumn<UserID, MillisTimestamp, String, ?>) Schema.USERS.VOTE_SALARY_DATE);
         SliceQuery<UserID, MillisTimestamp, String> query =
                 Schema.USERS.createSliceQuery(getKeyspaceManager(), userID, list);
 
@@ -288,18 +287,12 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                 new ArrayList<NamedColumn<UserID, MillisTimestamp, String, ?>>(1);
         list.add(Schema.USER_ROLES.USER_ROLE);
         RangeSlicesQuery<UserID, MillisTimestamp, String> query =
-                Schema.USERS.createRangeSlicesQuery(getKeyspaceManager(), list);
+                Schema.USER_ROLES.createRangeSlicesQuery(getKeyspaceManager(), list);
+        query.setKeys(userID, userID);
+        
+        QueryResult<OrderedRows<UserID, MillisTimestamp, String>> queryResult = query.execute();
 
-        // TODO: may need paging of data once we have more than a few hundred.
-        //       This may need some sort of indexing since we're using RandomPartitioner,
-        //       in order to return them in a useful order.
-        query.setRowCount(1000);
-        // TODO: needed?
-        // query.setKeys("fake_key_0", "fake_key_4");
-
-        QueryResult<OrderedRows<UserID, MillisTimestamp, String>> result = query.execute();
-
-        OrderedRows<UserID, MillisTimestamp, String> orderedRows = result.get();
+        OrderedRows<UserID, MillisTimestamp, String> orderedRows = queryResult.get();
         if (orderedRows == null) {
             return Collections.emptyList();
         }
