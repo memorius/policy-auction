@@ -34,7 +34,6 @@ if [ -z "$username" ] || [ -z "$server_host" ]; then
     exit_with_error "Empty host or username" 2
 fi
 
-cd ..
 mvn clean package
 
 echo "Copying war to target server..."
