@@ -37,8 +37,11 @@ fi
 echo "Building war..."
 mvn clean package
 
-echo "Copying war to target server..."
-scp test-server/remote/upgrade-policy-auction-war.sh target/policy-auction.war "${username}@${server_host}:~/"
+echo "Copying files to target server..."
+scp test-server/remote/*.sh \
+    conf/cassandra-schema.txt \
+    target/policy-auction.war \
+    "${username}@${server_host}:~/"
 
-echo "...copied ok, stopping/upgrading/installing..."
-ssh -t "${username}@${server_host}" sudo "~/upgrade-policy-auction-war.sh"
+echo "...copied ok, stopping/deleting/installing..."
+ssh -t "${username}@${server_host}" sudo "~/delete-db-and-recreate-schema-and-upgrade-webapp.sh"

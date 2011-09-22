@@ -34,11 +34,8 @@ if [ -z "$username" ] || [ -z "$server_host" ]; then
     exit_with_error "Empty host or username" 2
 fi
 
-echo "Building war..."
-mvn clean package
+echo "Copying script to target server..."
+scp test-server/remote/stop-everything.sh "${username}@${server_host}:~/"
 
-echo "Copying war to target server..."
-scp test-server/remote/upgrade-policy-auction-war.sh target/policy-auction.war "${username}@${server_host}:~/"
-
-echo "...copied ok, stopping/upgrading/installing..."
-ssh -t "${username}@${server_host}" sudo "~/upgrade-policy-auction-war.sh"
+echo "...copied ok, stopping everything..."
+ssh -t "${username}@${server_host}" sudo "~/stop-everything.sh"

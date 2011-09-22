@@ -24,6 +24,8 @@ exit_with_error () {
 
 trap trap_err ERR && set -o errexit
 
+pid_file=/var/run/cassandra/cassandra.pid
+
 if [ "$(whoami)" != "root" ]; then
     exit_with_error "Error: must be run as root (try 'sudo $0')"
 fi
@@ -36,18 +38,18 @@ while pgrep -f tomcat ; do
     sleep 1
 done
 
-echo "Removing old war..."
-rm -rf /var/lib/tomcat5/webapps/policy-auction.war /var/lib/tomcat5/webapps/policy-auction
+if [ -f "$pid_file" ]; then
+    pid="$(cat "$pid_file")"
 
-echo "Installing new war..."
-install -T --owner=tomcat --group=tomcat --mode=u=rw,g=rw,o= ~/policy-auction.war /var/lib/tomcat5/webapps/policy-auction.war
+    echo "Stopping cassandra process $pid..."
+    kill "$pid"
+    rm "$pid_file"
+fi
 
-echo "Restarting tomcat..."
-/etc/init.d/tomcat5 restart
-
-while ! pgrep -f tomcat ; do
-    echo "Waiting for tomcat process to appear..."
+while pgrep -f cassandra ; do
+    echo "Waiting for cassandra to go away..."
     sleep 1
 done
 
+echo
 echo "Done."
