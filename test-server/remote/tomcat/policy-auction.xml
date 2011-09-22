@@ -12,17 +12,17 @@
     <!-- Replace the placeholders below with your own values -->
 
     <Parameter name="net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-accessKey"
-               value="DUMMY_PLACEHOLDER_VALUE" override="true"/>
+               value="DUMMY_PLACEHOLDER_VALUE" override="false"/>
 
     <Parameter name="net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-secretKey"
-               value="DUMMY_PLACEHOLDER_VALUE" override="true"/>
+               value="DUMMY_PLACEHOLDER_VALUE" override="false"/>
 
     <Parameter name="net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-hosts"
-               value="localhost:9160" override="true"/>
+               value="localhost:9160" override="false"/>
 
     <Parameter name="net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-username"
-               value="webapp" override="true"/>
+               value="webapp" override="false"/>
 
     <Parameter name="net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-password"
-               value="DUMMY_PLACEHOLDER_VALUE" override="true"/>
+               value="DUMMY_PLACEHOLDER_VALUE" override="false"/>
 </Context>
