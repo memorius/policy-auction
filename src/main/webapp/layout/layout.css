@@ -118,7 +118,7 @@ div#sidebar p {
 }
 
 div#page_content {
-    height:400px;
+    min-height:400px;
     padding:20px;
 }
 

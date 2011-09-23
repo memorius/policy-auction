@@ -24,6 +24,7 @@ import net.retakethe.policyauction.data.impl.schema.Schema;
 import net.retakethe.policyauction.data.impl.schema.Schema.UserRolesCF;
 import net.retakethe.policyauction.data.impl.schema.Schema.UsersByNameCF;
 import net.retakethe.policyauction.data.impl.schema.Schema.UsersCF;
+import net.retakethe.policyauction.data.impl.schema.Schema.UsersPendingCF;
 import net.retakethe.policyauction.data.impl.schema.column.NamedColumn;
 import net.retakethe.policyauction.data.impl.schema.timestamp.MillisTimestamp;
 import net.retakethe.policyauction.data.impl.types.UserIDImpl;
@@ -84,18 +85,15 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         
         try {
             email = getNonNullColumn(cs, Schema.USERS.EMAIL);
+            createdTimestamp = getNonNullColumn(cs, Schema.USERS.CREATED_TIMESTAMP);
         } catch (NoSuchColumnException e) {
             throw new NoSuchUserException(userID);
         }
-        try {
-        	username = getNonNullColumn(cs, Schema.USERS.USERNAME);
-            passwordHash = getNonNullColumn(cs, Schema.USERS.PASSWORD_HASH);
-            passwordExpiryTimestamp = getNonNullColumn(cs, Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP);
-            
-            createdTimestamp = getNonNullColumn(cs, Schema.USERS.CREATED_TIMESTAMP);
-        } catch (NoSuchColumnException e) {
-            throw new RuntimeException("Invalid user record for key " + userID, e);
-        }
+
+    	username = getColumnOrNull(cs, Schema.USERS.USERNAME);
+        passwordHash = getColumnOrNull(cs, Schema.USERS.PASSWORD_HASH);
+        passwordExpiryTimestamp = getColumnOrNull(cs, Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP);
+
         firstName = getColumnOrNull(cs, Schema.USERS.FIRST_NAME);
         lastName = getColumnOrNull(cs, Schema.USERS.LAST_NAME);
         showRealName = getColumnOrNull(cs, Schema.USERS.SHOW_REAL_NAME);
@@ -129,7 +127,22 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
 
     @Override
     public UserDAO createUser() {
-        return new UserDAOImpl(new UserIDImpl());
+        UserDAOImpl newUserDAO = new UserDAOImpl(new UserIDImpl());
+		return newUserDAO;
+    }
+    
+    @Override
+    public UserDAO activateUser(UserDAO user) {
+    	if (user.getPasswordExpiryTimestamp()!=null) {
+    		throw new IllegalArgumentException("User: " + user.getEmail() + " is already activated");
+    	}
+    	Date now = new Date();
+    	user.setCreatedTimestamp(now);
+    	user.getUserRoles().addAll(getDefaultUserRoles());
+    	
+    	persist(user);
+		
+    	return user;
     }
 
     @Override
@@ -187,19 +200,19 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                         List<UserRole> userRoles;
                         
                         try {
-                            username = getNonNullColumn(cs, Schema.USERS.USERNAME);
-                        	email = getNonNullColumn(cs, Schema.USERS.EMAIL);
-                            
-                            passwordHash = getNonNullColumn(cs, Schema.USERS.PASSWORD_HASH);
-                            passwordExpiryTimestamp = getNonNullColumn(cs, Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP);
-                            
                             createdTimestamp = getNonNullColumn(cs, Schema.USERS.CREATED_TIMESTAMP);
-                            userRoles = getUserRoles(row.getKey());
+                        	email = getNonNullColumn(cs, Schema.USERS.EMAIL);
+                        	userRoles = getUserRoles(row.getKey());
                         } catch (NoSuchColumnException e) {
-                            throw new RuntimeException("Invalid user record for key " + row.getKey(), e);
+                        	throw new RuntimeException("Invalid user record for key " + row.getKey(), e);
                         } catch (NoSuchUserException e) {
-                            throw new RuntimeException("Invalid user record for key " + row.getKey(), e);
+                        	throw new RuntimeException("Invalid user record for key " + row.getKey(), e);
 						}
+                        	username = getColumnOrNull(cs, Schema.USERS.USERNAME);
+                            passwordHash = getColumnOrNull(cs, Schema.USERS.PASSWORD_HASH);
+                            passwordExpiryTimestamp = getColumnOrNull(cs, Schema.USERS.PASSWORD_EXPIRY_TIMESTAMP);
+                            
+
                         firstName = getColumnOrNull(cs, Schema.USERS.FIRST_NAME);
                         lastName = getColumnOrNull(cs, Schema.USERS.LAST_NAME);
                         showRealName = getColumnOrNull(cs, Schema.USERS.SHOW_REAL_NAME);
@@ -214,13 +227,57 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
     }
 
     @Override
-    public void persist(UserDAO user) {
+    public void update(UserDAO user) {
         saveUserDAO(user);
 
         saveUsername(user);
 
         saveUserRoles(user);
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void persist(UserDAO user) {
+    	saveMinimalUserDAO(user);
+        saveNewUser(user);
+        // TODO send email here perhaps...
+    }
+    
+    /**
+     * Save new user (where the user has an email address, uuid and that's it). This is where {@link UsersPendingCF} is used.
+     *
+     * @param user the user
+     */
+    private void saveNewUser(UserDAO user) {
+    	UserID userID = user.getUserID();
+    	
+    	UsersPendingCF usersPendingCF = Schema.USERS_PENDING;
+        MillisTimestamp ts = usersPendingCF.createCurrentTimestamp();
+        Mutator<UserID, MillisTimestamp> usersPendingMutator = usersPendingCF.createMutator(getKeyspaceManager());
+        
+        usersPendingCF.ACTIVATION_CODE.addColumnInsertion(usersPendingMutator, userID, usersPendingCF.createValue(user.getActivationCode(), ts));
+        
+        usersPendingMutator.execute();
+    }
+    
+    
+	/**
+	 * Save minimal user dao, for the initial creation of a new user.
+	 *
+	 * @param user the user
+	 */
+	private void saveMinimalUserDAO(UserDAO user) {
+		UserID userID = user.getUserID();
+
+        UsersCF userscf = Schema.USERS;
+        MillisTimestamp ts = userscf.createCurrentTimestamp();
+        Mutator<UserID, MillisTimestamp> usersMutator = userscf.createMutator(getKeyspaceManager());
+        
+        userscf.EMAIL.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getEmail(), ts));
+        userscf.CREATED_TIMESTAMP.addColumnInsertion(usersMutator, userID, userscf.createValue(user.getCreatedTimestamp(), ts));
+        
+        usersMutator.execute();
+	}
 
 	private void saveUserDAO(UserDAO user) {
 		UserID userID = user.getUserID();
@@ -315,5 +372,18 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                         return userRole;
                     }
                 });
+	}
+	
+	private List<UserRole> getDefaultUserRoles() {
+		List<UserRole> defaultList = new ArrayList<UserRole>();
+		defaultList.add(UserRole.LOGIN);
+		
+		defaultList.add(UserRole.COMMENT_CREATE_REPLY);
+		defaultList.add(UserRole.COMMENT_CREATE_THREAD);
+		
+		defaultList.add(UserRole.POLICY_CREATE);
+		defaultList.add(UserRole.ITEMS_REPORT);
+		
+		return defaultList;
 	}
 }

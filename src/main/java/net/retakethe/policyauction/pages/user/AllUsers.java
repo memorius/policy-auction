@@ -12,7 +12,7 @@ import org.apache.tapestry5.ioc.annotations.Inject;
 public class AllUsers {
 
     @InjectPage
-    private EditUser editUserPage;
+    private NewUser newUserPage;
 
     @Inject
     private DAOManager daoManager;
@@ -22,7 +22,7 @@ public class AllUsers {
     }
 
     public Object onActionFromAdd() {
-    	editUserPage.setup(EntityFactory.makeUser(daoManager.getUserManager().createUser()), false);
-        return editUserPage;
+    	newUserPage.setup(EntityFactory.makeUser(daoManager.getUserManager().createUser()));
+        return newUserPage;
     }
 }

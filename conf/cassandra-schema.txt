@@ -111,6 +111,15 @@ create column family users_by_name
         }
     ];
 
+create column family users_pending
+    with comment = 'Lookup of new userIDs and their activation codes'
+    and comparator = UTF8Type
+    and column_metadata = [{
+            column_name: activation_code,
+            validation_class: UTF8Type
+        }
+    ];
+
 create column family user_roles
     with comment = 'Roles attached to a userID'
     and comparator = UTF8Type

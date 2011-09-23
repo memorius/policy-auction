@@ -1,0 +1,17 @@
+<html t:type="layout" title="Policy Auction - New User"
+      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
+      xmlns:p="tapestry:parameter">
+        <!-- Most of the page content, including <head>, <body>, etc. tags, comes from Layout.tml -->
+
+    <p>New User</p>
+
+    <form t:id="newUserForm">
+    <t:errors/>
+    
+        <t:label for="emailAddress" />:
+        <input type="text" t:type="TextField" t:id="emailAddress" t:value="userEmail" t:validate="required,email" size="30" />
+        
+        <input type="submit" value="Continue"/>
+    </form>
+    
+</html>

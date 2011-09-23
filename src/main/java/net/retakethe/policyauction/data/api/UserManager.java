@@ -29,9 +29,23 @@ public interface UserManager {
     UsernameDAO getUsername(String username) throws NoSuchUserException;
 
     UserDAO createUser();
+    
+    UserDAO activateUser(UserDAO user);
 
     List<UserDAO> getAllUsers();
 
+    /**
+     * Update a user object (in the cassandra database).
+     *
+     * @param user the user
+     */
+    void update(UserDAO user);
+
+    /**
+     * Persist, the initial step in a user creation process. The user is expected to have stored against them: a userID, email address and activationCode.
+     *
+     * @param user the user
+     */
     void persist(UserDAO user);
 
 	void deleteUser(UserDAO user);

@@ -39,4 +39,7 @@ public interface UserDAO extends Serializable {
 	List<UserRole> getUserRoles();
 	void setUserRoles(List<UserRole> userRole);
 	
+	String getActivationCode();
+	void setActivationCode(String activationCode);
+	
 }

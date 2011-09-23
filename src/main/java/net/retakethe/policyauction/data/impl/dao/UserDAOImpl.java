@@ -31,6 +31,8 @@ public class UserDAOImpl implements UserDAO {
 	private Date voteSalaryDate;
 
 	private List<UserRole> userRoles;
+	
+	private String activationCode;
 
 	public UserDAOImpl(final UserID userID) {
 		if (userID == null ){
@@ -172,5 +174,15 @@ public class UserDAOImpl implements UserDAO {
 	@Override
 	public void setUserRoles(final List<UserRole> userRole) {
 		this.userRoles = userRole;
+	}
+
+	@Override
+	public String getActivationCode() {
+		return activationCode;
+	}
+
+	@Override
+	public void setActivationCode(String activationCode) {
+		this.activationCode = activationCode;
 	}
 }

@@ -56,6 +56,8 @@ public final class Schema {
     
     public static final UsersCF USERS = new UsersCF();
     
+    public static final UsersPendingCF USERS_PENDING = new UsersPendingCF();
+    
     public static final UsersByNameCF USERS_BY_NAME = new UsersByNameCF();
     
     public static final UserRolesCF USER_ROLES = new UserRolesCF();
@@ -187,6 +189,15 @@ public final class Schema {
     	}
     }
 
+    public static final class UsersPendingCF extends ColumnFamily<UserID, MillisTimestamp, String> {
+
+    	public final NamedColumn<UserID, MillisTimestamp, String, String> ACTIVATION_CODE;
+    	private UsersPendingCF() {
+    		super(SchemaKeyspace.MAIN, "users_pending", Type.USER_ID, MillisTimestampFactory.get(), Type.UTF8);
+    		ACTIVATION_CODE = new StringStringColumn<UserID, MillisTimestamp>("activation_code", this);
+    		addCF(this);
+    	}
+    }
     public static final class UserRolesCF extends ColumnFamily<UserID, MillisTimestamp, String> {
 
     	public final NamedColumn<UserID, MillisTimestamp, String, UserRole> USER_ROLE;

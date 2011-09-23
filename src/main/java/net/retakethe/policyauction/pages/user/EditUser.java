@@ -1,6 +1,10 @@
 package net.retakethe.policyauction.pages.user;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
@@ -19,11 +23,15 @@ public class EditUser {
 	@Persist
 	private User user;
 	
+	@SuppressWarnings("unused")
 	@Property
 	private String repeatPassword;
 	
 	@Property
 	private Object currentKey;
+	
+	@Persist
+	private Set<UserRole> selection;
 	
 	private boolean isExisting;
 
@@ -36,6 +44,7 @@ public class EditUser {
 	public void setup(final User user, final boolean isExisting) {
 		this.user = user;
 		this.isExisting = isExisting;
+		this.selection = new HashSet<UserRole>();
 	}
 
 	public String getCreateOrUpdate() {
@@ -56,23 +65,31 @@ public class EditUser {
 		daoManager.getUserManager().persist(userDAO);
 		return allUsersPage;
 	}
-	
+
+	public Map<String,UserRole> getMyMap() {
+	    HashMap<String, UserRole> hashMap = new HashMap<String, UserRole>();
+	    for (UserRole role : UserRole.values()) {
+	    	hashMap.put(role.toString(), role);
+	    }
+		return hashMap;
+	}
+
 	public boolean getCurrentValue() {
-	     return user.getRoles().contains(this.currentKey);
+	     return this.selection.contains(this.currentKey);
 	}
 
 	public void setCurrentValue(final boolean currentValue) {
-	    final UserRole mapValue = this.getEnumValue();
+	    final UserRole mapValue = this.getMapValue();
 
 	    if (currentValue) {
-	        user.getRoles().add(mapValue);
+	        this.selection.add(mapValue);
 	    } else {
 	        this.selection.remove(mapValue);
 	    }
 	}
 
 
-	public UserRole getEnumValue() {
+	public UserRole getMapValue() {
 	    return this.getMyMap().get(this.currentKey);
 	}
 }
