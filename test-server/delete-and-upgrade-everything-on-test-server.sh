@@ -34,8 +34,7 @@ if [ -z "$username" ] || [ -z "$server_host" ]; then
     exit_with_error "Empty host or username" 2
 fi
 
-echo "Building war..."
-mvn clean package
+"$(dirname "$0")/build-war.sh"
 
 echo "Copying files to target server..."
 scp test-server/remote/*.sh \

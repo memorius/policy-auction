@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app
+        PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+        "http://java.sun.com/dtd/web-app_2_3.dtd">
+<web-app>
+    <display-name>policy-auction Tapestry 5 Application</display-name>
+    <context-param>
+        <!-- The only significant configuration for Tapestry 5, this informs Tapestry
+of where to look for pages, components and mixins. -->
+        <param-name>tapestry.app-package</param-name>
+        <param-value>net.retakethe.policyauction</param-value>
+    </context-param>
+
+    <context-param>
+        <!-- Value as obtained from Amazon Web Services account page -->
+        <param-name>net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-accessKey</param-name>
+        <param-value>DUMMY_PLACEHOLDER_VALUE</param-value>
+    </context-param>
+    <context-param>
+        <!-- Value as obtained from Amazon Web Services account page -->
+        <param-name>net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-secretKey</param-name>
+        <param-value>DUMMY_PLACEHOLDER_VALUE</param-value>
+    </context-param>
+    <context-param>
+        <!-- Comma-separated 'host:port,host:port' or just 'host,host' -->
+        <param-name>net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-hosts</param-name>
+        <param-value>localhost:9160</param-value>
+    </context-param>
+    <context-param>
+        <!-- As in Cassandra passwd.properties -->
+        <param-name>net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-username</param-name>
+        <param-value>webapp</param-value>
+    </context-param>
+    <context-param>
+        <!-- As in Cassandra passwd.properties -->
+        <param-name>net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-password</param-name>
+        <param-value>j253tDL3OA61zq</param-value>
+    </context-param>
+
+    <filter>
+        <filter-name>app</filter-name>
+        <filter-class>org.apache.tapestry5.TapestryFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>app</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Protected Site</web-resource-name>
+            <!-- Protect the entire site -->
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <!-- Roles that have access -->
+            <role-name>policyauction</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <!-- HTTP BASIC authentication -->
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>HTTP Basic Authentication</realm-name>
+    </login-config>
+
+    <!-- Define security roles -->
+    <security-role>
+        <description>Role for access to this webapp</description>
+        <role-name>policy-auction</role-name>
+    </security-role>
+</web-app>
