@@ -1,0 +1,14 @@
+<html t:type="layout" title="Policy Auction - ${titleMessage}"
+      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
+      xmlns:p="tapestry:parameter">
+        <!-- Most of the page content, including <head>, <body>, etc. tags, comes from Layout.tml -->
+
+    <p>{titleMessage}</p>
+    
+    <p>{errorMessage}</p>
+
+    <p>
+        <t:pagelink page="Index">Back to home</t:pagelink>
+    </p>
+
+</html>

@@ -3,6 +3,7 @@ package net.retakethe.policyauction.data.api;
 import java.util.List;
 
 import net.retakethe.policyauction.data.api.dao.UserDAO;
+import net.retakethe.policyauction.data.api.dao.UserPendingDAO;
 import net.retakethe.policyauction.data.api.dao.UsernameDAO;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.api.types.UserRole;
@@ -25,6 +26,8 @@ public interface UserManager {
     List<UserRole> getUserRoles(UserID userID) throws NoSuchUserException;
 
     UserDAO getUser(UserID userID) throws NoSuchUserException;
+
+    UserPendingDAO getUserPending(String email) throws NoSuchUserException;
     
     UsernameDAO getUsername(String username) throws NoSuchUserException;
 
@@ -49,4 +52,5 @@ public interface UserManager {
     void persist(UserDAO user);
 
 	void deleteUser(UserDAO user);
+
 }

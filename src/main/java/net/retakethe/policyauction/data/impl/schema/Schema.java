@@ -189,12 +189,14 @@ public final class Schema {
     	}
     }
 
-    public static final class UsersPendingCF extends ColumnFamily<UserID, MillisTimestamp, String> {
+    public static final class UsersPendingCF extends ColumnFamily<String, MillisTimestamp, String> {
 
-    	public final NamedColumn<UserID, MillisTimestamp, String, String> ACTIVATION_CODE;
+    	public final NamedColumn<String, MillisTimestamp, String, UserID> USER_ID;
+    	public final NamedColumn<String, MillisTimestamp, String, String> ACTIVATION_CODE;
     	private UsersPendingCF() {
-    		super(SchemaKeyspace.MAIN, "users_pending", Type.USER_ID, MillisTimestampFactory.get(), Type.UTF8);
-    		ACTIVATION_CODE = new StringStringColumn<UserID, MillisTimestamp>("activation_code", this);
+    		super(SchemaKeyspace.MAIN, "users_pending", Type.UTF8, MillisTimestampFactory.get(), Type.UTF8);
+    		USER_ID = new StringNamedColumn<String, MillisTimestamp, UserID>("user_id", this, Type.USER_ID);
+    		ACTIVATION_CODE = new StringStringColumn<String, MillisTimestamp>("activation_code", this);
     		addCF(this);
     	}
     }

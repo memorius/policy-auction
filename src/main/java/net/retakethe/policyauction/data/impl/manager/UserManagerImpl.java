@@ -8,10 +8,12 @@ import java.util.List;
 import me.prettyprint.hector.api.query.QueryResult;
 import net.retakethe.policyauction.data.api.UserManager;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
+import net.retakethe.policyauction.data.api.dao.UserPendingDAO;
 import net.retakethe.policyauction.data.api.dao.UsernameDAO;
 import net.retakethe.policyauction.data.api.types.UserID;
 import net.retakethe.policyauction.data.api.types.UserRole;
 import net.retakethe.policyauction.data.impl.dao.UserDAOImpl;
+import net.retakethe.policyauction.data.impl.dao.UserPendingDAOImpl;
 import net.retakethe.policyauction.data.impl.dao.UsernameDAOImpl;
 import net.retakethe.policyauction.data.impl.query.api.ColumnSlice;
 import net.retakethe.policyauction.data.impl.query.api.KeyspaceManager;
@@ -122,6 +124,25 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
 			return new UsernameDAOImpl(getNonNullColumn(cs, Schema.USERS_BY_NAME.USER_ID), username);
 		} catch (NoSuchColumnException e) {
 			throw new RuntimeException("Invalid username record for key " + username, e);
+		}
+    }
+    
+    @Override
+    public UserPendingDAO getUserPending(String email) throws NoSuchUserException {
+
+    	List<NamedColumn<String, MillisTimestamp, String, ?>> list = CollectionUtils.list(
+                (NamedColumn<String, MillisTimestamp, String, ?>) Schema.USERS_PENDING.USER_ID,
+                (NamedColumn<String, MillisTimestamp, String, ?>) Schema.USERS_PENDING.ACTIVATION_CODE);
+        SliceQuery<String, MillisTimestamp, String> query =
+                Schema.USERS_PENDING.createSliceQuery(getKeyspaceManager(), email, list);
+
+        QueryResult<ColumnSlice<MillisTimestamp, String>> queryResult = query.execute();
+
+        ColumnSlice<MillisTimestamp, String> cs = queryResult.get();
+        try {
+			return new UserPendingDAOImpl(email, getNonNullColumn(cs, Schema.USERS_PENDING.USER_ID), getNonNullColumn(cs, Schema.USERS_PENDING.ACTIVATION_CODE));
+		} catch (NoSuchColumnException e) {
+			throw new RuntimeException("Invalid user pending record for key " + email, e);
 		}
     }
 
@@ -250,13 +271,14 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
      */
     private void saveNewUser(UserDAO user) {
     	UserID userID = user.getUserID();
+    	String userEmail = user.getEmail();
     	
     	UsersPendingCF usersPendingCF = Schema.USERS_PENDING;
         MillisTimestamp ts = usersPendingCF.createCurrentTimestamp();
-        Mutator<UserID, MillisTimestamp> usersPendingMutator = usersPendingCF.createMutator(getKeyspaceManager());
+        Mutator<String, MillisTimestamp> usersPendingMutator = usersPendingCF.createMutator(getKeyspaceManager());
         
-        usersPendingCF.ACTIVATION_CODE.addColumnInsertion(usersPendingMutator, userID, usersPendingCF.createValue(user.getActivationCode(), ts));
-        
+        usersPendingCF.ACTIVATION_CODE.addColumnInsertion(usersPendingMutator, userEmail, usersPendingCF.createValue(user.getActivationCode(), ts));
+        usersPendingCF.USER_ID.addColumnInsertion(usersPendingMutator, userEmail, usersPendingCF.createValue(userID, ts));
         usersPendingMutator.execute();
     }
     

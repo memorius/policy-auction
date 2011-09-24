@@ -12,7 +12,7 @@ import net.retakethe.policyauction.entities.User;
  */
 public class Security {
 	
-	public static final User AuthenticateUser(final DAOManager daoManager, final String username, final String password) {
+	public static final User authenticateUser(final DAOManager daoManager, final String username, final String password) {
 		UserManager userManager = daoManager.getUserManager();
 		
 		try {
@@ -25,5 +25,4 @@ public class Security {
 		}
 		return null;
 	}
-
 }
