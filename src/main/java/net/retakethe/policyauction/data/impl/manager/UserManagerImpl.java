@@ -78,7 +78,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         
         String firstName;
         String lastName;
-        Boolean showRealName = false;
+        boolean showRealName = false;
         Date createdTimestamp;
         Date voteSalaryLastPaidTimestamp;
         Date voteSalaryDate;
@@ -98,7 +98,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
 
         firstName = getColumnOrNull(cs, Schema.USERS.FIRST_NAME);
         lastName = getColumnOrNull(cs, Schema.USERS.LAST_NAME);
-        showRealName = getColumnOrNull(cs, Schema.USERS.SHOW_REAL_NAME);
+        showRealName = getColumnOrDefault(cs, Schema.USERS.SHOW_REAL_NAME, false);
 
         voteSalaryLastPaidTimestamp = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP);
         voteSalaryDate = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_DATE);
@@ -249,6 +249,9 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
 
     @Override
     public void update(UserDAO user) {
+    	// Clear the pending user details.
+    	deleteUserPending(user);
+    	
         saveUserDAO(user);
 
         saveUsername(user);
@@ -357,6 +360,18 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         m.execute();
         usersByNameMutator.execute();
 
+        // TODO: this will need to delete from other ColumnFamilies too and trigger recalcs
+    }
+    
+
+    @Override
+    public void deleteUserPending(UserDAO user) {
+
+        Mutator<String, MillisTimestamp> m = Schema.USERS_PENDING.createMutator(getKeyspaceManager());
+        
+        Schema.USERS_PENDING.addRowDeletion(m, user.getEmail());
+
+        m.execute();
         // TODO: this will need to delete from other ColumnFamilies too and trigger recalcs
     }
 

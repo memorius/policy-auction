@@ -117,7 +117,7 @@ create column family users_pending
     and column_metadata = [{
             column_name: user_id,
             validation_class: TimeUUIDType
-        }, 	{
+        }, {
 		    column_name: activation_code,
             validation_class: UTF8Type
         }

@@ -53,4 +53,6 @@ public interface UserManager {
 
 	void deleteUser(UserDAO user);
 
+	void deleteUserPending(UserDAO user);
+
 }

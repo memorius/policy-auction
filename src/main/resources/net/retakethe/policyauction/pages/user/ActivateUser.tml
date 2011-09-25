@@ -1,0 +1,42 @@
+<html t:type="layout" title="Policy Auction - Activate User"
+      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
+      xmlns:p="tapestry:parameter">
+        <!-- Most of the page content, including <head>, <body>, etc. tags, comes from Layout.tml -->
+
+    <p>Activate User</p>
+
+    <form t:id="activateUserForm">
+        <t:errors/>
+        <fieldset>
+            <t:label for="username" />:
+            <input type="text" t:type="TextField" t:id="username" t:value="username" t:validate="required,minlength=4" size="30" />
+            <br />
+            <t:label for="password" />:
+            <input type="text" t:type="PasswordField" t:id="password" t:value="password" t:validate="required,minlength=4" size="30" />
+            <br />
+            <t:label for="repeatPassword" />:
+            <input type="text" t:type="PasswordField" t:id="repeatPassword" t:value="repeatPassword" t:validate="required,minlength=4" size="30" />
+            <br />
+        </fieldset>
+        <fieldset>
+            <t:label for="firstName" />:
+            <input type="text" t:type="TextField" t:id="firstName" t:value="firstName" t:validate="required" size="30" />
+            <br />
+            <t:label for="lastName" />:
+            <input type="text" t:type="TextField" t:id="lastName" t:value="lastName" t:validate="required" size="30" />
+            <br />
+            <t:label for="showRealName" />:
+            <input type="text" t:type="CheckBox" t:id="showRealName" t:value="showRealName" />
+            <br />
+        </fieldset>
+        <fieldset>
+            <t:Loop t:source="myMap.keySet()" t:value="currentKey"> 
+                <input type="Checkbox" t:type="Checkbox" t:id="checkbox" t:value="currentValue"/>
+                <label t:type="Label" for="checkbox">${mapValue}</label>
+                <br />
+            </t:Loop>
+        </fieldset>
+        <input type="submit" value="Continue"/>
+    </form>
+    
+</html>

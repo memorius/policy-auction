@@ -46,7 +46,7 @@ public class NewUser {
 		UserDAO userDAO = EntityFactory.getUserDAO(user);
 		// Create the other fields behind the scene before we save.
 		userDAO.setEmail(userEmail);
-		userDAO.setActivationCode("this is a secret ok guys?");
+		userDAO.setActivationCode("testCode");
 		userDAO.setCreatedTimestamp(new Date());
 		daoManager.getUserManager().persist(userDAO);
 		return indexPage;

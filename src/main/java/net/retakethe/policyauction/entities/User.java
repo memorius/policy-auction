@@ -93,14 +93,26 @@ public class User implements Serializable {
 		return userDAO.getPasswordExpiryTimestamp();
 	}
 
+	public void setPasswordExpiryTimestamp(final Date passwordExpiryTimestamp) {
+		userDAO.setPasswordExpiryTimestamp(passwordExpiryTimestamp);
+	}
+
 	@NonVisual
 	public Date getVoteSalaryLastPaidTimestamp() {
 		return userDAO.getVoteSalaryLastPaidTimestamp();
 	}
 
+	public void setVoteSalaryLastPaidTimestamp(final Date voteSalaryLastPaidTimestamp) {
+		userDAO.setVoteSalaryLastPaidTimestamp(voteSalaryLastPaidTimestamp);
+	}
+
 	@NonVisual
 	public Date getVoteSalaryDate() {
 		return userDAO.getVoteSalaryDate();
+	}
+
+	public void setVoteSalaryDate(final Date voteSalaryDate) {
+		userDAO.setVoteSalaryDate(voteSalaryDate);
 	}
 
 	public List<UserRole> getRoles() {
