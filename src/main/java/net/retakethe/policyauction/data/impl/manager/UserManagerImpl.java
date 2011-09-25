@@ -213,7 +213,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
                         
                         String firstName;
                         String lastName;
-                        Boolean showRealName = false;
+                        boolean showRealName = false;
                         Date createdTimestamp;
                         Date voteSalaryLastPaidTimestamp;
                         Date voteSalaryDate;
@@ -236,7 +236,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
 
                         firstName = getColumnOrNull(cs, Schema.USERS.FIRST_NAME);
                         lastName = getColumnOrNull(cs, Schema.USERS.LAST_NAME);
-                        showRealName = getColumnOrNull(cs, Schema.USERS.SHOW_REAL_NAME);
+                        showRealName = getColumnOrDefault(cs, Schema.USERS.SHOW_REAL_NAME, false);
 
                         voteSalaryLastPaidTimestamp = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_LAST_PAID_TIMESTAMP);
                         voteSalaryDate = getColumnOrNull(cs, Schema.USERS.VOTE_SALARY_DATE);

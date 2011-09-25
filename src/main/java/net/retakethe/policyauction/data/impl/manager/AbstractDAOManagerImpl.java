@@ -44,6 +44,17 @@ public abstract class AbstractDAOManagerImpl {
         }
         return col.getValue().getValue();
     }
+    
+
+    protected <T extends Timestamp, N, V> V getColumnOrDefault(ColumnSlice<T, N> cs,
+            NamedColumn<?, T, N, V> column, V defaultValue) {
+        ColumnResult<T, N, V> col = cs.getColumn(column);
+        if (col == null) {
+            return defaultValue;
+        }
+        V storedValue = col.getValue().getValue();
+		return storedValue==null ? defaultValue: storedValue;
+    }
 
     protected <T extends Timestamp, N, V> V getNonNullColumn(ColumnSlice<T, N> cs,
             NamedColumn<?, T, N, V> column)

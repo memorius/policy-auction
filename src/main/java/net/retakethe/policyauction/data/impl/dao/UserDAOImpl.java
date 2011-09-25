@@ -41,7 +41,7 @@ public class UserDAOImpl implements UserDAO {
 		this.userID = userID;
 	}
 
-	public UserDAOImpl(final UserID userID, final String username, final String email, final String passwordHash, final Date passwordExpiryTimestamp, final String firstName, final String lastName, final Boolean showRealName, final Date createdTimestamp, final Date voteSalaryLastPaidTimestamp, final Date voteSalaryDate, final List<UserRole> userRoles) {
+	public UserDAOImpl(final UserID userID, final String username, final String email, final String passwordHash, final Date passwordExpiryTimestamp, final String firstName, final String lastName, final boolean showRealName, final Date createdTimestamp, final Date voteSalaryLastPaidTimestamp, final Date voteSalaryDate, final List<UserRole> userRoles) {
 		this.userID = userID;
 		this.username = username;
 		this.email = email;

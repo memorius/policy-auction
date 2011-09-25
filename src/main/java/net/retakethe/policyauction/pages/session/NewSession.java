@@ -19,6 +19,7 @@ import org.apache.tapestry5.ioc.annotations.Inject;
  */
 public class NewSession {
 	
+	@SuppressWarnings("unused")
 	@SessionState
 	private User currentUser;
 	
@@ -42,7 +43,7 @@ public class NewSession {
     private Form form;
 
     Object onSuccess() {
-    	User loggedInUser = Security.AuthenticateUser(daoManager, userName, password);
+    	User loggedInUser = Security.authenticateUser(daoManager, userName, password);
         if (loggedInUser==null)
         {
             form.recordError(passwordField, "Invalid user name or password.");

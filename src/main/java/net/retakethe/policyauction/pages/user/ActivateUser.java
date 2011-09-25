@@ -44,7 +44,7 @@ public class ActivateUser {
 	private String repeatPassword;
 	
 	@Component
-	private Form activationForm;
+	private Form activateUserForm;
 	
 	@InjectPage
 	private Index indexPage;
@@ -82,7 +82,7 @@ public class ActivateUser {
 	
 	public Object onValidate() {
 		if (!StringUtils.equals(password, repeatPassword)) {
-			activationForm.recordError("Passwords do not match.");
+			activateUserForm.recordError("Passwords do not match.");
 			return null;
 		}
 		return null;
