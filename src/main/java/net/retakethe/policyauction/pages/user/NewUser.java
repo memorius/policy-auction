@@ -8,6 +8,8 @@ import net.retakethe.policyauction.entities.EntityFactory;
 import net.retakethe.policyauction.entities.User;
 import net.retakethe.policyauction.pages.Index;
 
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.tapestry5.annotations.BeginRender;
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.InjectComponent;
 import org.apache.tapestry5.annotations.InjectPage;
@@ -38,15 +40,16 @@ public class NewUser {
 	@Component
 	private Form newUserForm;
 
-	public void setup(User user) {
-		this.user = user;
+	@BeginRender
+	public void setup() {
+		this.user = EntityFactory.makeUser(daoManager.getUserManager().createUser());
 	}
 	
 	public Object onSuccess() {
 		UserDAO userDAO = EntityFactory.getUserDAO(user);
 		// Create the other fields behind the scene before we save.
 		userDAO.setEmail(userEmail);
-		userDAO.setActivationCode("testCode");
+		userDAO.setActivationCode(RandomStringUtils.randomAlphanumeric(32));
 		userDAO.setCreatedTimestamp(new Date());
 		daoManager.getUserManager().persist(userDAO);
 		return indexPage;

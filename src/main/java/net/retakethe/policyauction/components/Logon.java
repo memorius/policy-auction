@@ -3,8 +3,12 @@ package net.retakethe.policyauction.components;
 import net.retakethe.policyauction.services.AuthenticationService;
 
 import org.apache.tapestry5.BindingConstants;
+import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.Parameter;
+import org.apache.tapestry5.annotations.Persist;
 import org.apache.tapestry5.annotations.Property;
+import org.apache.tapestry5.corelib.components.Form;
+import org.apache.tapestry5.corelib.components.PasswordField;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
 /**
@@ -18,6 +22,7 @@ public class Logon {
 
 	/** The login. */
 	@Property
+	@Persist
 	private String username;
 
 	/** The password. */
@@ -28,9 +33,11 @@ public class Logon {
 	@Parameter(defaultPrefix = BindingConstants.LITERAL)
 	private String successPage;
 
-	/** The error page. */
-	@Parameter(defaultPrefix = BindingConstants.LITERAL)
-	private String errorPage;
+	@Component
+	private Form form;
+	
+	@Component(id="password")
+	private PasswordField passwordField;
 	
 	/**
 	 * On success.
@@ -41,6 +48,7 @@ public class Logon {
 		if (authenticationService.login(username, password) != null) {
 			return successPage;
 		}
-		return errorPage;
+		form.recordError(passwordField, "Invalid user name or password.");
+		return null;
 	}
 }

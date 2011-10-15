@@ -22,7 +22,6 @@ public class AllUsers {
     }
 
     public Object onActionFromAdd() {
-    	newUserPage.setup(EntityFactory.makeUser(daoManager.getUserManager().createUser()));
         return newUserPage;
     }
 }
