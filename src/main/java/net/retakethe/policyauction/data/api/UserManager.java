@@ -19,6 +19,10 @@ public interface UserManager {
         public NoSuchUserException(UserID userID) {
             super("No user found with id '" + userID.asString() + "'");
         }
+
+		public NoSuchUserException(String string, Throwable e) {
+			super(string, e);
+		}
     }
 
     UserID makeUserID(String asString);

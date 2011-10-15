@@ -123,7 +123,7 @@ public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManag
         try {
 			return new UsernameDAOImpl(getNonNullColumn(cs, Schema.USERS_BY_NAME.USER_ID), username);
 		} catch (NoSuchColumnException e) {
-			throw new RuntimeException("Invalid username record for key " + username, e);
+			throw new NoSuchUserException("Invalid username record for key " + username, e);
 		}
     }
     

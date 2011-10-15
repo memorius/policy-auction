@@ -17,16 +17,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	private final UserManager userManager;
 	
-	@Inject
-	private DAOManager daoManager;
-	
     /**
      * Constructor used by {@link AppModule#bind(org.apache.tapestry5.ioc.ServiceBinder)}
      *
      * @throws InitializationException
      */
     @Inject 
-	public AuthenticationServiceImpl() {
+	public AuthenticationServiceImpl(@Inject DAOManager daoManager) {
 		this.userManager = daoManager.getUserManager();
 	}
 	
