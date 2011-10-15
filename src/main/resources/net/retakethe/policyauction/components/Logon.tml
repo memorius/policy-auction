@@ -1,0 +1,17 @@
+<t:container xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd">
+    <t:form t:type="form" t:id="form">
+
+        <t:errors/>
+
+        <t:label for="username"/>:
+        <input t:type="TextField" t:id="username" t:validate="required,minlength=3" size="30"/>
+        <br/>
+        <t:label for="password"/>:
+        <input t:type="PasswordField" t:id="password" t:validate="required,minlength=3" size="30"/>
+        <br/>
+        <input type="submit" value="Login"/>
+        <p>
+        <t:actionlink t:id="register">Register a new user.</t:actionlink>
+        </p>
+    </t:form>
+</t:container>
