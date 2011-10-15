@@ -1,10 +1,8 @@
 package net.retakethe.policyauction.components;
 
-import net.retakethe.policyauction.pages.user.NewUser;
 import net.retakethe.policyauction.services.AuthenticationService;
 
 import org.apache.tapestry5.BindingConstants;
-import org.apache.tapestry5.annotations.InjectPage;
 import org.apache.tapestry5.annotations.Parameter;
 import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.ioc.annotations.Inject;
@@ -34,9 +32,6 @@ public class Logon {
 	@Parameter(defaultPrefix = BindingConstants.LITERAL)
 	private String errorPage;
 	
-	@InjectPage
-	private NewUser newUser;
-
 	/**
 	 * On success.
 	 *
@@ -47,14 +42,5 @@ public class Logon {
 			return successPage;
 		}
 		return errorPage;
-	}
-	
-	/**
-	 * User clicks the "Register new user" link.
-	 *
-	 * @return the {@code NewUser} page.
-	 */
-	public Object onActionFromRegister() {
-		return newUser;
 	}
 }

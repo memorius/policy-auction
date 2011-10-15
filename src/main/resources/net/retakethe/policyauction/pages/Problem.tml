@@ -3,9 +3,9 @@
       xmlns:p="tapestry:parameter">
         <!-- Most of the page content, including <head>, <body>, etc. tags, comes from Layout.tml -->
 
-    <p>{titleMessage}</p>
+    <p>${titleMessage}</p>
     
-    <p>{errorMessage}</p>
+    <p>${errorMessage}</p>
 
     <p>
         <t:pagelink page="Index">Back to home</t:pagelink>

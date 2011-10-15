@@ -11,7 +11,7 @@
         <br/>
         <input type="submit" value="Login"/>
         <p>
-        <t:actionlink t:id="register">Register a new user.</t:actionlink>
+         <t:pagelink page="user/NewUser">Register a new user</t:pagelink>
         </p>
     </t:form>
 </t:container>

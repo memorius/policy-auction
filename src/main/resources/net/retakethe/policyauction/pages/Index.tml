@@ -15,7 +15,7 @@
 
     <p:sidebar>
     
-        <t:logon />
+        <t:logon errorPage="problem" successPage="index" />
 
         <p>${currentTime}</p>
         
