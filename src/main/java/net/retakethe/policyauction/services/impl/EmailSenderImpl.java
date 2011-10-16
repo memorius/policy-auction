@@ -8,7 +8,7 @@
 
 package net.retakethe.policyauction.services.impl;
 
-import java.util.LinkedList;
+import java.util.List;
 
 import net.retakethe.policyauction.data.impl.manager.InitializationException;
 import net.retakethe.policyauction.services.AppModule;
@@ -71,7 +71,7 @@ public class EmailSenderImpl implements EmailSender
     }
 
 	@Override
-    public void sendMail(String sender, LinkedList<String> recipients, String subject, String body)
+    public void sendMail(String sender, List<String> recipients, String subject, String body)
 	        throws EmailNotSentException {
 	    if (!configured) {
 	        String message = "Not sending email because " + getClass().getName() + " is not configured";

@@ -1,6 +1,7 @@
 package net.retakethe.policyauction.services;
 
-import java.util.LinkedList;
+import java.util.List;
+
 
 public interface EmailSender {
 
@@ -26,6 +27,6 @@ public interface EmailSender {
      *
      * @throws EmailNotSentException for all failures
      */
-    void sendMail(String sender, LinkedList<String> recipients, String subject, String body)
+    void sendMail(String sender, List<String> recipients, String subject, String body)
             throws EmailNotSentException;
 }
