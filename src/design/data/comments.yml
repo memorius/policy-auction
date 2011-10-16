@@ -1,0 +1,55 @@
+-
+    id          : 1
+    article_id  : 1
+    user_id     : 2
+    date        : 7 Sep 2011
+    content     : '<p>Curabitur congue, justo at tincidunt tristique, justo tellus pulvinar augue, sed porta nisi est non enim. Nam porttitor condimentum est, nec dictum neque pharetra nec. In vel nisi eu magna eleifend malesuada. Nam gravida commodo purus, quis fringilla sapien volutpat sit amet. Sed in nunc at velit luctus ultricies. Nam sed odio eros, id volutpat libero.</p>'
+
+-
+    id          : 2
+    article_id  : 1
+    user_id     : 3
+    date        : 11 Sep 2011
+    content     : '<p>Nam condimentum auctor sollicitudin. Maecenas viverra lectus quis nunc dignissim in volutpat tortor tincidunt. Fusce sed nunc odio, non sodales felis. Phasellus volutpat ipsum ut urna sodales sit amet laoreet turpis auctor. Etiam ut tortor non ipsum imperdiet elementum.</p><p>Integer tincidunt, sem id volutpat tristique, quam velit fringilla est, in lacinia velit massa interdum purus. In pharetra, sapien ultrices egestas luctus, urna lorem lacinia mauris, sit amet ultricies est massa at metus. Morbi consectetur lectus vitae risus blandit blandit. Pellentesque a luctus nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam rutrum mi ac velit tincidunt vel posuere purus luctus. Nunc sit amet laoreet urna.</p>'
+
+-
+    id          : 3
+    article_id  : 1
+    user_id     : 4
+    date        : 17 Sep 2011
+    content     : '<p>Maecenas interdum eros sed metus egestas et blandit leo condimentum. Etiam semper, tortor in suscipit lacinia, arcu erat condimentum risus, sit amet lacinia tellus turpis eu tortor.</p><p>Pellentesque sit amet ligula nisi. Mauris id mi metus, a malesuada ipsum. Suspendisse quis molestie risus. Vivamus ut mauris mi, a consequat velit. Duis non enim turpis. Donec sed nunc mi. Phasellus et sem arcu, quis condimentum quam. Aenean quam enim, commodo porttitor bibendum sed, egestas nec tellus. Duis in feugiat erat. Duis pulvinar massa vel turpis viverra quis sodales erat facilisis. Duis dolor eros, rhoncus ac gravida pellentesque, dignissim vel nisl.</p>'
+
+-
+    id          : 4
+    article_id  : 1
+    user_id     : 5
+    date        : 21 Sep 2011
+    content     : '<p>Aliquam eget leo sed dolor commodo dapibus sed vitae sem. Pellentesque varius est ac arcu luctus in ultrices nisi interdum. In hac habitasse platea dictumst. Phasellus tempus nunc vitae massa lacinia mollis. Vestibulum eu risus quam, convallis tristique purus. Nullam porttitor leo vel justo aliquet et euismod nisl tempus. Nam sit amet nisl orci, quis sagittis dui. Ut eget metus a nibh cursus auctor</p>'
+    
+-
+    id          : 5
+    article_id  : 3
+    user_id     : 2
+    date        : 7 Sep 2011
+    content     : '<p>Curabitur congue, justo at tincidunt tristique, justo tellus pulvinar augue, sed porta nisi est non enim. Nam porttitor condimentum est, nec dictum neque pharetra nec. In vel nisi eu magna eleifend malesuada. Nam gravida commodo purus, quis fringilla sapien volutpat sit amet. Sed in nunc at velit luctus ultricies. Nam sed odio eros, id volutpat libero.</p>'
+
+-
+    id          : 6
+    article_id  : 3
+    user_id     : 3
+    date        : 11 Sep 2011
+    content     : '<p>Nam condimentum auctor sollicitudin. Maecenas viverra lectus quis nunc dignissim in volutpat tortor tincidunt. Fusce sed nunc odio, non sodales felis. Phasellus volutpat ipsum ut urna sodales sit amet laoreet turpis auctor. Etiam ut tortor non ipsum imperdiet elementum.</p><p>Integer tincidunt, sem id volutpat tristique, quam velit fringilla est, in lacinia velit massa interdum purus. In pharetra, sapien ultrices egestas luctus, urna lorem lacinia mauris, sit amet ultricies est massa at metus. Morbi consectetur lectus vitae risus blandit blandit. Pellentesque a luctus nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam rutrum mi ac velit tincidunt vel posuere purus luctus. Nunc sit amet laoreet urna.</p>'
+
+-
+    id          : 7
+    article_id  : 3
+    user_id     : 4
+    date        : 17 Sep 2011
+    content     : '<p>Maecenas interdum eros sed metus egestas et blandit leo condimentum. Etiam semper, tortor in suscipit lacinia, arcu erat condimentum risus, sit amet lacinia tellus turpis eu tortor.</p><p>Pellentesque sit amet ligula nisi. Mauris id mi metus, a malesuada ipsum. Suspendisse quis molestie risus. Vivamus ut mauris mi, a consequat velit. Duis non enim turpis. Donec sed nunc mi. Phasellus et sem arcu, quis condimentum quam. Aenean quam enim, commodo porttitor bibendum sed, egestas nec tellus. Duis in feugiat erat. Duis pulvinar massa vel turpis viverra quis sodales erat facilisis. Duis dolor eros, rhoncus ac gravida pellentesque, dignissim vel nisl.</p>'
+
+-
+    id          : 8
+    article_id  : 3
+    user_id     : 5
+    date        : 21 Sep 2011
+    content     : '<p>Aliquam eget leo sed dolor commodo dapibus sed vitae sem. Pellentesque varius est ac arcu luctus in ultrices nisi interdum. In hac habitasse platea dictumst. Phasellus tempus nunc vitae massa lacinia mollis. Vestibulum eu risus quam, convallis tristique purus. Nullam porttitor leo vel justo aliquet et euismod nisl tempus. Nam sit amet nisl orci, quis sagittis dui. Ut eget metus a nibh cursus auctor</p>'

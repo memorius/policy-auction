@@ -1,0 +1,11 @@
+div.comments
+    h2 Comments
+    == partial "partials/comments_form"
+    -items.each do | item |
+        - user  = data.users.select{|x| x.id == item.user_id}[0]
+        div.comment id="comment_#{item.id}"
+            div.meta
+                a.user href='/users/#{user.id}.html' = user.name
+                a.permalink href='#comment_#{item.id}' = item.date
+            div.content
+                == item.content

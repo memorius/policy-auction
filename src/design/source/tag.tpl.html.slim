@@ -1,0 +1,12 @@
+- content_for :head do
+  title = @tag.title
+
+
+h1 = @tag.title
+
+- articles = data.articles.select{|x| x['tags'] }
+
+/ - articles = data.articles.select{ |x| x['tags'].value? @tag.title }
+== partial 'partials/articles', :locals => { :items => articles }
+            
+    

@@ -1,0 +1,11 @@
+- content_for :head do
+  title I'd vote for this
+
+- articles = data.articles
+
+h1 I'd vote for this
+    
+== partial 'partials/articles', :locals => { :items => articles}
+
+            
+    

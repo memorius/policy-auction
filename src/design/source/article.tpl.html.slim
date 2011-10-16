@@ -1,0 +1,13 @@
+- content_for :head do
+  title = @article.title
+
+- comments = data.comments.select{|x| x.article_id == @article.id}
+- users = data.users
+
+h1 = @article.title
+    
+== partial 'partials/articles', :locals => { :items => [@article]}
+== partial 'partials/comments', :locals => { :items => comments}
+
+            
+    

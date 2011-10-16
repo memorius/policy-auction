@@ -1,0 +1,49 @@
+- is_single = items.length == 1 || nil
+- tags = data.tags
+- items.each do | item |
+  article
+    - if is_single.nil?
+      header
+        h2
+          a href='/articles/#{item.id}.html' = item.title
+    div
+      p
+        =' item.summary
+        - if is_single.nil?
+          a.more href='/articles/#{item.id}.html' More
+      - if !is_single.nil?
+        == item.content
+    aside
+      dl
+        dt.date.added Date Added
+        dd.date.added
+          =' item.added
+          a href='/articles/added' View all by date added 
+        dt.date.closes Date Closes
+        dd.date.closes
+          =' item.closes
+          a href='/articles/closing' View all by closing date  
+        dt.votes Votes
+        dd.votes.ayes
+          ' #{item.ayes} Ayes
+          a.aye href='/votes/aye/#{item.id}'
+            span.icon
+            span Vote Aye
+        dd.votes.noes
+          ' #{item.noes} Noes
+          a.aye href='/votes/no/#{item.id}'
+            span.icon
+            span Vote No
+        - if item.comments?
+          dt.comments Comments
+          dd.comments
+            a.comments href='/articles/#{item.id}.html#comments' #{item.comments} Comments
+        - if item.tags && !is_single.nil?
+          dt.tags Tags
+          dd.tags
+            ul
+              - item.tags.each do |tag|
+                - url = tag.to_s.downcase.gsub(' ', '-')
+                li
+                  a href='/tags/#{url}.html' = tag
+ 

@@ -1,0 +1,10 @@
+- prefix = url === '/tags' ? url: '/articles'
+ul
+    - items.slice(0,show).each do | item |
+      li
+        - if id == 'trending'
+          a data-votes='#{item.ayes}' href='#{prefix}/#{item.id}.html' = item.title
+        - else
+          a href='#{prefix}/#{item.id}.html' = item.title
+    li
+        a.more href='#{url}.html' View all 

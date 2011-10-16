@@ -1,0 +1,29 @@
+footer
+  div.container
+    div.lists
+      - articles = data.articles
+      div#trending.list
+        h3 Trending
+        == partial 'partials/articles_footer', :locals => { :id => 'trending', :items => articles.sort_by{|x| x.ayes}.reverse, :url => '/article/trending', :show => 10}
+      
+      div.list
+        h3 Recently Added
+        == partial 'partials/articles_footer', :locals => { :id => 'recent', :items => articles.sort_by{|x| x.added},  :url => '/articles/recent', :show => 5}
+      
+      div.list
+        h3 Closing Soon
+        == partial 'partials/articles_footer', :locals => { :id => 'closing', :items => articles.sort_by{|x| x.closes}, :url => '/articles/closing', :show => 5}
+      
+      
+      div.list.tags
+        h3 Tags
+        == partial 'partials/articles_footer', :locals => { :id => 'tags', :items => data.tags, :url => '/tags', :show => 10}            
+
+  div.nav
+    ul
+      li
+        a href="/about.html" About us
+      li
+        a href="/using-this-site.html" Using this site
+      li
+        a href="/privacy.html" Privacy
