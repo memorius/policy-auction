@@ -62,7 +62,7 @@ public class EditUser {
 			userDAO.setVoteSalaryDate(now);
 			userDAO.setVoteSalaryLastPaidTimestamp(now);
 		}
-		daoManager.getUserManager().persist(userDAO);
+		daoManager.getUserDAOManager().persist(userDAO);
 		return allUsersPage;
 	}
 

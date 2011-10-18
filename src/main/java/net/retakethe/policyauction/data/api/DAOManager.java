@@ -17,7 +17,7 @@ public interface DAOManager {
 
     PortfolioManager getPortfolioManager();
 
-    UserManager getUserManager();
+    UserDAOManager getUserDAOManager();
 
     UserVoteAllocationManager getUserVoteAllocationManager();
 

@@ -3,10 +3,11 @@ package net.retakethe.policyauction.services;
 import java.io.IOException;
 
 import net.retakethe.policyauction.annotations.RestrictedPage;
+import net.retakethe.policyauction.business.api.BusinessManager;
+import net.retakethe.policyauction.business.impl.BusinessManagerImpl;
 import net.retakethe.policyauction.data.api.DAOManager;
 import net.retakethe.policyauction.data.impl.manager.DAOManagerImpl;
 import net.retakethe.policyauction.services.filters.RestrictedPageFilter;
-import net.retakethe.policyauction.services.impl.AuthenticationServiceImpl;
 import net.retakethe.policyauction.services.impl.EmailSenderImpl;
 
 import org.apache.tapestry5.SymbolConstants;
@@ -51,7 +52,7 @@ public class AppModule
 
         binder.bind(EmailSender.class, EmailSenderImpl.class);
         
-        binder.bind(AuthenticationService.class, AuthenticationServiceImpl.class);
+        binder.bind(BusinessManager.class, BusinessManagerImpl.class);
     }
 
     public static void contributeApplicationDefaults(

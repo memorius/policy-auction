@@ -34,7 +34,7 @@ public class DAOManagerImpl implements DAOManager, RegistryShutdownListener {
     private final PolicyManagerImpl policyManager;
     private final PortfolioManagerImpl portfolioManager;
     private final SystemInfoManagerImpl systemInfoManager;
-    private final UserManagerImpl userManager;
+    private final UserDAOManagerImpl userManager;
     private final UserVoteAllocationManagerImpl userVoteManager;
     private final VoteSalaryManagerImpl voteSalaryManager;
     private final VotingConfigManagerImpl votingConfigManager;
@@ -75,7 +75,7 @@ public class DAOManagerImpl implements DAOManager, RegistryShutdownListener {
 
         policyManager = new PolicyManagerImpl(keyspaceManager, portfolioManager);
 
-        userManager = new UserManagerImpl(keyspaceManager);
+        userManager = new UserDAOManagerImpl(keyspaceManager);
 
         votingConfigManager = new VotingConfigManagerImpl(keyspaceManager);
 
@@ -163,7 +163,7 @@ public class DAOManagerImpl implements DAOManager, RegistryShutdownListener {
     }
     
     @Override
-    public UserManagerImpl getUserManager() {
+    public UserDAOManagerImpl getUserDAOManager() {
     	return userManager;
     }
 

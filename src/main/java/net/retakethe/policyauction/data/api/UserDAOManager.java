@@ -11,7 +11,7 @@ import net.retakethe.policyauction.data.api.types.UserRole;
 /**
  * @author Mathew Hartley
  */
-public interface UserManager {
+public interface UserDAOManager {
 
     public class NoSuchUserException extends Exception {
         private static final long serialVersionUID = 0L;

@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import me.prettyprint.hector.api.query.QueryResult;
-import net.retakethe.policyauction.data.api.UserManager;
+import net.retakethe.policyauction.data.api.UserDAOManager;
 import net.retakethe.policyauction.data.api.dao.UserDAO;
 import net.retakethe.policyauction.data.api.dao.UserPendingDAO;
 import net.retakethe.policyauction.data.api.dao.UsernameDAO;
@@ -40,9 +40,9 @@ import net.retakethe.policyauction.util.Functional.SkippedElementException;
  * 
  * @author Mathew Hartley
  */
-public class UserManagerImpl extends AbstractDAOManagerImpl implements UserManager {
+public class UserDAOManagerImpl extends AbstractDAOManagerImpl implements UserDAOManager {
 
-    public UserManagerImpl(KeyspaceManager keyspaceManager) {
+    public UserDAOManagerImpl(KeyspaceManager keyspaceManager) {
         super(keyspaceManager);
     }
 

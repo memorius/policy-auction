@@ -1,8 +1,8 @@
 package net.retakethe.policyauction.pages.session;
 
+import net.retakethe.policyauction.business.api.BusinessManager;
 import net.retakethe.policyauction.entities.User;
 import net.retakethe.policyauction.pages.Index;
-import net.retakethe.policyauction.services.AuthenticationService;
 
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.InjectPage;
@@ -33,7 +33,7 @@ public class NewSession {
     private String password;
 	
 	@Inject
-	private AuthenticationService authenticationService;
+	private BusinessManager businessManager;
 
     @Component(id = "password")
     private PasswordField passwordField;
@@ -42,7 +42,7 @@ public class NewSession {
     private Form form;
 
     Object onSuccess() {
-    	User loggedInUser = authenticationService.login(userName, password);
+    	User loggedInUser = businessManager.getUserManager().authenticateUser(userName, password);
         if (loggedInUser==null)
         {
             form.recordError(passwordField, "Invalid user name or password.");

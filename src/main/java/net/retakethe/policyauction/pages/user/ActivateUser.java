@@ -1,17 +1,12 @@
 package net.retakethe.policyauction.pages.user;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.retakethe.policyauction.data.api.DAOManager;
-import net.retakethe.policyauction.data.api.UserManager;
-import net.retakethe.policyauction.data.api.UserManager.NoSuchUserException;
-import net.retakethe.policyauction.data.api.dao.UserPendingDAO;
+import net.retakethe.policyauction.business.api.BusinessManager;
 import net.retakethe.policyauction.data.api.types.UserRole;
-import net.retakethe.policyauction.entities.EntityFactory;
 import net.retakethe.policyauction.entities.User;
 import net.retakethe.policyauction.pages.Index;
 import net.retakethe.policyauction.pages.Problem;
@@ -27,7 +22,6 @@ import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.corelib.components.Form;
 import org.apache.tapestry5.ioc.annotations.Inject;
-import org.mindrot.jbcrypt.BCrypt;
 
 public class ActivateUser {
 	
@@ -80,7 +74,7 @@ public class ActivateUser {
 	private Problem errorPage;
 	
 	@Inject
-	private DAOManager daoManager;
+	private BusinessManager businessManager;
 	
 	public void setup() {
 		if (selection==null) {
@@ -90,25 +84,18 @@ public class ActivateUser {
 
 	public Object onActivate() {
 		setup();
-		
 		// Pre-validation of activation codes
 		if (StringUtils.isBlank(code) || StringUtils.isBlank(email)) {
 			errorPage.setup("invalid", "Parts of the required parameters are missing.");
 			return errorPage;
 		}
 		
-		UserManager userManager = daoManager.getUserManager();
-		UserPendingDAO userPendingDAO;
-		try {
-			userPendingDAO = userManager.getUserPending(email);
-			if (userPendingDAO.getActivationCode().equalsIgnoreCase(code)) {
-				user = EntityFactory.makeUser(userManager.getUser(userPendingDAO.getUserID()));
-				return null;
-			}
-		} catch (NoSuchUserException e) {
-			return generalActivationError();
+		user = businessManager.getUserManager().loadNewUser(email, code);
+		if (user == null) {
+			errorPage.setup("error", "Invalid email or activation code");
+			return errorPage;
 		}
-		return generalActivationError();
+		return null;
 	}
 	
 	public Map<String,UserRole> getMyMap() {
@@ -137,11 +124,6 @@ public class ActivateUser {
 	public UserRole getMapValue() {
 	    return this.getMyMap().get(this.currentKey);
 	}
-
-	private Object generalActivationError() {
-		errorPage.setup("error", "Invalid email address or code.");
-		return errorPage;
-	}
 	
 	@OnEvent(value=EventConstants.VALIDATE, component="activateUserForm")
 	public Object onValidate() {
@@ -159,17 +141,7 @@ public class ActivateUser {
 		user.setLastName(lastName);
 		user.setShowRealName(showRealName);
 
-		user.setPasswordExpiryTimestamp(new Date());
-		user.setPasswordHash(BCrypt.hashpw(password, BCrypt.gensalt()));
-		
-		
-		// FIXME I'm expecting that a service-layer call will set these values, and should not be set here in future.
-		user.setVoteSalaryDate(new Date());
-		user.setVoteSalaryLastPaidTimestamp(new Date());
-		
-		daoManager.getUserManager().update(EntityFactory.getUserDAO(user));
-
-		currentUser = user;
+		currentUser = businessManager.getUserManager().activateUser(user);
 		return indexPage;
 	}
 

@@ -18,7 +18,7 @@ public class AllUsers {
     private DAOManager daoManager;
 
     public List<User> getAllUsers() {
-        return EntityFactory.makeUsers(daoManager.getUserManager().getAllUsers());
+        return EntityFactory.makeUsers(daoManager.getUserDAOManager().getAllUsers());
     }
 
     public Object onActionFromAdd() {
