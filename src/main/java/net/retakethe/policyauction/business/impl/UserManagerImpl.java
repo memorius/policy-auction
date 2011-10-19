@@ -17,19 +17,17 @@ import net.retakethe.policyauction.util.AssertArgument;
 import net.retakethe.policyauction.util.CollectionUtils;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.tapestry5.ioc.annotations.Inject;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class UserManagerImpl implements UserManager {
 	
 	private DAOManager daoManager;
-	
-	@Inject 
+
 	private EmailSender emailSender;
-	
-	@Inject
-	public UserManagerImpl(@Inject DAOManager daoManager) {
+
+	public UserManagerImpl(final DAOManager daoManager, final EmailSender emailSender) {
 		this.daoManager = daoManager;
+		this.emailSender = emailSender;
 	}
 
 	/** {@inheritDoc} */
