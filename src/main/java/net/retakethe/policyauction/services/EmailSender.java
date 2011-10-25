@@ -20,13 +20,12 @@ public interface EmailSender {
     /**
      * Send an email message.
      *
-     * @param sender
      * @param recipients
      * @param subject
      * @param body
      *
      * @throws EmailNotSentException for all failures
      */
-    void sendMail(String sender, List<String> recipients, String subject, String body)
+    void sendMail(List<String> recipients, String subject, String body)
             throws EmailNotSentException;
 }

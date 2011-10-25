@@ -47,7 +47,7 @@ public class UserManagerImpl implements UserManager {
 		daoManager.getUserDAOManager().persist(userDAO);
 		String body = "Hi, you're almost there, just click through on the following link and you're in - " + url + "?email=" + userDAO.getEmail() + "&code=" + userDAO.getActivationCode() + " \r\n";
 		try {
-			emailSender.sendMail("newuser@idvoteforthis.co.nz", CollectionUtils.list(userDAO.getEmail()), "New user activation", body);
+			emailSender.sendMail(CollectionUtils.list(userDAO.getEmail()), "New user activation", body);
 		} catch (EmailNotSentException e) {
 			throw new RuntimeException("Email unable to be sent", e);
 		}

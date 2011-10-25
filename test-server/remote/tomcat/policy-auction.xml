@@ -17,6 +17,9 @@
     <Parameter name="net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-secretKey"
                value="DUMMY_PLACEHOLDER_VALUE" override="false"/>
 
+    <Parameter name="net.retakethe.policyauction.services.impl.EmailSenderImpl.sender-email-address"
+               value="DUMMY_PLACEHOLDER_VALUE" override="false"/>
+
     <Parameter name="net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-hosts"
                value="localhost:9160" override="false"/>
 

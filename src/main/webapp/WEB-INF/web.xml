@@ -22,6 +22,11 @@ of where to look for pages, components and mixins. -->
         <param-value>DUMMY_PLACEHOLDER_VALUE</param-value>
     </context-param>
     <context-param>
+        <!-- Must be validated as a sender address with Amazon SES -->
+        <param-name>net.retakethe.policyauction.services.impl.EmailSenderImpl.sender-email-address</param-name>
+        <param-value>DUMMY_PLACEHOLDER_VALUE</param-value>
+    </context-param>
+    <context-param>
         <!-- Comma-separated 'host:port,host:port' or just 'host,host' -->
         <param-name>net.retakethe.policyauction.data.impl.manager.DAOManagerImpl.cassandra-hosts</param-name>
         <param-value>localhost:9160</param-value>

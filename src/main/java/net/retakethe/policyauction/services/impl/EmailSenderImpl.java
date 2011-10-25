@@ -39,6 +39,7 @@ public class EmailSenderImpl implements EmailSender
 
     private final String accessKey;
     private final String secretKey;
+    private final String senderEmailAddress;
     private final boolean configured;
 
     /**
@@ -50,14 +51,19 @@ public class EmailSenderImpl implements EmailSender
     public EmailSenderImpl(
             // These values come from web.xml (or tomcat context config) <context-param> settings.
             @Inject @Symbol(PolicyAuctionConfigPropertyNames.EMAIL_SENDER_AWS_ACCESS_KEY) final String accessKey,
-            @Inject @Symbol(PolicyAuctionConfigPropertyNames.EMAIL_SENDER_AWS_SECRET_KEY) final String secretKey) {
+            @Inject @Symbol(PolicyAuctionConfigPropertyNames.EMAIL_SENDER_AWS_SECRET_KEY) final String secretKey,
+            @Inject @Symbol(PolicyAuctionConfigPropertyNames.EMAIL_SENDER_SENDER_EMAIL_ADDRESS) final String senderEmailAddress) {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
+        this.senderEmailAddress = senderEmailAddress;
 
         if ("DUMMY_PLACEHOLDER_VALUE".equals(this.accessKey)) {
             this.configured = false;
             logNotConfiguredWarning();
         } else if ("DUMMY_PLACEHOLDER_VALUE".equals(this.secretKey)) {
+            this.configured = false;
+            logNotConfiguredWarning();
+        } else if ("DUMMY_PLACEHOLDER_VALUE".equals(this.senderEmailAddress)) {
             this.configured = false;
             logNotConfiguredWarning();
         } else {
@@ -71,7 +77,7 @@ public class EmailSenderImpl implements EmailSender
     }
 
 	@Override
-    public void sendMail(String sender, List<String> recipients, String subject, String body)
+    public void sendMail(List<String> recipients, String subject, String body)
 	        throws EmailNotSentException {
 	    if (!configured) {
 	        String message = "Not sending email because " + getClass().getName() + " is not configured";
@@ -86,7 +92,7 @@ public class EmailSenderImpl implements EmailSender
 		Body msgBody = new Body(bodyContent);
 		Message msg = new Message(subjectContent, msgBody);
  
-		SendEmailRequest request = new SendEmailRequest(sender, destination, msg);
+		SendEmailRequest request = new SendEmailRequest(senderEmailAddress, destination, msg);
  
 		AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
 		AmazonSimpleEmailServiceClient sesClient = new AmazonSimpleEmailServiceClient(credentials);

@@ -21,6 +21,12 @@ public final class PolicyAuctionConfigPropertyNames {
             = "net.retakethe.policyauction.services.impl.EmailSenderImpl.aws-secretKey";
 
     /**
+     * Must be validated as a sender address with Amazon SES
+     */
+    public static final String EMAIL_SENDER_SENDER_EMAIL_ADDRESS
+            = "net.retakethe.policyauction.services.impl.EmailSenderImpl.sender-email-address";
+    
+    /**
      * Comma-separated <code>host:port,host:port</code> or just <code>host,host</code>
      */
     public static final String DAO_MANAGER_CASSANDRA_HOSTS
