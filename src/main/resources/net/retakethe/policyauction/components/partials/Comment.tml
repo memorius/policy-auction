@@ -1,0 +1,15 @@
+<t:container xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd">
+  <div class="comments">
+    <h2>Comments</h2>
+    <pre>form</pre>
+    <t:loop source="comments" value="comment">
+      <div class="comment" id="comment_${comment.id}">
+        <div class="meta">
+          <a class="user" href="/users/${user.id}">${user.name}</a>
+          <a class="permalink" href="#comment_${comment.id}">${comment.date}</a>
+        </div>
+        <div class="content">${comment.content}</div>
+      </div>
+    </t:loop>
+  </div> 
+</t:container>

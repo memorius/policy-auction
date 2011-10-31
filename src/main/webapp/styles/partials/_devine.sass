@@ -1,0 +1,35 @@
+//     Devine,  A + B is to A as A is to B 
+//     (c) 2011 Terrence Wood
+//     Devine may be freely distributed under the MIT license.
+
+$devine_ab: 60em
+$devine_a: 37em
+$devine_b: 23em
+$phi: 1.618em
+
+=devine_ab
+  @media screen
+    max-width: $devine_ab - $phi
+    margin: auto
+    overflow: hidden
+    @media (min-width: 37em)
+      padding: 0 $phi / 2
+      @media (max-width: 60em)
+        width: $devine_a - $phi / 2
+
+=devine_a
+  @media screen
+    float: left
+    display: inline
+    max-width: $devine_a - 1.5 * $phi
+    margin: 0 $phi / 2
+    @media (min-width: 37em)
+      @media (max-width: 60em)
+
+=devine_b
+  +devine_a
+  @media screen
+    @media (min-width: 37em)
+      width: $devine_b - $phi * 1.5
+      @media (max-width: 60em)
+        width: 100%

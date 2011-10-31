@@ -12,17 +12,4 @@
     <p>
         <t:pagelink page="user/UserIndex">Users</t:pagelink>
     </p>
-
-    <p:sidebar>
-    
-        <t:logon errorPage="problem" successPage="index" />
-
-        <p>${currentTime}</p>
-        
-
-        <p>
-            [<t:pagelink page="Index">refresh</t:pagelink>]
-        </p>
-    </p:sidebar>
-
 </html>

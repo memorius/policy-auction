@@ -1,0 +1,30 @@
+.nav
+  background: $black_alpha
+  clear: both
+  padding: .25em 0
+  width: 100%
+  ul
+    +devine_ab
+    +clearfix
+    list-style: none
+    margin-top: 0
+    margin-bottom: 0
+  li
+    float: left
+  li:first-child
+    margin-left: -1em
+  a
+    +font_alt
+    +border-radius(5px)
+    color: $black
+    display: inline-block
+    padding: .25em .5em
+    text-decoration: none
+    &:hover
+      background: $black_alpha
+
+#nav
+  left: 0
+  position: absolute
+  top: 0
+  width: 100

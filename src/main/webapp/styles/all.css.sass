@@ -1,0 +1,48 @@
+@import partials/_base
+
+$white: #5c5b89
+
+html
+  background: $white url("../images/bg.png")
+
+
+.container,
+#main
+  +devine_ab
+  
+// *
+//   background: rgba(0,0,0,.1)
+
+// Header
+
+  
+  
+footer
+  background: rgba(0,0,0,.1)
+  .list
+    ul
+      +font_alt
+      margin: 0
+      padding: 0
+      li
+        list-style: none
+      a
+        display: block
+        padding: 0.25em 0.5em
+        margin: 0 0 0 -0.5em
+        +link-colors($black)
+        text-decoration: none
+        &:hover
+          background: $black_alpha
+          +border-radius(5px)
+        
+footer
+  .lists
+    margin: 0 $phi/2
+    .list
+      float: left
+      width: ($devine_ab - 4 * $phi) / 3
+      
+      &:nth-child(even)
+        margin: 0 $phi
+        
